@@ -6,15 +6,15 @@
 /pkg/out/
 
 # Copyrighted chumby material — never commit any of it (BC1 audit,
-# docs/reference/14-big-cleanup.md). controlpanel.swf and other SWF
+# claude-docs/reference/14-big-cleanup.md). controlpanel.swf and other SWF
 # assets belong in swf-assets/ (untracked) or come from your own
 # chumby backup; alarm tones likewise.
 *.swf
 *.mp3
 *.wav
-/docs/reference/appendix/
+/claude-docs/reference/appendix/
 /resources/zurks-offline-firmware-classic/
 
 # Panel screenshots show chumby UI artwork — not published (BC1
 # checkpoint decision 2026-07-07); use Nextcloud for test images.
-/docs/reference/images/
+/claude-docs/reference/images/

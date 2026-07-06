@@ -22,7 +22,7 @@ API extensions, script calls, frame control).
    updates) must be cataloged so it can be re-implemented for the Pi.
 5. The SWF has more screens than we want. **Before implementing support for any
    screen, present it to the user and ask whether it is in scope.** Maintain a
-   `docs/feature-decisions.md` with status: needed / skip / undecided.
+   `claude-docs/feature-decisions.md` with status: needed / skip / undecided.
 6. Prefer small, verifiable steps with a written result over broad exploration.
    If you find yourself reading code for more than ~30 minutes without producing
    a documented finding, stop and write down what you have, then reassess.
@@ -83,7 +83,7 @@ API extensions, script calls, frame control).
   The environment contract (03) must therefore tag each touchpoint with a
   proposed network class: `mock-forever` / `real-network-later` / `discuss`.
 
-**Feature scope decisions so far (seed for docs/feature-decisions.md):**
+**Feature scope decisions so far (seed for claude-docs/feature-decisions.md):**
 - EXCLUDED: all social features (chum lists, sending widgets, etc.).
 - EXCLUDED: hardware configuration screens — touchscreen calibration, WiFi /
   network setup — EXCEPT volume and brightness, which are wanted.
@@ -95,7 +95,7 @@ API extensions, script calls, frame control).
 
 ## Milestone 1 — Understand the Control Panel
 
-**Deliverable:** a reference under `docs/reference/` that makes Milestone 2
+**Deliverable:** a reference under `claude-docs/reference/` that makes Milestone 2
 mechanical. Acceptance criteria (from the user):
 - Documents the screens and functionality of `controlpanel.swf`, especially
   user-facing elements.
@@ -112,10 +112,10 @@ mechanical. Acceptance criteria (from the user):
 - Find how the flash player is invoked: grep the firmware and backup for
   `chumbyflashplayer.x`, collect every invocation with full arguments,
   environment variables, and FlashVars. Document in
-  `docs/reference/01-invocations.md`.
+  `claude-docs/reference/01-invocations.md`.
 - Identify the scripts/daemons the panel ecosystem uses: list everything under
   `/usr/chumby/scripts/` (or equivalent) in firmware + backup, with a one-line
-  purpose each → `docs/reference/02-external-scripts.md`.
+  purpose each → `claude-docs/reference/02-external-scripts.md`.
 - Try to locate the most recent official control panel: check the offline
   firmware repo docs/README, archive.org snapshots of chumby update URLs, and
   the zurks repos. If not obtainable in ~30 min, note that and move on.
@@ -126,7 +126,7 @@ mechanical. Acceptance criteria (from the user):
 - Use ffdec CLI to export, reproducibly (record the exact command):
   scripts, frames (as images), frame labels, symbols, embedded assets — for
   each controlpanel variant.
-- Store raw exports under `docs/reference/appendix/<variant>/` (this satisfies
+- Store raw exports under `claude-docs/reference/appendix/<variant>/` (this satisfies
   the "complete code" criterion).
 - Also export any secondary SWFs the panel loads (`loadMovie` targets).
 
@@ -145,7 +145,7 @@ Statically scan the exported ActionScript of the **backup** variant first
   from the command line — cross-reference with 01-invocations.md).
 - `System.capabilities` or version checks.
 
-Produce `docs/reference/03-environment-contract.md`: one table row per
+Produce `claude-docs/reference/03-environment-contract.md`: one table row per
 touchpoint: *call site (script/frame) → screen → purpose → request format →
 expected response format → network class (mock-forever / real-network-later /
 discuss) → notes for Pi reimplementation*. This file is the single most
@@ -159,11 +159,11 @@ important output of M1.
 - Use Ruffle's debug UI to inspect `_root` variables and try jumping frames
   manually; note what the wizard checks before letting the main screen appear.
 - Document how far the panel currently gets and what it blocks on →
-  `docs/reference/04-ruffle-gap-analysis.md`.
+  `claude-docs/reference/04-ruffle-gap-analysis.md`.
 
 ### Step 1.5 — Screen / frame catalog
 - From ffdec frame labels + frame exports + the dynamic experiments, produce
-  `docs/reference/05-screens.md`: per screen — name/frame label, screenshot,
+  `claude-docs/reference/05-screens.md`: per screen — name/frame label, screenshot,
   user-facing elements, which contract rows it depends on, and a proposed
   status (needed / skip / undecided) **as a question for the user, not a
   decision**. Pre-apply the known exclusions (social features; hardware config
@@ -174,7 +174,7 @@ important output of M1.
 - Diff the offline-firmware panel vs the backup panel (script-level diff of
   the ffdec exports; ignore cosmetic recompilation noise), and vs the newest
   obtainable version if found. Focus on: removed network calls, changed
-  ASnative usage, wizard differences → `docs/reference/06-variant-diff.md`.
+  ASnative usage, wizard differences → `claude-docs/reference/06-variant-diff.md`.
   Note in particular what zurk's offline firmware changed *outside* the SWF
   (server stubs, scripts) vs inside it — that is the existing prior art for
   exactly what we are doing.
@@ -191,7 +191,7 @@ over; the most relevant API extensions exist as mocks whose results we control
 from Rust (fixtures), without touching the SWF.
 
 ### Step 2.1 — Architecture (write before coding)
-Write `docs/design/chumby-host.md` proposing:
+Write `claude-docs/design/chumby-host.md` proposing:
 - A `ChumbyHost` Rust trait: one method per contract row category
   (native call, script exec, url fetch, persistence). Implementations:
   `FixtureHost` (M2: returns canned data from a `fixtures/` directory keyed by
@@ -231,7 +231,7 @@ Order of work (each step ends with the panel observably getting further):
 - `cargo run --features chumby -- controlpanel.swf` (or documented equivalent)
   shows the main control panel screen.
 - A `fixtures/README.md` explains how to change any mocked result.
-- A `docs/patch-notes.md` lists every upstream Ruffle file touched and why
+- A `claude-docs/patch-notes.md` lists every upstream Ruffle file touched and why
   (rebase guide).
 - Demo to the user; collect feedback before defining Milestone 3.
 
@@ -256,7 +256,7 @@ ends here; rule 2 (clean patch) still applies unchanged.
 - Record: Pi model, SoC/architecture (armv7 vs aarch64), OS + version,
   display (resolution, connector, backlight sysfs path), audio devices,
   input devices (keyboard? touchscreen? GPIO button for bend?), storage,
-  network, mpv availability → `docs/reference/07-pi-survey.md`.
+  network, mpv availability → `claude-docs/reference/07-pi-survey.md`.
 - Propose, per finding: build strategy (cross-compile from the dev box vs
   native build on the Pi), target resolution/scaling (NOT hardcoded —
   see working assumptions), audio route, bend-input mapping.
@@ -267,17 +267,17 @@ stream-playback network decision. Wait for approval before building.`
 ### Step 3.2 — ARM build
 - Build `ruffle_desktop --features chumby` for the Pi architecture at the
   pinned fork commit; record toolchain, exact commands, and workarounds →
-  `docs/reference/08-pi-build.md`. Known risk to document: the wgpu/
+  `claude-docs/reference/08-pi-build.md`. Known risk to document: the wgpu/
   graphics stack on the Pi (which renderer path works, at what FPS).
 
 ### Step 3.3 — Deploy & smoke test
 - Deployment layout on the Pi (binary, `fixtures/`, `controlpanel.swf`
   copy — the Pi must NOT depend on `/home/jan/chumby_backup` —, mpv,
-  launcher script). Document → `docs/reference/09-pi-deploy.md`.
+  launcher script). Document → `claude-docs/reference/09-pi-deploy.md`.
 - Smoke test on device: boot to normal operation, widgets, bend summon
   via the chosen input, the five M2-verified screens; then first-time
   tests: alarm set → ring (visible + audible), My Streams playback.
-  Results + photos/screenshots → `docs/progress.md` (M3 section).
+  Results + photos/screenshots → `claude-docs/progress.md` (M3 section).
 
 `CHECKPOINT 5: user tests on the device; collect feedback before 3.4.`
 
@@ -285,13 +285,13 @@ stream-playback network decision. Wait for approval before building.`
 - Moved here from M2 (2026-06-13); **moved to the very end of the plan
   2026-07-06 (user decision)**: the current TFT's backlight is
   hardwired (no dimming possible — findings and panel alternatives in
-  `docs/reference/13-brightness-hardware.md`), a dimmable replacement
+  `claude-docs/reference/13-brightness-hardware.md`), a dimmable replacement
   panel will be ordered but the model is not yet decided. See "Final
   milestone" at the bottom of this plan.
 
 ### Step 3.5 — Performance & input cleanup (added 2026-07-06, user request)
 Bugfix/cleanup backlog, not gating 3.3/3.4 but tracked so it isn't lost.
-Document findings in `docs/reference/11-perf-and-input-cleanup.md`.
+Document findings in `claude-docs/reference/11-perf-and-input-cleanup.md`.
 
 1. **CPU load higher than expected.** Ruffle runs at 200–300% CPU on the
    Pi 3B+ (see 09-pi-deploy.md / 10-tft-display.md measurements) — bearable,
@@ -321,7 +321,7 @@ Publish the project as two GitHub repos. This supersedes the standing
   works — the ASnative table registration, navigator/URL interception,
   the virtual rootfs replacing chumby's file/exec surface (the
   "replaced syscalls"), mpv audio backend, control FIFO, touch/bend
-  hooks. Today's `docs/patch-notes.md` (hook map) is the seed.
+  hooks. Today's `claude-docs/patch-notes.md` (hook map) is the seed.
 
 **2. https://github.com/yanosz/chumby-pi** — everything else:
 scripts, Debian package definitions, documentation, fixtures.
@@ -356,7 +356,7 @@ GitHub releases as-built.
 live (chumby-ruffle: `chumby` branch = upstream + squashed commit;
 chumby-pi: fresh-history `main`), working repo swapped to the public
 tree, internal archive at `/home/jan/chumby-pi-internal`. Full record:
-`docs/reference/14-big-cleanup.md`. BC2 starts NEXT SESSION.
+`claude-docs/reference/14-big-cleanup.md`. BC2 starts NEXT SESSION.
 Additional BC1-era decisions: screenshots gitignored (test images go
 to the CI Nextcloud); `swf-assets/` folder exists empty/gitignored,
 wiring it into scripts is BC2; deb VERSION bump 0.1.2 → 0.2.0 to
@@ -407,7 +407,7 @@ next sessions").
   (C11, decided *needed*) — requires `_getDirectoryEntry` object-filling
   (5,320); clock/time/timezone panels (B3, E5, E12) unverified.
 
-Scope decisions for all screens: `docs/feature-decisions.md`.
+Scope decisions for all screens: `claude-docs/feature-decisions.md`.
 
 ## Final milestone — Brightness & night mode (E2, B4) (moved 2026-07-06)
 
