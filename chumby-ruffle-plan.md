@@ -352,6 +352,16 @@ GitHub releases as-built.
 
 ### Checkpoints (agreed with user, 2026-07-06)
 
+**Status: BC1 PASSED and executed 2026-07-07 (~00:05) — both repos
+live (chumby-ruffle: `chumby` branch = upstream + squashed commit;
+chumby-pi: fresh-history `main`), working repo swapped to the public
+tree, internal archive at `/home/jan/chumby-pi-internal`. Full record:
+`docs/reference/14-big-cleanup.md`. BC2 starts NEXT SESSION.
+Additional BC1-era decisions: screenshots gitignored (test images go
+to the CI Nextcloud); `swf-assets/` folder exists empty/gitignored,
+wiring it into scripts is BC2; deb VERSION bump 0.1.2 → 0.2.0 to
+decide before the next deb release.**
+
 - **CHECKPOINT BC1 — repos separated & verified locally, BEFORE any
   push.** Fork squashed, current upstream Ruffle merged, chumby-pi
   restructured with chumby-ruffle as submodule, copyrighted material
