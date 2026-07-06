@@ -3,9 +3,10 @@
 #   chumby-player       arm64  binary, launcher, chumby-ctl, kiosk unit
 #   chumby-player-data  all    fixtures tree + controlpanel.swf (PRIVATE)
 #
-# Inputs: the cross-compiled release binary (08-pi-build.md) and the
-# backup controlpanel.swf (read-only ground truth; override CHUMBY_SWF).
-# Output: pkg/out/*.deb. Staging in pkg/build/ (both gitignored).
+# Inputs: the cross-compiled dist binary (claude-docs/reference/
+# 08-pi-build.md) and controlpanel.swf from swf-assets/ (override with
+# CHUMBY_SWF). Output: pkg/out/*.deb. Staging in pkg/build/ (both
+# gitignored).
 
 set -eu
 
@@ -16,12 +17,12 @@ VERSION="${VERSION:-0.1.2}"
 # dist = release + fat LTO + codegen-units=1 (what upstream ships);
 # measurably lighter on the Pi's CPU-bound rasterization (doc 11).
 BIN="$REPO/ruffle/target/aarch64-unknown-linux-gnu/dist/ruffle_desktop"
-SWF="${CHUMBY_SWF:-/home/jan/chumby_backup/tmp/controlpanel.swf}"
+SWF="${CHUMBY_SWF:-$REPO/swf-assets/controlpanel.swf}"
 BUILD="$REPO/pkg/build"
 OUT="$REPO/pkg/out"
 
 [ -x "$BIN" ] || { echo "missing $BIN — cross-build with --profile dist first (08-pi-build.md)" >&2; exit 1; }
-[ -f "$SWF" ] || { echo "missing $SWF" >&2; exit 1; }
+[ -f "$SWF" ] || { echo "missing $SWF — put controlpanel.swf in swf-assets/ (docs/setup.md §2) or set CHUMBY_SWF" >&2; exit 1; }
 
 rm -rf "$BUILD"
 mkdir -p "$BUILD" "$OUT"

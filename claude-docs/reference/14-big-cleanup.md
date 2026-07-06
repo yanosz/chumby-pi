@@ -192,3 +192,52 @@ build (fat-LTO cross build runs ~30 min).
 - Post-swap smoke test PASS (panel boot + bend + B2 from the swapped
   tree).
 - Deb VERSION bump: still open, decide before the next deb release.
+
+## 9. BC2: documentation (2026-07-07)
+
+All four BC2 items done; work recorded per item. Only BC1 gated
+pushing, so BC2 commits are pushed as they land.
+
+1. **chumby-ruffle architecture doc**: `CHUMBY.md` at the fork's repo
+   root (root-level file = discoverable and collision-free for future
+   upstream merges; upstream `docs/` only holds fuzzing.md). Seeded
+   from patch-notes.md + design/chumby-host.md, checked against the
+   actual module source. Covers: why a fork (the three non-standard
+   channels), hook table H1–H11, `ChumbyHost` trait + `OnceLock`
+   registry deviation, ASnative table incl. the (4,39) collision and
+   the `WidgetPlayer.onPress` surgery, `ChumbyNavigator`, virtual
+   rootfs confinement + `{FIXTURES}` token, mpv audio (incl. the
+   state-constant mapping), control FIFO protocol, touch/bend mapping,
+   build/run commands, linear-branch discipline. Pushed as
+   `00decada1` on `chumby`.
+2. **`docs/` → `claude-docs/`**: `git mv` (untracked appendix/images
+   moved with the directory). Path references updated in CLAUDE.md,
+   the plan, `.gitignore`, `verify-screens.sh`, pkg comments,
+   `fixtures/README.md`. Doc content itself unchanged ("stays
+   as-is"); their internal `docs/...` self-references are historical
+   text and were left alone. CLAUDE.md now states artifacts go under
+   `claude-docs/` and `docs/` is end-user documentation.
+3. **End-user docs**: new root `README.md` (what/why, repo map, quick
+   start, SWF-assets copyright notice, status) + `docs/setup.md`
+   (bare Pi → chumby walkthrough: sources, SWF asset placement,
+   cross-build, debs, config.txt overlay, install/operate, desktop
+   run) + `docs/hardware.md` (the `/etc/default/chumby-player`
+   override table; other TFT: DRM requirement, overlay choice,
+   rotation gotcha, by-path `WLR_DRM_DEVICES` incl. per-model SPI
+   address, renderer choice, touch calibration flags incl. the
+   inverted-boolean gotcha; other sound device: PipeWire default sink
+   vs `CHUMBY_AUDIO_DEVICE`; other Pi models). Facts drawn from
+   claude-docs 08/10/12 and fixtures/README.
+4. **swf-assets/ wired into scripts** (BC1 §5 leftover):
+   `run-controlpanel.sh` and `pkg/build-debs.sh` now default to
+   `swf-assets/controlpanel.swf` (`CHUMBY_SWF` still overrides), with
+   pointing-to-docs error messages. Locally `swf-assets/
+   controlpanel.swf` is an untracked symlink to the read-only backup
+   copy, so Jan's workflow is unchanged. Verified: `pkg/build-debs.sh`
+   runs clean end-to-end from the new default (0.1.2 debs rebuilt);
+   desktop run against the new path verified with a freshly built
+   debug binary.
+
+Open (unchanged from §7): deb VERSION bump 0.1.2 → 0.2.0 before the
+next deb release; BC3 (CI on both repos, declare the doc-12 library
+deps) is next.

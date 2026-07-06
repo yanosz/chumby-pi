@@ -14,10 +14,10 @@ RUST_LOG=warn,chumby_host=info,avm_trace=info \
 cargo run -p ruffle_desktop --features chumby -- \
   --load-behavior blocking \
   --filesystem-access-mode allow \
-  --chumby-fixtures /home/jan/chumby-pi/fixtures \
+  --chumby-fixtures <repo>/fixtures \
   --chumby-control /tmp/chumby-ctl \
   -PlocalCache=1 \
-  /home/jan/chumby_backup/tmp/controlpanel.swf
+  <repo>/swf-assets/controlpanel.swf
 ```
 
 (`--load-behavior blocking` is required: Ruffle's default streaming load
@@ -29,7 +29,7 @@ the state machine still answers correctly but stays silent. Set
 `alsa/plughw:CARD=UACDemoV10`; list with `mpv --audio-device=help`) to
 route mpv to a specific output — used on the Pi for the USB card.
 Screen-flow regression check: `./verify-screens.sh all` (xdotool;
-screenshots into `docs/reference/images/`).
+screenshots into `claude-docs/reference/images/`).
 
 Fixture bodies (exec and http) may contain the token `{FIXTURES}`; the
 FixtureHost expands it to the absolute fixtures directory at read time.
@@ -81,4 +81,4 @@ The control panel bar is summoned with the simulated bend sensor: type
 `bend` (or `tap`) + Enter in the launch terminal, `echo bend >
 /tmp/chumby-ctl`, or press Home with the window focused. Verified
 reachable on fixtures: alarms (B5), Music → My Streams (C0/C2),
-Settings → Volume (E0/E1) — see `docs/progress.md`.
+Settings → Volume (E0/E1) — see `claude-docs/progress.md`.

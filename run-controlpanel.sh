@@ -6,6 +6,9 @@
 #   ./run-controlpanel.sh -Pbuiltin=1  # extra args are passed to ruffle,
 #                                      # e.g. other FlashVars or --width
 #
+# Reads swf-assets/controlpanel.swf (not in the repo — docs/setup.md §2);
+# override with CHUMBY_SWF=<path>.
+#
 # Logs go to the terminal AND /tmp/chumby-run.log (chumby_host lines show
 # every environment request; "MISSING" = fixture to add).
 #
@@ -17,8 +20,14 @@
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
 RUFFLE="$DIR/ruffle/target/debug/ruffle_desktop"
-SWF=/home/jan/chumby_backup/tmp/controlpanel.swf
+SWF="${CHUMBY_SWF:-$DIR/swf-assets/controlpanel.swf}"
 CTL=/tmp/chumby-ctl
+
+if [ ! -f "$SWF" ]; then
+    echo "controlpanel.swf not found at $SWF"
+    echo "Put it in swf-assets/ (docs/setup.md §2) or set CHUMBY_SWF=<path>."
+    exit 1
+fi
 
 [ -p "$CTL" ] || mkfifo -m 600 "$CTL" || exit 1
 
