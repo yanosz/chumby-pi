@@ -1,0 +1,6 @@
+# vc4-hdmi's CEC input device advertises a pointer capability, which
+# makes cage/wlroots draw an arrow cursor on the touch-only kiosk.
+# Ignoring it removes the cursor; plugging in a real USB mouse still
+# shows one (the seat then has a genuine pointer). See
+# docs/reference/11-perf-and-input-cleanup.md §2.
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="vc4-hdmi", ENV{LIBINPUT_IGNORE_DEVICE}="1"

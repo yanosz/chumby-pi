@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "configure" ]; then
+    systemctl daemon-reload || true
+    systemctl enable chumby-player.service || true
+    udevadm control --reload-rules || true
+    udevadm trigger --subsystem-match=input || true
+    echo "chumby-player: enabled for next boot; start now with:" >&2
+    echo "  sudo systemctl start chumby-player" >&2
+fi

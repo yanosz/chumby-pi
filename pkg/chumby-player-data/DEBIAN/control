@@ -1,0 +1,16 @@
+Package: chumby-player-data
+Version: @VERSION@
+Architecture: all
+Maintainer: Jan <jan@simula.no>
+Section: misc
+Priority: optional
+Description: Chumby control panel data (fixtures, SWFs)
+ Fixture tree (canned chumby.com/native responses, virtual rootfs,
+ widget SWFs) and controlpanel.swf for chumby-player.
+ .
+ PRIVATE USE ONLY: controlpanel.swf and the widget SWFs are copyrighted
+ chumby firmware. This package must never be published in an apt repo.
+ .
+ The player copies fixtures/ to /var/lib/chumby on first run; after
+ upgrading this package, remove /var/lib/chumby/fixtures to re-seed
+ (this discards panel-made settings: alarms, streams, volume).

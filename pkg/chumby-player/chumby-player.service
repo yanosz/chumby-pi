@@ -1,0 +1,41 @@
+# Chumby kiosk: cage on tty1/seat0 as user pi, output on the SPI TFT.
+#
+# PAMName=login gives the service a real logind session (seat0 +
+# XDG_RUNTIME_DIR), which is what lets cage open the DRM device as a
+# plain user and lets audio reach pi's PipeWire without any bridging.
+#
+# WLR_DRM_DEVICES: the ili9486 TFT via its stable by-path name — the
+# cardN numbering is NOT stable (TFT was card1 on 2026-07-06, card0
+# after the next reboot). 3f204000.spi is the BCM2837 SPI0 controller;
+# a different Pi model would change that address. Override point:
+# /etc/default/chumby-player.
+
+[Unit]
+Description=Chumby control panel kiosk (cage + ruffle)
+After=systemd-user-sessions.service getty@tty1.service
+Conflicts=getty@tty1.service
+
+[Service]
+Type=simple
+User=pi
+PAMName=login
+TTYPath=/dev/tty1
+StandardInput=tty-fail
+StandardOutput=journal
+StandardError=journal
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+UtmpIdentifier=tty1
+UtmpMode=user
+StateDirectory=chumby
+Environment=WLR_BACKENDS=drm,libinput
+Environment=WLR_DRM_DEVICES=/dev/dri/by-path/platform-3f204000.spi-cs-0-card
+Environment=WLR_RENDERER=pixman
+EnvironmentFile=-/etc/default/chumby-player
+ExecStart=/usr/bin/cage -- /usr/bin/chumby-player-run
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical.target

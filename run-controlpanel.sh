@@ -1,0 +1,40 @@
+#!/bin/sh
+# Launch the chumby control panel under the forked Ruffle with fixtures.
+#
+# Usage:
+#   ./run-controlpanel.sh              # normal run (device path, 2x window)
+#   ./run-controlpanel.sh -Pbuiltin=1  # extra args are passed to ruffle,
+#                                      # e.g. other FlashVars or --width
+#
+# Logs go to the terminal AND /tmp/chumby-run.log (chumby_host lines show
+# every environment request; "MISSING" = fixture to add).
+#
+# Simulated bend sensor (squeeze button) — three equivalent ways:
+#   type `bend` (or `tap`) + Enter in this terminal
+#   echo bend > /tmp/chumby-ctl        (from any shell)
+#   press Home with the ruffle window focused
+# `bend down` / `bend up` give explicit press/hold/release.
+
+DIR="$(cd "$(dirname "$0")" && pwd)"
+RUFFLE="$DIR/ruffle/target/debug/ruffle_desktop"
+SWF=/home/jan/chumby_backup/tmp/controlpanel.swf
+CTL=/tmp/chumby-ctl
+
+[ -p "$CTL" ] || mkfifo -m 600 "$CTL" || exit 1
+
+if [ ! -x "$RUFFLE" ]; then
+    echo "ruffle_desktop not built. Build it with:"
+    echo "  cd $DIR/ruffle && cargo build -p ruffle_desktop --features chumby"
+    exit 1
+fi
+
+RUST_LOG="${RUST_LOG:-warn,chumby_host=info,avm_trace=info}" \
+"$RUFFLE" \
+    --load-behavior blocking \
+    --filesystem-access-mode allow \
+    --chumby-fixtures "$DIR/fixtures" \
+    --chumby-control "$CTL" \
+    --width 640 --height 480 \
+    -PlocalCache=1 \
+    "$@" \
+    "$SWF" 2>&1 | tee /tmp/chumby-run.log

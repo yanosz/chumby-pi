@@ -1,0 +1,47 @@
+#!/bin/sh
+# chumby-player-run — seed state and launch the chumby control panel.
+#
+# Normally exec'd by cage from chumby-player.service; also works
+# standalone inside any Wayland session for debugging.
+#
+# Overrides (set in /etc/default/chumby-player for the service):
+#   CHUMBY_STATE         state dir      (default /var/lib/chumby)
+#   CHUMBY_CTL           control FIFO   (default /tmp/chumby-ctl)
+#   CHUMBY_AUDIO_DEVICE  mpv audio device (default: PipeWire default sink)
+#   RUST_LOG             log filter     (default warn; use
+#                        warn,chumby_host=info,avm_trace=info to debug)
+
+set -eu
+
+SHARE=/usr/share/chumby-player
+STATE="${CHUMBY_STATE:-/var/lib/chumby}"
+CTL="${CHUMBY_CTL:-/tmp/chumby-ctl}"
+
+# First run: seed the writable fixture tree. The panel writes into
+# fixtures/rootfs (alarms, streams, volume — all /psp settings), so it
+# cannot run from /usr/share. Remove "$STATE/fixtures" to re-seed after
+# a chumby-player-data upgrade.
+if [ ! -d "$STATE/fixtures" ]; then
+    mkdir -p "$STATE"
+    cp -a "$SHARE/fixtures" "$STATE/fixtures.seed"
+    mv "$STATE/fixtures.seed" "$STATE/fixtures"
+fi
+
+[ -p "$CTL" ] || mkfifo -m 600 "$CTL"
+
+export RUST_LOG="${RUST_LOG:-warn}"
+
+# lavapipe (software Vulkan) worker threads: extra workers roughly
+# double total CPU for the same 12 fps output on the Pi 3B+ —
+# measured 215% (4 threads) vs 103% (1 thread), see
+# docs/reference/11-perf-and-input-cleanup.md.
+export LP_NUM_THREADS="${LP_NUM_THREADS:-1}"
+
+exec /usr/lib/chumby-player/ruffle_desktop \
+    --load-behavior blocking \
+    --filesystem-access-mode allow \
+    --chumby-fixtures "$STATE/fixtures" \
+    --chumby-control "$CTL" \
+    --fullscreen \
+    -PlocalCache=1 \
+    "$SHARE/swf/controlpanel.swf"

@@ -1,0 +1,21 @@
+[2m2026-06-12T16:43:05.609177Z[0m [33m WARN[0m [2mwgpu_hal::vulkan::instance[0m[2m:[0m Unable to find extension: VK_EXT_physical_device_drm
+[2m2026-06-12T16:43:05.609394Z[0m [33m WARN[0m [2mwgpu_hal::vulkan::instance[0m[2m:[0m InstanceFlags::VALIDATION requested, but unable to find layer: VK_LAYER_KHRONOS_validation
+[2m2026-06-12T16:43:05.728222Z[0m [33m WARN[0m [2mruffle_desktop::gui::controller[0m[2m:[0m Failed to register [SansSerif] as Proportional: no unicode fonts found!
+[2m2026-06-12T16:43:05.728739Z[0m [33m WARN[0m [2mruffle_desktop::gui::controller[0m[2m:[0m Failed to register [Name("Noto Sans CJK"), Name("Source Han Sans"), Name("WenQuanYi Zen Hei"), Name("Arial Unicode MS")] as Proportional: no unicode fonts found!
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5205:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5205:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5205:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5728:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2722:(snd_pcm_open_noupdate) Unknown PCM default
+[2m2026-06-12T16:43:05.754874Z[0m [31mERROR[0m [2mruffle_desktop::player[0m[2m:[0m Unable to create audio device: Failed to get default output config
+[2m2026-06-12T16:43:05.754975Z[0m [33m WARN[0m [2mruffle_frontend_utils::write[0m[2m:[0m missing or invalid 'recent' array, recreating..
+[2m2026-06-12T16:43:05.766276Z[0m [33m WARN[0m [2mruffle_video_external::decoder::openh264[0m[2m:[0m Failed to load system OpenH264 library libopenh264.so.7: Error while loading OpenH264: libopenh264.so.7: cannot open shared object file: No such file or directory
+[2m2026-06-12T16:43:05.766360Z[0m [33m WARN[0m [2mruffle_video_external::decoder::openh264[0m[2m:[0m Failed to load system OpenH264 library libopenh264.so.2.4.1: Error while loading OpenH264: libopenh264.so.2.4.1: cannot open shared object file: No such file or directory
+[2m2026-06-12T16:43:05.766408Z[0m [33m WARN[0m [2mruffle_video_external::decoder::openh264[0m[2m:[0m Failed to load system OpenH264 library libopenh264.so: Error while loading OpenH264: libopenh264.so: cannot open shared object file: No such file or directory
+[2m2026-06-12T16:43:06.636014Z[0m [33m WARN[0m [2mruffle_desktop::dbus[0m[2m:[0m Failed to register a game with gamemode: Portal request failed: org.freedesktop.zbus.Error: Could not get pidns: Could not fstatat ns/pid: Not a directory
+[2m2026-06-12T16:43:07.416207Z[0m [33m WARN[0m [2mruffle_core::stub[0m[2m:[0m Encountered stub: AVM1 System.security.allowDomain()
+[2m2026-06-12T16:43:07.511924Z[0m [31mERROR[0m [2mruffle_core::loader[0m[2m:[0m Error during LoadVars load of "exec://guidgen.sh": FetchError("builder error for url (exec://guidgen.sh)")
+[2m2026-06-12T16:43:07.520043Z[0m [31mERROR[0m [2mruffle_core::loader[0m[2m:[0m Error during LoadVars load of "exec://network_status.sh": FetchError("builder error for url (exec://network_status.sh)")

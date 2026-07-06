@@ -1,0 +1,518 @@
+[2m2026-06-12T16:44:57.965589Z[0m [33m WARN[0m [2mwgpu_hal::vulkan::instance[0m[2m:[0m Unable to find extension: VK_EXT_physical_device_drm
+[2m2026-06-12T16:44:57.965793Z[0m [33m WARN[0m [2mwgpu_hal::vulkan::instance[0m[2m:[0m InstanceFlags::VALIDATION requested, but unable to find layer: VK_LAYER_KHRONOS_validation
+[2m2026-06-12T16:44:58.046985Z[0m [33m WARN[0m [2mruffle_desktop::gui::controller[0m[2m:[0m Failed to register [SansSerif] as Proportional: no unicode fonts found!
+[2m2026-06-12T16:44:58.047526Z[0m [33m WARN[0m [2mruffle_desktop::gui::controller[0m[2m:[0m Failed to register [Name("Noto Sans CJK"), Name("Source Han Sans"), Name("WenQuanYi Zen Hei"), Name("Arial Unicode MS")] as Proportional: no unicode fonts found!
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5205:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5205:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5205:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5728:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2722:(snd_pcm_open_noupdate) Unknown PCM default
+[2m2026-06-12T16:44:58.051079Z[0m [31mERROR[0m [2mruffle_desktop::player[0m[2m:[0m Unable to create audio device: Failed to get default output config
+[2m2026-06-12T16:44:58.063121Z[0m [33m WARN[0m [2mruffle_video_external::decoder::openh264[0m[2m:[0m Failed to load system OpenH264 library libopenh264.so.7: Error while loading OpenH264: libopenh264.so.7: cannot open shared object file: No such file or directory
+[2m2026-06-12T16:44:58.063210Z[0m [33m WARN[0m [2mruffle_video_external::decoder::openh264[0m[2m:[0m Failed to load system OpenH264 library libopenh264.so.2.4.1: Error while loading OpenH264: libopenh264.so.2.4.1: cannot open shared object file: No such file or directory
+[2m2026-06-12T16:44:58.063251Z[0m [33m WARN[0m [2mruffle_video_external::decoder::openh264[0m[2m:[0m Failed to load system OpenH264 library libopenh264.so: Error while loading OpenH264: libopenh264.so: cannot open shared object file: No such file or directory
+[2m2026-06-12T16:44:58.501990Z[0m [33m WARN[0m [2mruffle_desktop::dbus[0m[2m:[0m Failed to register a game with gamemode: Portal request failed: org.freedesktop.zbus.Error: Could not get pidns: Could not fstatat ns/pid: Not a directory
+[2m2026-06-12T16:44:58.518590Z[0m [32m INFO[0m [2mruffle_core::context[0m[2m:[0m Loaded SWF version 6, resolution 320x240 @ 12 FPS
+[2m2026-06-12T16:44:58.588104Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: Klaxon (ID: 1)
+[2m2026-06-12T16:44:58.588185Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: Bugle (ID: 2)
+[2m2026-06-12T16:44:58.588222Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: Beep (ID: 3)
+[2m2026-06-12T16:44:58.601571Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: usbMusicListItem (ID: 20)
+[2m2026-06-12T16:44:58.602620Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: fmRadioPresetsListItem (ID: 27)
+[2m2026-06-12T16:44:58.602777Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: fmRadioLocationListItem (ID: 29)
+[2m2026-06-12T16:44:58.613071Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: intercomListItem (ID: 36)
+[2m2026-06-12T16:44:58.640333Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: musicItem (ID: 42)
+[2m2026-06-12T16:44:58.650311Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: fbFileInfo (ID: 56)
+[2m2026-06-12T16:44:58.650421Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: fbBrowsers (ID: 57)
+[2m2026-06-12T16:44:58.650460Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: fbBrowserItems (ID: 58)
+[2m2026-06-12T16:44:58.650920Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: fbBrowserItem (ID: 64)
+[2m2026-06-12T16:44:58.651024Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: FUIComponentSymbol (ID: 65)
+[2m2026-06-12T16:44:58.652042Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: UpArrow (ID: 98)
+[2m2026-06-12T16:44:58.652624Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: ScrollThumb (ID: 118)
+[2m2026-06-12T16:44:58.653101Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: DownArrow (ID: 143)
+[2m2026-06-12T16:44:58.653169Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: FScrollBarSymbol (ID: 146)
+[2m2026-06-12T16:44:58.653392Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: FBoundingBoxSymbol (ID: 149)
+[2m2026-06-12T16:44:58.665714Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: FScrollPaneSymbol (ID: 153)
+[2m2026-06-12T16:44:58.665798Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: fbBrowser (ID: 154)
+[2m2026-06-12T16:44:58.666645Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: sendItem (ID: 162)
+[2m2026-06-12T16:44:58.667597Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: alarmsSelectionItem (ID: 174)
+[2m2026-06-12T16:44:58.667887Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: configItem (ID: 178)
+[2m2026-06-12T16:44:58.668470Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: alarmAudioItem (ID: 183)
+[2m2026-06-12T16:44:58.668698Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: alarmWhenItem (ID: 185)
+[2m2026-06-12T16:44:58.670184Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: alarmActionItem (ID: 192)
+[2m2026-06-12T16:44:58.670412Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: widgetItem (ID: 194)
+[2m2026-06-12T16:44:58.670514Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: categoryItem (ID: 196)
+[2m2026-06-12T16:44:58.670612Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: profileItem (ID: 198)
+[2m2026-06-12T16:44:58.670891Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiItem (ID: 203)
+[2m2026-06-12T16:44:58.671478Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: timezoneLocation (ID: 208)
+[2m2026-06-12T16:44:58.671548Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: widgetProxy (ID: 209)
+[2m2026-06-12T16:44:58.677988Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: alarmRing (ID: 228)
+[2m2026-06-12T16:44:58.678269Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: widgetAcceptPickerItem (ID: 230)
+[2m2026-06-12T16:44:58.678482Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: widgetInfoPickerItem (ID: 232)
+[2m2026-06-12T16:44:58.679562Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: ipodPlaylistItem (ID: 237)
+[2m2026-06-12T16:44:58.679990Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: mp3tunesItem4 (ID: 243)
+[2m2026-06-12T16:44:58.680081Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: mp3tunesItem3 (ID: 245)
+[2m2026-06-12T16:44:58.680150Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: mp3tunesItem2 (ID: 247)
+[2m2026-06-12T16:44:58.680212Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: mp3tunesItem1 (ID: 249)
+[2m2026-06-12T16:44:58.680286Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: mp3tunesItem0 (ID: 251)
+[2m2026-06-12T16:44:58.680534Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: mediaflyListItem (ID: 256)
+[2m2026-06-12T16:44:58.680663Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: directURLListItem (ID: 260)
+[2m2026-06-12T16:44:58.690135Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: cbsPodcastsListItem (ID: 268)
+[2m2026-06-12T16:44:58.702706Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: nytPodcastsListItem (ID: 275)
+[2m2026-06-12T16:44:58.703299Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: noaaStateListItem (ID: 283)
+[2m2026-06-12T16:44:58.703815Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: noaaStationListItem (ID: 289)
+[2m2026-06-12T16:44:58.703915Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: sleepcastListItem (ID: 292)
+[2m2026-06-12T16:44:58.703989Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: chumbcastListItem (ID: 295)
+[2m2026-06-12T16:44:58.705208Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: shoutcastListItem (ID: 309)
+[2m2026-06-12T16:44:58.705448Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: nextButtonIcon (ID: 311)
+[2m2026-06-12T16:44:58.705705Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: prevButtonIcon (ID: 313)
+[2m2026-06-12T16:44:58.706020Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: playButtonIcon (ID: 315)
+[2m2026-06-12T16:44:58.706086Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: stopButtonIcon (ID: 316)
+[2m2026-06-12T16:44:58.706338Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: widgetModeClock (ID: 320)
+[2m2026-06-12T16:44:58.706566Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: ipodPrevButtonIcon (ID: 322)
+[2m2026-06-12T16:44:58.706758Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: ipodNextButtonIcon (ID: 324)
+[2m2026-06-12T16:44:58.707283Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: mfPrevButtonIcon (ID: 326)
+[2m2026-06-12T16:44:58.707776Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: mfNextButtonIcon (ID: 328)
+[2m2026-06-12T16:44:58.707962Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: mediaflyChannelHeader (ID: 331)
+[2m2026-06-12T16:44:58.708138Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pc_volumeIcon (ID: 333)
+[2m2026-06-12T16:44:58.708348Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pc_nextIcon (ID: 335)
+[2m2026-06-12T16:44:58.708522Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pc_stopIcon (ID: 337)
+[2m2026-06-12T16:44:58.708715Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pc_playIcon (ID: 339)
+[2m2026-06-12T16:44:58.708904Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pc_prevIcon (ID: 341)
+[2m2026-06-12T16:44:58.709432Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: widgetModeIntercomOverlay (ID: 349)
+[2m2026-06-12T16:44:58.728959Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: bi_clock (ID: 381)
+[2m2026-06-12T16:44:58.761949Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: intercomPanelMain (ID: 450)
+[2m2026-06-12T16:44:58.762040Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: FScrollBarSymbol (ID: 146)
+[2m2026-06-12T16:44:58.762074Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: FScrollPaneSymbol (ID: 153)
+[2m2026-06-12T16:44:58.762112Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: alarmsSelectionItems (ID: 451)
+[2m2026-06-12T16:44:58.762444Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.762508Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiAsciiRange (ID: 456)
+[2m2026-06-12T16:44:58.763969Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiAsciiRange (ID: 456)
+[2m2026-06-12T16:44:58.764062Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiAsciiRangeEntry (ID: 466)
+[2m2026-06-12T16:44:58.764288Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiItems (ID: 469)
+[2m2026-06-12T16:44:58.764457Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:58.767112Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:58.774250Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.774451Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "DejaVu Sans" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.774558Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "DejaVu Sans Bold" (bold: true, italic: false) from file
+[2m2026-06-12T16:44:58.774648Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "DejaVu Sans Oblique" (bold: false, italic: true) from file
+[2m2026-06-12T16:44:58.774739Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "DejaVu Sans Bold Oblique" (bold: true, italic: true) from file
+[2m2026-06-12T16:44:58.774805Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "OpenSymbol" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.774870Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Hack Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.774932Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Adlam Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.774983Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Hebrew Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.775032Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Warang Citi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.775141Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "DejaVuMathTeXGyre-Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.775229Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "DejaVu Sans Mono" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.775332Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "DejaVu Serif" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.775392Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Kufi Arabic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.775441Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Hanifi Rohingya Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.775488Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Lisu Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.775533Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Sora Sompeng Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.775614Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Liberation Serif" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.775718Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Mono Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.775794Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Naskh Arabic UI Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.775868Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Arabic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.775917Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Armenian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.775974Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Newa Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776065Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Symbols2 Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776114Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Ahom Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776167Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Balinese Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776222Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Marchen Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776273Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Ol Chiki Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776326Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Old Hungarian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776384Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Old Italic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776433Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Sharada Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776478Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Takri Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776527Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tifinagh Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776592Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Zanabazar Square Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776660Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Gujarati Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776722Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Kannada Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776777Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Sinhala Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776823Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Avestan Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776881Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Bengali Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776939Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Bhaiksuki Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.776987Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Brahmi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777034Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Caucasian Albanian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777085Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Chakma Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777151Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Devanagari Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777203Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Georgian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777268Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Grantha Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777324Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Gurmukhi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777378Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Kaithi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777427Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Kayah Li Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777477Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Kharoshthi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777534Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Khmer Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777586Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Khojki Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777636Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Lao Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777686Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Linear B Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777742Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Malayalam Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777793Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Mandaic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777875Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Math Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777942Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Meetei Mayek Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.777992Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Miao Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.778059Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Mongolian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.778114Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Myanmar Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.778163Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans NKo Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.778206Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans New Tai Lue Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.778268Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Siddham Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.778745Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans SignWriting Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.778815Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Sundanese Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.778866Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Syloti Nagri Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.778927Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Symbols Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.778984Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tai Tham Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779037Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tamil Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779094Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Telugu Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779145Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tirhuta Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779270Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Tangut Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779345Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Tibetan Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779400Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Music Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779450Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Anatolian Hieroglyphs Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779503Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Bamum Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779547Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Bassa Vah Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779592Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Batak Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779636Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Buginese Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779681Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Buhid Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779737Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Canadian Aboriginal Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779780Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Carian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779827Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Cham Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779878Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Cherokee Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779927Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Coptic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.779984Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Cuneiform Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780026Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Cypriot Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780072Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Deseret Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780117Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Duployan Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780174Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Egyptian Hieroglyphs Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780220Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Elbasan Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780280Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Ethiopic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780330Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Glagolitic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780375Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Gothic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780423Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Hanunoo Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780467Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Hatran Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780508Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Imperial Aramaic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780565Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Indic Siyaq Numbers Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780611Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Inscriptional Pahlavi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780656Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Inscriptional Parthian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780709Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Javanese Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780755Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Khudawadi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780805Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Lepcha Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780849Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Limbu Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780894Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Linear A Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780938Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Lycian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.780979Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Lydian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781023Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Mahajani Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781071Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Manichaean Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781120Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Mende Kikakui Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781167Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Meroitic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781214Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Modi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781290Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Mro Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781333Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Multani Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781374Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Nabataean Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781415Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Old North Arabian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781460Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Old Permic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781501Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Old Persian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781550Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Old Sogdian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781592Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Old South Arabian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781634Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Old Turkic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781689Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Oriya Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781735Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Osage Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781778Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Osmanya Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781822Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Pahawh Hmong Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781872Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Palmyrene Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781917Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Pau Cin Hau Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.781966Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans PhagsPa Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782011Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Phoenician Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782058Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Psalter Pahlavi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782102Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Rejang Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782144Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Runic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782187Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Samaritan Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782236Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Saurashtra Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782284Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Shavian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782337Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Sogdian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782385Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Soyombo Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782460Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Syriac Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782504Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tagalog Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782544Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tagbanwa Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782590Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tai Le Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782637Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tai Viet Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782683Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Thaana Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782730Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Thai Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782771Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Ugaritic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782815Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Vai Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782857Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Wancho Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782918Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Yi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.782967Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Masaram Gondi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.783013Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Dogra Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.783061Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Gunjala Gondi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.783109Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Nushu Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.783152Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Medefaidrin Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.783193Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tamil Supplement Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.783242Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Looped Lao Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.783296Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Looped Thai Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.783341Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Elymaic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.783385Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Hmong Nyiakeng Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.783428Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Yezidi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.783584Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Symbola" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.783648Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Liberation Sans Narrow" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.783740Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "DejaVu Serif Italic" (bold: false, italic: true) from file
+[2m2026-06-12T16:44:58.783824Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Liberation Serif Italic" (bold: false, italic: true) from file
+[2m2026-06-12T16:44:58.783918Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Color Emoji" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:58.787208Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:58.805135Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:58.805332Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:58.805401Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiItems (ID: 469)
+[2m2026-06-12T16:44:58.805491Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiAsciiRangeEntry (ID: 466)
+[2m2026-06-12T16:44:58.805528Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiAsciiRangeEntry (ID: 466)
+[2m2026-06-12T16:44:58.805561Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiAsciiRangeEntry (ID: 466)
+[2m2026-06-12T16:44:58.805803Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:58.806092Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.806149Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.806178Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.806228Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.806264Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.806299Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.806337Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.806376Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.806409Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.806440Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.806472Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.806502Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.806532Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.806561Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.806591Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.806622Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.806985Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.807033Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.807063Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.807092Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.807121Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.807149Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.807177Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.807205Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.807232Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.807267Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.807296Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: wifiKey (ID: 455)
+[2m2026-06-12T16:44:58.817606Z[0m [34mDEBUG[0m [1mrender[0m[2m:[0m [2mruffle_core::display_object::graphic[0m[2m:[0m Graphic id=210 retessellated: new_scale=1.00, cache_size=0
+[2m2026-06-12T16:44:58.817783Z[0m [34mDEBUG[0m [1mrender[0m[2m:[0m [2mruffle_core::display_object::graphic[0m[2m:[0m Graphic id=60 retessellated: new_scale=7.41, cache_size=0
+[2m2026-06-12T16:44:58.818321Z[0m [34mDEBUG[0m [1mrender[0m[2m:[0m [2mruffle_core::display_object::graphic[0m[2m:[0m Graphic id=211 retessellated: new_scale=1.00, cache_size=0
+[2m2026-06-12T16:44:58.818559Z[0m [34mDEBUG[0m [1mrender[0m[2m:[0m [2mruffle_core::display_object::graphic[0m[2m:[0m Graphic id=212 retessellated: new_scale=1.00, cache_size=0
+[2m2026-06-12T16:44:58.818771Z[0m [34mDEBUG[0m [1mrender[0m[2m:[0m [2mruffle_core::display_object::graphic[0m[2m:[0m Graphic id=213 retessellated: new_scale=1.00, cache_size=0
+[2m2026-06-12T16:44:58.819104Z[0m [34mDEBUG[0m [1mrender[0m[2m:[0m [2mruffle_core::display_object::graphic[0m[2m:[0m Graphic id=215 retessellated: new_scale=1.00, cache_size=0
+[2m2026-06-12T16:44:58.833160Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:59.049352Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m AdManifest()
+[2m2026-06-12T16:44:59.051333Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m WidgetCache()
+[2m2026-06-12T16:44:59.051677Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m Welcome to the Chumby Control Panel (version 2.8.87b3 [LNX 32,0,0,0])
+[2m2026-06-12T16:44:59.051808Z[0m [33m WARN[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::stub[0m[2m:[0m Encountered stub: AVM1 System.security.allowDomain()
+[2m2026-06-12T16:44:59.052420Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m Language: 
+[2m2026-06-12T16:44:59.052505Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m ConfigName: 
+[2m2026-06-12T16:44:59.052620Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m PlatformName: 
+[2m2026-06-12T16:44:59.052725Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m Base URL=http://xml.chumby.com
+[2m2026-06-12T16:44:59.052854Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m Widgets URL=http://widgets.chumby.com
+[2m2026-06-12T16:44:59.053081Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m Restoring settings
+[2m2026-06-12T16:44:59.053113Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m - restoring clock format
+[2m2026-06-12T16:44:59.053398Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m ScreenManager.startupMode()
+[2m2026-06-12T16:44:59.053582Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m ScreenManager.singleScreen(): false
+[2m2026-06-12T16:44:59.053848Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m ScreenManager.setDim(): 0
+[2m2026-06-12T16:44:59.053911Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m ScreenManager.clearScreenRestore()
+[2m2026-06-12T16:44:59.054338Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m Fetching Chumby GUID
+[2m2026-06-12T16:44:59.067742Z[0m [34mDEBUG[0m [1mrender[0m[2m:[0m [2mruffle_core::display_object::graphic[0m[2m:[0m Graphic id=59 retessellated: new_scale=7.42, cache_size=0
+[2m2026-06-12T16:44:59.067969Z[0m [34mDEBUG[0m [1mrender[0m[2m:[0m [2mruffle_core::display_object::graphic[0m[2m:[0m Graphic id=470 retessellated: new_scale=0.34, cache_size=0
+[2m2026-06-12T16:44:59.068348Z[0m [34mDEBUG[0m [1mrender[0m[2m:[0m [2mruffle_core::display_object::graphic[0m[2m:[0m Graphic id=473 retessellated: new_scale=1.00, cache_size=0
+[2m2026-06-12T16:44:59.089787Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:59.100738Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:59.118952Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: alarmsSelectionItems (ID: 451)
+[2m2026-06-12T16:44:59.143580Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m (Master heartbeat)
+[2m2026-06-12T16:44:59.145969Z[0m [31mERROR[0m [2mruffle_core::loader[0m[2m:[0m Error during LoadVars load of "exec://guidgen.sh": FetchError("builder error for url (exec://guidgen.sh)")
+[2m2026-06-12T16:44:59.146086Z[0m [32m INFO[0m [2mavm_trace[0m[2m:[0m - can't load Chumby GUID
+[2m2026-06-12T16:44:59.146600Z[0m [32m INFO[0m [2mavm_trace[0m[2m:[0m Fetching network status
+[2m2026-06-12T16:44:59.153836Z[0m [31mERROR[0m [2mruffle_core::loader[0m[2m:[0m Error during LoadVars load of "exec://network_status.sh": FetchError("builder error for url (exec://network_status.sh)")
+[2m2026-06-12T16:44:59.154120Z[0m [32m INFO[0m [2mavm_trace[0m[2m:[0m - failed to get network status
+[2m2026-06-12T16:44:59.154780Z[0m [32m INFO[0m [2mavm_trace[0m[2m:[0m Authorizing chumby
+[2m2026-06-12T16:44:59.155682Z[0m [32m INFO[0m [2mavm_trace[0m[2m:[0m ValidateScanPanel(): no network, skipping
+[2m2026-06-12T16:44:59.219866Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:59.225521Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:59.231266Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.231442Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "DejaVu Sans" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.231536Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "DejaVu Sans Bold" (bold: true, italic: false) from file
+[2m2026-06-12T16:44:59.231625Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "DejaVu Sans Oblique" (bold: false, italic: true) from file
+[2m2026-06-12T16:44:59.231715Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "DejaVu Sans Bold Oblique" (bold: true, italic: true) from file
+[2m2026-06-12T16:44:59.231778Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "OpenSymbol" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.231848Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Hack Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.231901Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Adlam Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.231949Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Hebrew Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.231996Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Warang Citi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.232100Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "DejaVuMathTeXGyre-Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.232185Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "DejaVu Sans Mono" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.232286Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "DejaVu Serif" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.232357Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Kufi Arabic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.232406Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Hanifi Rohingya Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.232450Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Lisu Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.232493Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Sora Sompeng Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.232584Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Liberation Serif" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.232680Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Mono Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.232750Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Naskh Arabic UI Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.232817Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Arabic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.232864Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Armenian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.232921Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Newa Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.232998Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Symbols2 Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233044Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Ahom Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233098Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Balinese Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233154Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Marchen Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233197Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Ol Chiki Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233246Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Old Hungarian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233302Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Old Italic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233351Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Sharada Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233398Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Takri Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233445Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tifinagh Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233493Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Zanabazar Square Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233546Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Gujarati Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233602Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Kannada Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233659Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Sinhala Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233704Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Avestan Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233759Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Bengali Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233843Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Bhaiksuki Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233899Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Brahmi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233947Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Caucasian Albanian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.233997Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Chakma Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234057Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Devanagari Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234106Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Georgian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234160Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Grantha Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234209Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Gurmukhi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234270Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Kaithi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234319Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Kayah Li Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234366Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Kharoshthi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234417Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Khmer Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234464Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Khojki Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234513Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Lao Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234556Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Linear B Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234612Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Malayalam Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234658Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Mandaic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234736Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Math Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234782Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Meetei Mayek Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234830Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Miao Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234896Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Mongolian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234951Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Myanmar Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.234998Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans NKo Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.235042Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans New Tai Lue Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.235095Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Siddham Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.235552Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans SignWriting Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.235627Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Sundanese Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.235680Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Syloti Nagri Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.235745Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Symbols Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.235804Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tai Tham Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.235856Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tamil Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.235912Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Telugu Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.235966Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tirhuta Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236082Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Tangut Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236151Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Tibetan Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236201Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Music Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236247Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Anatolian Hieroglyphs Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236305Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Bamum Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236350Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Bassa Vah Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236399Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Batak Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236443Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Buginese Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236490Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Buhid Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236544Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Canadian Aboriginal Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236605Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Carian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236654Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Cham Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236707Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Cherokee Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236755Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Coptic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236811Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Cuneiform Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236854Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Cypriot Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236899Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Deseret Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236942Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Duployan Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.236995Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Egyptian Hieroglyphs Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237038Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Elbasan Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237092Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Ethiopic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237137Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Glagolitic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237182Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Gothic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237223Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Hanunoo Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237268Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Hatran Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237313Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Imperial Aramaic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237366Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Indic Siyaq Numbers Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237413Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Inscriptional Pahlavi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237458Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Inscriptional Parthian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237510Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Javanese Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237558Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Khudawadi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237603Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Lepcha Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237644Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Limbu Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237686Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Linear A Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237729Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Lycian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237771Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Lydian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237812Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Mahajani Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237859Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Manichaean Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237905Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Mende Kikakui Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.237951Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Meroitic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238000Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Modi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238038Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Mro Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238076Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Multani Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238118Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Nabataean Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238159Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Old North Arabian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238204Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Old Permic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238246Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Old Persian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238296Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Old Sogdian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238338Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Old South Arabian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238382Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Old Turkic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238437Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Oriya Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238483Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Osage Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238526Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Osmanya Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238573Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Pahawh Hmong Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238617Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Palmyrene Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238661Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Pau Cin Hau Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238715Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans PhagsPa Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238762Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Phoenician Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238811Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Psalter Pahlavi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238855Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Rejang Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238896Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Runic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238940Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Samaritan Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.238987Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Saurashtra Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239028Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Shavian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239079Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Sogdian Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239133Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Soyombo Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239191Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Syriac Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239235Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tagalog Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239280Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tagbanwa Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239326Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tai Le Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239371Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tai Viet Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239416Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Thaana Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239464Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Thai Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239507Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Ugaritic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239553Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Vai Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239597Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Wancho Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239653Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Yi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239700Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Masaram Gondi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239745Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Dogra Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239793Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Gunjala Gondi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239843Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Nushu Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239887Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Medefaidrin Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239928Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Tamil Supplement Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.239976Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Looped Lao Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.240023Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Looped Thai Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.240067Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Sans Elymaic Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.240110Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Hmong Nyiakeng Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.240156Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Serif Yezidi Regular" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.240358Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Symbola" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.240425Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Liberation Sans Narrow" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.240513Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "DejaVu Serif Italic" (bold: false, italic: true) from file
+[2m2026-06-12T16:44:59.240605Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Liberation Serif Italic" (bold: false, italic: true) from file
+[2m2026-06-12T16:44:59.240698Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::library[0m[2m:[0m Loaded new device font "Noto Color Emoji" (bold: false, italic: false) from file
+[2m2026-06-12T16:44:59.242733Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:59.288017Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:59.288501Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:59.291374Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:59.292001Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:59.292182Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:59.292264Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:59.292769Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:59.296294Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: FScrollPaneSymbol (ID: 153)
+[2m2026-06-12T16:44:59.299845Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:59.299935Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: pinwheel (ID: 472)
+[2m2026-06-12T16:44:59.305990Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: intercomPanelMain (ID: 450)
+[2m2026-06-12T16:44:59.307356Z[0m [34mDEBUG[0m [1mrun_frame[0m[2m:[0m [2mruffle_core::display_object::movie_clip[0m[2m:[0m register_export asset: bi_clock (ID: 381)
+[2m2026-06-12T16:45:14.164193Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m (Master heartbeat)
+[2m2026-06-12T16:45:29.163838Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m (Master heartbeat)
+[2m2026-06-12T16:45:44.164032Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m (Master heartbeat)
+[2m2026-06-12T16:45:59.164208Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m (Master heartbeat)
+[2m2026-06-12T16:46:14.164998Z[0m [32m INFO[0m [1mrun_frame[0m[2m:[0m [2mavm_trace[0m[2m:[0m (Master heartbeat)
