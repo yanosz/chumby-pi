@@ -174,3 +174,21 @@ build (fat-LTO cross build runs ~30 min).
    (internal repo archived locally), decide deb VERSION bump
    (0.1.2 → 0.2.0?) since the player now carries the 146 merged
    upstream commits.
+
+## 8. BC1 completed (2026-07-07, 00:00–00:05 CEST)
+
+- Pushed `chumby` → `yanosz/chumby-ruffle` (default branch). SSH
+  deploy-key identity had no access to these repos; pushes go over
+  HTTPS with gh credentials (`gh auth setup-git`), and pushing the
+  upstream history required adding the `workflow` OAuth scope
+  (`gh auth refresh -s workflow`) because upstream ships
+  `.github/workflows/*`.
+- Pushed `main` → `yanosz/chumby-pi` (initial import, 89 files —
+  doc 14 included, screenshots excluded).
+- Swap done: `/home/jan/chumby-pi` = public working repo,
+  `/home/jan/chumby-pi-internal` = archived full-history repo (never
+  push). Untracked gitignored assets restored into the working tree:
+  alarmtones, widget SWFs, appendix, images.
+- Post-swap smoke test PASS (panel boot + bend + B2 from the swapped
+  tree).
+- Deb VERSION bump: still open, decide before the next deb release.
