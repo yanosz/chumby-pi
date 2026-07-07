@@ -22,8 +22,13 @@ test -x /usr/bin/chumby-player-run
 # Movie-start test from the packaged data: same assertion as the
 # chumby-ruffle workflow — player still alive when the timeout fires
 # (exit 124) and the panel executed chumby host calls.
+# libxkbcommon-x11-0: winit's X11 backend dlopens it and panics
+# without it (found by the fork CI run); only the Xvfb test needs it —
+# on the Pi the player runs under Wayland, where cage's dependencies
+# provide libxkbcommon.
 apt-get install -y --no-install-recommends \
-    xvfb mesa-vulkan-drivers libgl1-mesa-dri fonts-dejavu-core
+    xvfb mesa-vulkan-drivers libgl1-mesa-dri fonts-dejavu-core \
+    libxkbcommon-x11-0
 
 export RUST_LOG=warn,chumby_host=info,avm_trace=info
 set +e
