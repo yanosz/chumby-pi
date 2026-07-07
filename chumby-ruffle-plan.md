@@ -449,7 +449,14 @@ the BC3 session). Two checkpoints (user 2026-07-07):
 After the cleanup: **widget channels** (user 2026-07-06, "one of the
 next sessions").
 
-### NEXT SESSION first: fix the _setTimeZone bug (user, 2026-07-07)
+### NEXT SESSION first: fix the _setTimeZone bug (user, 2026-07-07) — DONE 2026-07-07
+
+**Fixed 2026-07-07** (fork commit `6c99ebd1f`, amended +
+`--force-with-lease` per branch discipline below): explicit
+`_setTimeZone` arm writes the trimmed value to `/psp/timezone`;
+round-trip unit test `test_timezone_set_get_round_trip` passes; local
+45 s movie-start check green; fork CI green on the re-squashed commit
+(run 28884211332); doc 17 §1 has the dated fixed note.
 
 Small, before or alongside the widget-channels start. The bug (found in
 the BC4b audit, confirmed by Jan against real hardware; fork README
@@ -542,10 +549,9 @@ channels start = user's call at CHECKPOINT UI1.
   (C11, decided *needed*) — requires `_getDirectoryEntry` object-filling
   (5,320); clock/time/timezone panels (B3, E5, E12) unverified (now
   covered by the "UI policy" milestone above: TZ shown read-only,
-  TZ/NTP selection disabled, 12/24h functional) — incl.
-  a known FixtureHost bug found in BC4b, confirmed by Jan 2026-07-07:
-  `_setTimeZone` (5,178) does not round-trip to `_getTimeZone` (5,177)
-  as it does on a real chumby (fork README, 5,178 row).
+  TZ/NTP selection disabled, 12/24h functional). The `_setTimeZone`
+  round-trip bug found in BC4b was FIXED 2026-07-07 (see the
+  "_setTimeZone" section above; doc 17 §1).
 
 Scope decisions for all screens: `claude-docs/feature-decisions.md`.
 

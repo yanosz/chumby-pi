@@ -43,7 +43,15 @@ fixture code itself. Audit findings worth knowing:
   Jan confirmed set → get round-trips on a real chumby, so this is a
   bug, documented in the fork README (5,178 row) and in a `KNOWN BUG`
   comment at the `_getTimeZone` arm in `fixture.rs`, to be fixed with
-  the clock-panel verification (plan, future milestones). And a quirk:
+  the clock-panel verification (plan, future milestones).
+  **FIXED 2026-07-07** (fork commit `6c99ebd1f`, amended per branch
+  discipline): `_setTimeZone` got an explicit arm writing the trimmed
+  value to `/psp/timezone` via the rootfs; round-trip covered by
+  `fixture.rs::tests::test_timezone_set_get_round_trip` (passes);
+  `KNOWN BUG` comment removed, README 5,178 row rewritten; local 45 s
+  movie-start check green (exit 124, `_getPlatform` seen, no panic);
+  fork CI on the re-squashed commit green (run 28884211332).
+  And a quirk:
   `_SetOnLocationCallback`'s capital S bypasses the `_set…` store
   prefix match, so it stubs.
 - `RootFs::dir_entry` exists but nothing calls it yet —
