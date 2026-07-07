@@ -388,8 +388,11 @@ starts NEXT SESSION.**
   run 28862399194 and chumby-pi run 28862410493 both green; deps
   declared, debs at 0.2.0. Repo visibility per user decision:
   chumby-ruffle public, chumby-pi private.
-- **CHECKPOINT BC4 — chumby-ruffle housekeeping** (added 2026-07-07,
-  user; a LATER session, not the BC3 one) = milestone done. Details
+- **CHECKPOINT BC4a — chumby-ruffle source refactoring** (added
+  2026-07-07, user; a LATER session, not the BC3 one): remove the
+  feature-toggle logic — chumby features are always needed/built.
+- **CHECKPOINT BC4b — chumby-ruffle docs** = milestone done: every
+  ASnative instruction properly documented; README swap. Details
   below.
 
 ### Decisions for BC3 (recorded 2026-07-06)
@@ -410,23 +413,28 @@ starts NEXT SESSION.**
 ### BC4: chumby-ruffle housekeeping (added 2026-07-07, user — next session)
 
 After BC3, on the chumby-ruffle repo (explicitly NOT to be started in
-the BC3 session):
+the BC3 session). Two checkpoints (user 2026-07-07):
 
-1. **Every ASnative call documented.** Audit the ASnative table in the
-   chumby module: each registered (a,b) index must have documentation
-   (purpose, args, return, fixture behavior) in the repo's chumby doc.
-2. **Remove the feature-toggle logic.** Drop the `chumby` cargo
-   feature; the fork always builds with the chumby code (user decision
-   2026-07-07 — no need to build the software without our feature).
-   This supersedes the "behind a `chumby` cargo feature" clause of
-   hard rule 2; the rest of rule 2 (one isolated module, minimal
-   documented hooks in upstream files) stands. Same-step follow-ups:
-   update `--features chumby` in both CI workflows, CHUMBY.md,
-   chumby-pi docs/scripts (run-controlpanel.sh, build-debs.sh,
-   docs/setup.md), and note the change for future upstream merges.
-3. **README swap.** The repo-root README becomes the chumby doc
-   (today's CHUMBY.md content); the original Ruffle README is renamed
-   (e.g. `README.ruffle.md`) and linked from the new one.
+**CHECKPOINT BC4a — source-code refactoring:**
+- **Remove the feature-toggle logic.** Drop the `chumby` cargo
+  feature; the fork always builds with the chumby code (user decision
+  2026-07-07 — assume chumby features are always needed). This
+  supersedes the "behind a `chumby` cargo feature" clause of hard
+  rule 2; the rest of rule 2 (one isolated module, minimal documented
+  hooks in upstream files) stands. Same-step follow-ups: update
+  `--features chumby` in both CI workflows, CHUMBY.md, chumby-pi
+  docs/scripts (run-controlpanel.sh, build-debs.sh, docs/setup.md),
+  and note the change for future upstream merges. Acceptance: CI on
+  both repos still green (incl. movie-start) after the refactor.
+
+**CHECKPOINT BC4b — docs (= Big Cleanup milestone done):**
+- **Every ASnative instruction properly documented.** Audit the
+  ASnative table in the chumby module: each registered (a,b) index
+  must have documentation (purpose, args, return, fixture behavior)
+  in the repo's chumby doc.
+- **README swap.** The repo-root README becomes the chumby doc
+  (today's CHUMBY.md content); the original Ruffle README is renamed
+  (e.g. `README.ruffle.md`) and linked from the new one.
 
 After the cleanup: **widget channels** (user 2026-07-06, "one of the
 next sessions").
