@@ -101,7 +101,7 @@ dispatcher reaches `main` once (a) network status reports healthy and
 (b) the clock is sane. Both are environment answers, not frame hacks:
 
 ```
-ruffle_desktop --features chumby \
+ruffle_desktop \                        # chumby code always built (BC4a)
   --load-behavior blocking \            # G3 workaround (faithful anyway)
   -Pbuiltin=1 -PlocalCache=1 \
   --chumby-fixtures fixtures/ \
@@ -116,6 +116,13 @@ needs it, the documented insertion point is `Player::update` with a
 queued-action approach — but we start without it.
 
 ## 4. Integration points in upstream Ruffle (the entire patch surface)
+
+> Correction 2026-07-07 (BC4a/BC4b): the `chumby` cargo feature and all
+> cfg-gating were removed (doc 16), and the H1…H11 hook numbering this
+> table introduced was retired — it carried no information (user
+> decision). The current, file-keyed patch-surface table lives in
+> `claude-docs/patch-notes.md`. The table below is the original design
+> as written.
 
 | # | File | Change | Size |
 |---|------|--------|------|

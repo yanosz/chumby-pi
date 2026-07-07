@@ -49,9 +49,12 @@ Host (amd64) builds are unaffected.
 
 ```sh
 cd ruffle
-cargo build --profile dist -p ruffle_desktop --features chumby \
+cargo build --profile dist -p ruffle_desktop \
     --target aarch64-unknown-linux-gnu
 ```
+
+(**BC4a 2026-07-07:** `--features chumby` removed from this command —
+the fork now always builds the chumby code; the flag no longer exists.)
 
 Output: `ruffle/target/aarch64-unknown-linux-gnu/dist/ruffle_desktop`.
 

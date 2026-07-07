@@ -56,14 +56,15 @@ and pkg-config paths. Then:
 
 ```sh
 cd ruffle
-cargo build --profile dist -p ruffle_desktop --features chumby \
+cargo build --profile dist -p ruffle_desktop \
     --target aarch64-unknown-linux-gnu
 cd ..
 ```
 
-`--features chumby` is essential — without it you get a stock Ruffle
-that knows nothing about chumbys. The `dist` profile (fat LTO) takes a
-while (~15–25 min cold) but measurably lowers CPU on the Pi.
+The chumby code is always built in this fork — no feature flag needed
+(before 2026-07 this required `--features chumby`). The `dist` profile
+(fat LTO) takes a while (~15–25 min cold) but measurably lowers CPU on
+the Pi.
 
 ## 4. Build the debs
 
@@ -136,7 +137,7 @@ The panel appears on the TFT and from now on comes up on every boot.
 For trying it out or hacking on fixtures, any Linux desktop works:
 
 ```sh
-cd ruffle && cargo build -p ruffle_desktop --features chumby && cd ..
+cd ruffle && cargo build -p ruffle_desktop && cd ..
 ./run-controlpanel.sh
 ```
 

@@ -11,7 +11,8 @@ on a chumby: the clock widget plays, alarms ring, internet radio
 streams, volume and settings persist.
 
 What the fork does and how is documented in its
-[CHUMBY.md](https://github.com/yanosz/chumby-ruffle/blob/chumby/CHUMBY.md).
+[README](https://github.com/yanosz/chumby-ruffle/blob/chumby/README.md),
+including a per-index reference of every `ASnative(5,N)` vendor call.
 This repo carries everything around it:
 
 | Path | What |
@@ -32,7 +33,7 @@ cd chumby-pi
 # put controlpanel.swf into swf-assets/ (see below), then either:
 
 # a) desktop window (any Linux machine)
-(cd ruffle && cargo build -p ruffle_desktop --features chumby)
+(cd ruffle && cargo build -p ruffle_desktop)
 ./run-controlpanel.sh
 
 # b) Raspberry Pi kiosk — full walkthrough in docs/setup.md

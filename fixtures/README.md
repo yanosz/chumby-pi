@@ -11,7 +11,7 @@ to `/tmp/chumby-run.log`. The underlying command it runs (from
 
 ```sh
 RUST_LOG=warn,chumby_host=info,avm_trace=info \
-cargo run -p ruffle_desktop --features chumby -- \
+cargo run -p ruffle_desktop -- \
   --load-behavior blocking \
   --filesystem-access-mode allow \
   --chumby-fixtures <repo>/fixtures \

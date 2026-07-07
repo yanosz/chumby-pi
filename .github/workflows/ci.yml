@@ -48,13 +48,14 @@ jobs:
         with:
           workspaces: ruffle
 
-      - name: Build ruffle_desktop (dist profile, chumby feature)
+      - name: Build ruffle_desktop (dist profile)
         working-directory: ruffle
         # --target keeps the output at the path build-debs.sh expects
         # (target/aarch64-unknown-linux-gnu/dist/), same as the
         # cross-build documented in claude-docs/reference/08-pi-build.md.
+        # No --features chumby since BC4a: the fork always builds it.
         run: |
-          cargo build -p ruffle_desktop --features chumby \
+          cargo build -p ruffle_desktop \
             --profile dist --target aarch64-unknown-linux-gnu
 
       - name: Fetch controlpanel.swf from the private share

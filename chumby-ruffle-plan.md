@@ -391,9 +391,17 @@ starts NEXT SESSION.**
 - **CHECKPOINT BC4a — chumby-ruffle source refactoring** (added
   2026-07-07, user; a LATER session, not the BC3 one): remove the
   feature-toggle logic — chumby features are always needed/built.
+  **DONE 2026-07-07** (claude-docs/reference/16-bc4a-feature-removal.md):
+  chumby-ruffle CI run 28864269056 green; chumby-pi CI pending Jan's
+  push of `main`.
 - **CHECKPOINT BC4b — chumby-ruffle docs** = milestone done: every
   ASnative instruction properly documented; README swap. Details
-  below.
+  below. **Work done 2026-07-07**
+  (claude-docs/reference/17-bc4b-asnative-docs.md): ASnative(5,N)
+  per-index reference in the fork's README, README.ruffle.md swap,
+  source-comment audit (indices ↔ names annotated both ways, hook
+  numbering dropped per user 2026-07-07); local movie-start check
+  green — awaiting CHECKPOINT BC4b review by Jan.
 
 ### Decisions for BC3 (recorded 2026-07-06)
 
@@ -447,7 +455,10 @@ next sessions").
 - **Milestone: Info & Licenses panels** (05-screens.md E6, E7).
 - Also still open from M2, not Pi-specific: Music from USB / local files
   (C11, decided *needed*) — requires `_getDirectoryEntry` object-filling
-  (5,320); clock/time/timezone panels (B3, E5, E12) unverified.
+  (5,320); clock/time/timezone panels (B3, E5, E12) unverified — incl.
+  a known FixtureHost bug found in BC4b, confirmed by Jan 2026-07-07:
+  `_setTimeZone` (5,178) does not round-trip to `_getTimeZone` (5,177)
+  as it does on a real chumby (fork README, 5,178 row).
 
 Scope decisions for all screens: `claude-docs/feature-decisions.md`.
 

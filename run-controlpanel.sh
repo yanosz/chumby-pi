@@ -33,7 +33,7 @@ fi
 
 if [ ! -x "$RUFFLE" ]; then
     echo "ruffle_desktop not built. Build it with:"
-    echo "  cd $DIR/ruffle && cargo build -p ruffle_desktop --features chumby"
+    echo "  cd $DIR/ruffle && cargo build -p ruffle_desktop"
     exit 1
 fi
 
