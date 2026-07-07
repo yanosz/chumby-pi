@@ -357,11 +357,16 @@ live (chumby-ruffle: `chumby` branch = upstream + squashed commit;
 chumby-pi: fresh-history `main`), working repo swapped to the public
 tree, internal archive at `/home/jan/chumby-pi-internal`. Full record:
 `claude-docs/reference/14-big-cleanup.md`. BC2 work done 2026-07-07
-(architecture doc CHUMBY.md in chumby-ruffle; docs/ → claude-docs/;
-end-user README + docs/setup.md + docs/hardware.md; swf-assets/ wired
-into run-controlpanel.sh and build-debs.sh) — record in doc 14 §9,
-awaiting CHECKPOINT BC2 user review. Still open: deb VERSION bump
-0.1.2 → 0.2.0 to decide before the next deb release; BC3 next.**
+(architecture doc CHUMBY.md in chumby-ruffle — pushed; docs/ →
+claude-docs/; end-user README + docs/setup.md + docs/hardware.md;
+swf-assets/ wired into run-controlpanel.sh and build-debs.sh) —
+record in doc 14 §9, awaiting CHECKPOINT BC2 review by Jan (session
+ended here 2026-07-07). NOTE: chumby-pi commits are local only — the
+Claude Code auto-mode permission classifier blocks `git push origin
+main`; Jan pushes manually or approves the push interactively.
+Still open: deb VERSION bump 0.1.2 → 0.2.0 before the next deb
+release. BC3 (CI green on both repos, declare doc-12 library deps)
+starts NEXT SESSION.**
 
 - **CHECKPOINT BC1 — repos separated & verified locally, BEFORE any
   push.** Fork squashed, current upstream Ruffle merged, chumby-pi
