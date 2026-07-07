@@ -551,8 +551,12 @@ Steps:
    `ui_policy.rs` + `fixtures/ui-policy.toml` (3 rules); desktop
    verification complete incl. pick-traced inertness proof and live
    12/24h round-trip; docs updated (fork README section + hook map,
-   patch-notes, fixtures README). Remaining: CI green on the amended
-   commit + on-device check by Jan (hot-replace deploy).
+   patch-notes, fixtures README).
+   **DONE 2026-07-07:** fork CI (`Build and start controlpanel.swf`)
+   green on `adeb6058d`; hot-replace deployed to the Pi (doc 09) and
+   Jan confirmed on-device that the NTP + SET TIME ZONE controls render
+   disabled on Settings → TIME/DATE. UI-policy milestone (clock screen)
+   complete.
 
 Ordering: AFTER the `_setTimeZone` fix above; relation to widget
 channels start = user's call at CHECKPOINT UI1.

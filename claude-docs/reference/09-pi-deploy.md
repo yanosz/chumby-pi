@@ -193,3 +193,37 @@ running (~99 % CPU, the known ~103 % baseline), state dir re-seeded
 (`channel_names`, `controlpanelversion`) written by the SWF, no
 panics in the journal. Binary sha256 verified equal on both ends
 (`1e0ea2ae…`).
+
+## Hot-replace deploy, 2026-07-07 (the UI-policy build)
+
+Same repeatable procedure as the `_setTimeZone` deploy above, this time
+for the UI-policy build (fork `adeb6058d`, submodule `ruffle/` already
+at that commit; the dist binary was already built — no rebuild). Pi
+still at `192.168.42.30`, kiosk debs 0.1.2 (dpkg unchanged; on-disk
+files now ahead of the package again).
+
+- New binary sha256 `8d0500dc…` (29 610 848 B), verified equal on the
+  dev box and at `/usr/lib/chumby-player/ruffle_desktop` after
+  `install`. Previous on-disk binary was the `_setTimeZone` build
+  (`1e0ea2ae…`).
+- `fixtures/` rsynced to `/usr/share/chumby-player/fixtures/` — this
+  carried the new `fixtures/ui-policy.toml` (3 UI1 rules). Runtime tree
+  `/var/lib/chumby/fixtures` wiped so the launcher re-seeds it with the
+  policy file (confirmed present after restart).
+- controlpanel.swf NOT touched. Service `active`, ruffle ~97 % CPU
+  (known baseline), no panics/errors in the journal.
+
+Display note (correcting a stale reading of §7 above): the panel now
+outputs to the SPI TFT over the **DRM tiny driver** decided + verified
+2026-07-06 — `card0-SPI-1` connected, HDMI disconnected, service env
+`WLR_BACKENDS=drm,libinput`,
+`WLR_DRM_DEVICES=/dev/dri/by-path/platform-3f204000.spi-cs-0-card`,
+`WLR_RENDERER=pixman` (see `10-tft-display.md` §A and
+`12-kiosk-packaging.md`). `grim` screenshots work against the cage
+session (`XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-0`).
+
+On-device verification: Jan navigated to Settings → TIME/DATE and
+confirmed the NTP checkbox/label and the SET TIME ZONE globe render
+disabled (2026-07-07). This closes the last open item of the UI-policy
+milestone (fork CI `Build and start controlpanel.swf` was already green
+on `adeb6058d`).
