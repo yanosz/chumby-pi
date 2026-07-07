@@ -27,15 +27,12 @@ jobs:
     name: Build debs (arm64) and install-test on trixie
     runs-on: ubuntu-24.04-arm
     steps:
+      # The chumby-ruffle submodule is public (user decision
+      # 2026-07-07), so the default token clones it fine; this repo
+      # itself stays private.
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-          # Both repos are private for now (user decision 2026-07-07):
-          # the default GITHUB_TOKEN cannot clone the chumby-ruffle
-          # submodule, so a fine-grained PAT (contents: read on both
-          # repos) is provided as the CI_REPO_TOKEN secret. Drop this
-          # line once the repos go public.
-          token: ${{ secrets.CI_REPO_TOKEN }}
 
       - name: Install system dependencies
         run: |
