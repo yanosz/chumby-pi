@@ -528,6 +528,13 @@ Steps:
    control, its instance path/depth/symbol, which natives/psp keys it
    touches. Real chumby = reference oracle (read-only, ask first).
    → `claude-docs/reference/18-clock-screen-and-ui-policy.md`.
+   Known issue to catalog (found by Jan on-device 2026-07-07, decision:
+   no fix, record only): the 12/24h toggle persists (`/psp/clock_format`)
+   but the running clock only picks it up on restart/reboot — on real
+   hardware the panel pushes `_setSlaveVar("_chumby_clock_format", …)`
+   every heartbeat to the slave clock instance; our in-movie widget
+   path (localCache, CHECKPOINT 3) has no slave-var → running-widget
+   bridge, so the value is only injected at widget start.
 2. `CHECKPOINT UI1:` present catalog + concrete policy entries
    (what gets hidden vs disabled) + config format before wiring.
 3. Implement the policy mechanism in the chumby module + the clock
