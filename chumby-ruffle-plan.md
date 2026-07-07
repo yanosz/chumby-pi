@@ -400,6 +400,26 @@ starts NEXT SESSION.**
   `qemu-user-static`. A self-hosted runner on the Pi is rejected
   (security exposure on a public repo).
 
+### Big Cleanup backlog: chumby-ruffle housekeeping (added 2026-07-07, user)
+
+After BC3, on the chumby-ruffle repo:
+
+1. **Every ASnative call documented.** Audit the ASnative table in the
+   chumby module: each registered (a,b) index must have documentation
+   (purpose, args, return, fixture behavior) in the repo's chumby doc.
+2. **Remove the feature-toggle logic.** Drop the `chumby` cargo
+   feature; the fork always builds with the chumby code (user decision
+   2026-07-07 — no need to build the software without our feature).
+   This supersedes the "behind a `chumby` cargo feature" clause of
+   hard rule 2; the rest of rule 2 (one isolated module, minimal
+   documented hooks in upstream files) stands. Same-step follow-ups:
+   update `--features chumby` in both CI workflows, CHUMBY.md,
+   chumby-pi docs/scripts (run-controlpanel.sh, build-debs.sh,
+   docs/setup.md), and note the change for future upstream merges.
+3. **README swap.** The repo-root README becomes the chumby doc
+   (today's CHUMBY.md content); the original Ruffle README is renamed
+   (e.g. `README.ruffle.md`) and linked from the new one.
+
 After the cleanup: **widget channels** (user 2026-07-06, "one of the
 next sessions").
 

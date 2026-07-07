@@ -59,9 +59,9 @@ jobs:
 
       - name: Fetch controlpanel.swf from the private share
         env:
-          RCLONE_CONFIG_RSHARE_TYPE: ${{ secrets.RCLONE_CONFIG_RSHARE_TYPE }}
+          RCLONE_CONFIG_RSHARE_TYPE: webdav
+          RCLONE_CONFIG_RSHARE_VENDOR: nextcloud
           RCLONE_CONFIG_RSHARE_URL: ${{ secrets.RCLONE_CONFIG_RSHARE_URL }}
-          RCLONE_CONFIG_RSHARE_VENDOR: ${{ secrets.RCLONE_CONFIG_RSHARE_VENDOR }}
           RCLONE_CONFIG_RSHARE_USER: ${{ secrets.RCLONE_CONFIG_RSHARE_USER }}
           RCLONE_CONFIG_RSHARE_PASS: ${{ secrets.RCLONE_CONFIG_RSHARE_PASS }}
         run: |
