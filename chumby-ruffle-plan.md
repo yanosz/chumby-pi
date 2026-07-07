@@ -474,6 +474,64 @@ the BC4b audit, confirmed by Jan against real hardware; fork README
 - Branch discipline reminder: amend into the single fork commit and
   `--force-with-lease`, do not stack a second commit.
 
+### Milestone: UI policy — disable unsupported panel controls (direction confirmed by user 2026-07-07)
+
+**Context/decision (2026-07-07):** the real chumby runs in the user's
+LOCAL timezone (verified via SSH: `date` → CEST, `/psp/timezone` =
+`Europe/Oslo`, `/etc/localtime` → `/psp/localtime`). On the Pi the OS
+owns timezone + NTP, so the panel must not set them: the clock screen
+shows the timezone read-only, TZ picker and NTP selection are
+disabled, only the 12/24h checkbox stays functional (recorded in
+feature-decisions.md). This needs a **general mechanism** for
+disabling UI elements the Pi doesn't support — expected to be reused
+by later features.
+
+**Chosen approach (user confirmed direction; alternatives weighed for
+simplicity/performance/maintainability/robustness, user 2026-07-07):**
+host-side **property-based disabling** driven by a declarative policy
+config, applied by the existing bootstrap controller on frame entry
+(re-applied if the SWF resets it). Explicitly REJECTED alternatives:
+bytecode patching at load (fragile across panel variants, against the
+spirit of rule 3), renderer patching (cosmetic only — input stays
+live), native no-ops (UI looks functional but silently ignores input
+= worst UX for alarm-safety). Runtime property setting is the same
+proven mechanism as the wizard skip, costs nothing per frame, keeps
+the SWF untouched, and each policy entry is data, not code.
+
+Requirements from the user (2026-07-07):
+- **Stable element identification.** Instance paths may be unstable
+  (auto-named `instanceN` depends on load order). The policy config
+  therefore supports MULTIPLE selector alternatives per element —
+  e.g. dotted instance path, parent-path + depth, symbol/export ID —
+  tried in order, first match wins. A selector that resolves to
+  nothing is a logged WARNING (visible failure), never silent.
+- **All form-input kinds, no format assumptions.** Actions operate at
+  the DisplayObject level so they are type-generic: `hide`
+  (`_visible = false`), `disable` (`enabled = false` + lowered
+  `_alpha` for a grayed-out look — no SWF art needed), `readonly`
+  (input TextField → dynamic / unselectable). Per-object-class
+  mapping lives once in the chumby module. Fallback per element: if a
+  control is script-hit-tested and can't be disabled, hide it.
+- Policy config is a versioned file in chumby-pi (fixtures-style):
+  rows = screen/frame label → selector alternatives → action.
+
+Steps:
+1. Catalog the clock-settings screen(s) (B3, E5, E12 — currently
+   unverified) from the ffdec export + a live fixture run: every
+   control, its instance path/depth/symbol, which natives/psp keys it
+   touches. Real chumby = reference oracle (read-only, ask first).
+   → `claude-docs/reference/18-clock-screen-and-ui-policy.md`.
+2. `CHECKPOINT UI1:` present catalog + concrete policy entries
+   (what gets hidden vs disabled) + config format before wiring.
+3. Implement the policy mechanism in the chumby module + the clock
+   screen entries. Acceptance: TZ/NTP controls visibly disabled and
+   inert; 12/24h round-trips (with the `_setTimeZone` fix in place,
+   set → get consistent); desktop fixture run + on-device check; CI
+   movie-start green; patch-notes/CHUMBY docs updated.
+
+Ordering: AFTER the `_setTimeZone` fix above; relation to widget
+channels start = user's call at CHECKPOINT UI1.
+
 ## Future milestones (added at CHECKPOINT 2, 2026-06-12, by user decision)
 
 - **Milestone: Widget channels & management** — channel switching, channel
@@ -482,7 +540,9 @@ the BC4b audit, confirmed by Jan against real hardware; fork README
 - **Milestone: Info & Licenses panels** (05-screens.md E6, E7).
 - Also still open from M2, not Pi-specific: Music from USB / local files
   (C11, decided *needed*) — requires `_getDirectoryEntry` object-filling
-  (5,320); clock/time/timezone panels (B3, E5, E12) unverified — incl.
+  (5,320); clock/time/timezone panels (B3, E5, E12) unverified (now
+  covered by the "UI policy" milestone above: TZ shown read-only,
+  TZ/NTP selection disabled, 12/24h functional) — incl.
   a known FixtureHost bug found in BC4b, confirmed by Jan 2026-07-07:
   `_setTimeZone` (5,178) does not round-trip to `_getTimeZone` (5,177)
   as it does on a real chumby (fork README, 5,178 row).

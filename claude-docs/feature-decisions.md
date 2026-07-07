@@ -12,7 +12,7 @@ of *undecided* with explicit user approval (project rule 5).
 | Volume (E1) | **needed** | standing decision |
 | Brightness incl. night mode (E2, B4) | **future-milestone** | was *needed*; moved 2026-06-13 (user): no touchscreen at hand, heavily tied to the Pi environment — bundle with the Pi deployment milestone |
 | Alarms (B5, B6) — list, editor, ring screen | **needed** | user: "In." |
-| Clock panel / time / timezone (B3, E5, E12) | **needed** | implied by alarms + core settings |
+| Clock panel / time / timezone (B3, E5, E12) | **needed** | implied by alarms + core settings; refined 2026-07-07 (user): the Pi OS owns timezone+NTP (real chumby verified to run in the user's local TZ — `/psp/timezone`=Europe/Oslo, `/etc/localtime`→`/psp/localtime`), so the panel shows the TZ read-only, TZ picker + NTP selection are DISABLED via the UI-policy mechanism (plan: "UI policy" milestone), only 12/24h stays settable |
 | Music: My Streams (C2) | **needed** | user |
 | Music: USB / local files (C11) | **needed** | user; "USB" maps to local dirs on Pi |
 | Music: all other sources (C1, C3-C10, C12, C13) | **skip** | user: MyStreams + USB-local "is perfect" |
