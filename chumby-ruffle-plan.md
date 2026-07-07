@@ -537,11 +537,22 @@ Steps:
    bridge, so the value is only injected at widget start.
 2. `CHECKPOINT UI1:` present catalog + concrete policy entries
    (what gets hidden vs disabled) + config format before wiring.
+   **PASSED 2026-07-07** (doc 18 §8): disable = dim + dead input for
+   ntpButton + setTimezoneButton, ntpLabel dims too (3rd rule),
+   config = fixtures/ui-policy.toml, no belt-and-braces rules.
+   Also decided there: B3 orphaned in 2.8.87b3 → policy covers E5
+   only; E12 unreachable once the globe is disabled.
 3. Implement the policy mechanism in the chumby module + the clock
    screen entries. Acceptance: TZ/NTP controls visibly disabled and
    inert; 12/24h round-trips (with the `_setTimeZone` fix in place,
    set → get consistent); desktop fixture run + on-device check; CI
    movie-start green; patch-notes/CHUMBY docs updated.
+   **Implemented 2026-07-07** (fork `adeb6058d`, amended; doc 18 §9):
+   `ui_policy.rs` + `fixtures/ui-policy.toml` (3 rules); desktop
+   verification complete incl. pick-traced inertness proof and live
+   12/24h round-trip; docs updated (fork README section + hook map,
+   patch-notes, fixtures README). Remaining: CI green on the amended
+   commit + on-device check by Jan (hot-replace deploy).
 
 Ordering: AFTER the `_setTimeZone` fix above; relation to widget
 channels start = user's call at CHECKPOINT UI1.

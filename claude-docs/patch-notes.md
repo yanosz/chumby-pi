@@ -24,7 +24,8 @@ directory with no upstream counterpart and rebases clean.
 | `core/src/player.rs` | click-target diagnostic in `run_mouse_pick` (silent unless `chumby_pick=debug`); body split into `run_mouse_pick_inner` |
 | `desktop/src/player.rs` | `ChumbyNavigator` wrap before `.with_navigator(...)` |
 | `desktop/src/cli.rs` | `--chumby-fixtures <PATH>` and `--chumby-control <FIFO>` options |
-| `desktop/src/main.rs` | host init + `chumby::input::spawn` after tracing setup |
+| `desktop/src/main.rs` | host init + `chumby::ui_policy::load` + `chumby::input::spawn` after tracing setup |
+| `core/Cargo.toml` | `toml = { workspace = true }` dependency (ui-policy parsing, chumby module only) |
 | `desktop/src/app.rs` | three input mappings: (a) Home key → bend sensor in `KeyboardInput` (chumby's falconwing port used the same key); (b) `WindowEvent::Touch` arm (upstream ignores touch entirely; Wayland touch is not a pointer): single-touch → left-button MouseMove/Down/Up, plus a `ChumbyTouch` field + `about_to_wait` check turning a stationary (≤12 px) ≥1 s hold into `tap_bend()`; (c) pointer-queue drain at the top of `about_to_wait`: `click X Y` / `drag X1 Y1 X2 Y2` control commands become mouse `PlayerEvent`s, one action per loop iteration (sliders need the sequence spread over ticks), through the same `window_to_movie_position` as real mouse input |
 
 (3.5: the kiosk mouse-pointer fix is a udev rule in the chumby-player
@@ -35,6 +36,15 @@ The fork's architecture — and the per-index reference of the whole
 `ASnative(5,N)` table (purpose, args, return, fixture behavior) — lives
 in the fork's own `README.md` (the upstream README is preserved as
 `README.ruffle.md` there, swap done in BC4b).
+
+Behavior note (UI-policy milestone, 2026-07-07, module-internal apart
+from the `main.rs` load call and the `core/Cargo.toml` toml line above):
+`chumby/ui_policy.rs` neutralizes panel controls the host platform does
+not support — declarative rules from `<fixtures>/ui-policy.toml`
+(selectors with name/depth segments → hide/disable/readonly), applied at
+frame cadence from `avm::method` (rides the panel's per-frame `_bent`
+poll). First use: clock screen TZ/NTP controls disabled on the Pi
+(chumby-pi `claude-docs/reference/18-clock-screen-and-ui-policy.md`).
 
 Behavior note (2.2.6, module-internal, no upstream hook): the mpv audio
 backend (`chumby/audio.rs`, spawned process + Unix-socket IPC), ASnative

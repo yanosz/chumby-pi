@@ -230,14 +230,66 @@ the pointer must land on Ruffle, not an overlapping window.
 - The `doneButton` on E5 persists `/psp/clock_format` on exit — the
   12/24h setting is only written when leaving the screen.
 
-## 8. Open questions for CHECKPOINT UI1
+## 8. CHECKPOINT UI1 — decided (Jan, 2026-07-07)
 
-1. `disable` (dim, input dead) for both `ntpButton` and
-   `setTimezoneButton` as proposed — or `hide` for either?
-2. Config format/location `fixtures/ui-policy.toml` OK? (Alternative:
-   compile the two rules into the chumby module as constants and add
-   the config file only when a third rule appears.)
-3. `ntpLabel` ("Set time from the Internet"): keep at full opacity or
-   dim together with the checkbox?
-4. Belt-and-braces rules for the (unreachable-once-disabled) E12 map
-   `okButton`, and for the orphaned B3 controls — add or omit?
+1. **`disable` = dim + dead input** for both `ntpButton` and
+   `setTimezoneButton` (truthful "on, not changeable" reading; no
+   grey-twin/gap problems).
+2. **`fixtures/ui-policy.toml`** as proposed (rules are data, ship
+   with fixtures, no rebuild to edit).
+3. **`ntpLabel` dims together with its checkbox** (reads as one
+   disabled unit) — implemented as a third rule targeting the label.
+4. **No belt-and-braces rules** — the policy stays at the minimal
+   rule set; E12 unreachable once the globe is disabled, B3 orphaned
+   (§1 records why).
+
+## 9. Implementation & verification (same day)
+
+Implemented as designed (fork `core/src/chumby/ui_policy.rs`, ~330
+lines; format + action semantics in its module header):
+
+- Loaded once at startup next to `set_host` (`desktop/main.rs` hook
+  line extended); parsed with the workspace-pinned `toml` crate (one
+  dependency line added to `core/Cargo.toml` — recorded in
+  patch-notes.md).
+- Applied from `avm::method` on every native call — the panel polls
+  `_bent` per frame, giving frame-cadence re-application for free (no
+  new upstream hook; same pattern as the `WidgetPlayer.onPress`
+  surgery). Idempotent; screens re-entering get re-disabled.
+- Property sets go through the AVM1 object interface (`_visible`,
+  `enabled`, `_alpha`), `disable` also sets `enabled = false` on the
+  target's direct children — necessary because AVM1 `enabled` does not
+  cascade and the hit handlers sit on inner clips (`box`, `b`).
+- Log damping is transition-based per rule (acquired / parent-only /
+  gone); the "screen present but control missing — selectors stale?"
+  warning fires only for the PRIMARY selector, because depth-based
+  fallbacks legitimately walk into other frames of the same container
+  (the settings grid reuses depths across frames) and would cry wolf.
+- Unit test `ui_policy::tests::test_parse_rules_and_selectors`
+  (parse + selector segmentation + malformed-rule skipping) passes.
+- `fixtures/ui-policy.toml` ships the three UI1 rules; fixtures README
+  row added.
+
+Desktop verification (2026-07-07, pick-traced clicks — a first attempt
+without `chumby_pick=debug` was inconclusive because a missed click is
+indistinguishable from an inert control):
+
+- Policy loads: `UI policy loaded: 3 rule(s)`; on entering the clock
+  screen all three rules log `target acquired — applying Disable`;
+  the pick trace shows the live auto-names (`instance31`/`instance33`)
+  in the unnamed chain, confirming the depth-selector rationale.
+- NTP checkbox + label and SET TIME ZONE globe render dimmed; 24h
+  checkbox + DONE stay full-strength (screenshot
+  `images/18-e5-policy-applied.png`).
+- Inertness proven: pick trace shows clicks LANDING on
+  `setTimezoneButton.b` and `ntpButton.box` with zero effect (no
+  `setTimeZonePanel` navigation, no `sync_time_state` exec, checkbox
+  unchanged).
+- 12/24h round-trip intact: clicking `mode24Button` toggles the mark
+  and the time display switches to 24h live (`20:17:39`); toggled
+  back + DONE afterwards, fixtures tree restored byte-exact.
+- 45 s movie-start check green with the policy active (exit 124,
+  `_getPlatform`, no panic).
+
+On-device check + CI on the amended fork commit: see plan status /
+follow-up notes.
