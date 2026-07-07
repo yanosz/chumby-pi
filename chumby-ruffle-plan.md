@@ -382,8 +382,11 @@ starts NEXT SESSION.**
   `docs/` + README including other-TFT and other-sound-device
   instructions. After BC1, normal commits/pushes flow freely; only BC1
   gates pushing.
-- **CHECKPOINT BC3 — CI green on both repos** = milestone done.
+- **CHECKPOINT BC3 — CI green on both repos.**
   Includes fixing the doc-12 undeclared library deps.
+- **CHECKPOINT BC4 — chumby-ruffle housekeeping** (added 2026-07-07,
+  user; a LATER session, not the BC3 one) = milestone done. Details
+  below.
 
 ### Decisions for BC3 (recorded 2026-07-06)
 
@@ -400,9 +403,10 @@ starts NEXT SESSION.**
   `qemu-user-static`. A self-hosted runner on the Pi is rejected
   (security exposure on a public repo).
 
-### Big Cleanup backlog: chumby-ruffle housekeeping (added 2026-07-07, user)
+### BC4: chumby-ruffle housekeeping (added 2026-07-07, user — next session)
 
-After BC3, on the chumby-ruffle repo:
+After BC3, on the chumby-ruffle repo (explicitly NOT to be started in
+the BC3 session):
 
 1. **Every ASnative call documented.** Audit the ASnative table in the
    chumby module: each registered (a,b) index must have documentation
