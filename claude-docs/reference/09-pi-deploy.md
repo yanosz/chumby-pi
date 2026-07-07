@@ -156,3 +156,40 @@ verification:
 - Audio state for reference: USB sink (UACDemoV1.0) is default, hardware
   volume set 35 %; panel volume slider live-controls mpv (persists to
   `psp/volume`); `alarm_volume` stays a separate fixture value.
+
+## Hot-replace deploy, 2026-07-07 (the _setTimeZone fix build)
+
+The Pi (3B+, kiosk debs 0.1.2) was at `192.168.42.30` (DHCP — was
+.210.159 on the old network). Goal: test the `_setTimeZone` fix (fork
+`6c99ebd1f`) without rebuilding debs — replace the installed files in
+place ("hot-replace all data", user request). dpkg still shows 0.1.2;
+the on-disk files now diverge from the package until the next deb
+install. Procedure (repeatable):
+
+```sh
+# build (dev box, monorepo ruffle/ at the fork commit) — doc 08 §4
+cd ruffle && cargo build --profile dist -p ruffle_desktop \
+    --target aarch64-unknown-linux-gnu
+
+# transfer while the kiosk keeps running
+scp ruffle/target/aarch64-unknown-linux-gnu/dist/ruffle_desktop \
+    pi@192.168.42.30:/tmp/ruffle_desktop.new
+rsync -a --delete --rsync-path="sudo rsync" fixtures/ \
+    pi@192.168.42.30:/usr/share/chumby-player/fixtures/
+
+# swap + full state reset (loses persisted volume/alarms — intended)
+ssh pi@192.168.42.30 '
+  sudo systemctl stop chumby-player &&
+  sudo install -m 755 -o root -g root /tmp/ruffle_desktop.new \
+      /usr/lib/chumby-player/ruffle_desktop &&
+  sudo rm -rf /var/lib/chumby/fixtures &&   # launcher re-seeds on start
+  sudo systemctl start chumby-player'
+```
+
+controlpanel.swf was NOT replaced (sha256 identical to
+`swf-assets/controlpanel.swf`). Result: service `active`, panel
+running (~99 % CPU, the known ~103 % baseline), state dir re-seeded
+(`rootfs/psp/timezone` = `Europe/Oslo`), runtime files
+(`channel_names`, `controlpanelversion`) written by the SWF, no
+panics in the journal. Binary sha256 verified equal on both ends
+(`1e0ea2ae…`).

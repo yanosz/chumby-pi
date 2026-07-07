@@ -90,3 +90,36 @@ device before any packaging effort:
    ~800×600) — decision input for the kiosk cage configuration.
 
 Results → `09-pi-deploy.md` / `docs/progress.md` (M3 section).
+
+## 6. Post-Big-Cleanup gotcha: stale `target/` from the renamed tree (2026-07-07)
+
+First cross-build in the public working repo (`/home/jan/chumby-pi`,
+submodule `ruffle/` at `6c99ebd1f`) failed in `core/build.rs`:
+
+```
+Error: Could not find or load main class macromedia.asc.embedding.ScriptCompiler
+```
+
+Cause: the gitignored `ruffle/target/` survived the BC1 directory
+rename `/home/jan/chumby-pi-public` → `/home/jan/chumby-pi`. Host-side
+build-script artifacts (`target/dist/build/…`) had the OLD absolute
+path baked in via `env!("CARGO_MANIFEST_DIR")` — the `asc` wrapper
+crate resolves `tools/asc/asc.jar` that way — and cargo fingerprints
+do not notice a tree rename, so the stale build script was reused and
+pointed java at a jar path that no longer exists. (`asc.jar` is
+Adobe's ActionScript compiler; upstream Ruffle needs java at build
+time, on the build host only, to compile its `playerglobal` AS
+stdlib into the binary.)
+
+`cargo clean -p asc -p build_playerglobal -p ruffle_core` did NOT fix
+it (build-script artifacts survive `clean -p`). Fix that worked:
+
+```sh
+rm -rf ruffle/target/dist        # host-side dist artifacts only
+cargo build --profile dist -p ruffle_desktop \
+    --target aarch64-unknown-linux-gnu
+```
+
+Rebuild took 5m43s (aarch64 dep cache under
+`target/aarch64-unknown-linux-gnu/` stayed valid). If other profiles
+misbehave in this tree, the same applies to `target/debug` etc.
