@@ -293,3 +293,46 @@ indistinguishable from an inert control):
 
 On-device check + CI on the amended fork commit: see plan status /
 follow-up notes.
+
+## 10. Settings-menu entries disabled (2026-07-07, user request)
+
+Extension of the UI policy beyond the clock screen: the user asked to
+disable four Settings-menu entries — **Network, Chumby Info,
+Touchscreen, Brightness**. Same mechanism (disable = dim + inert, the
+UI1 decision); applied one level up, at the **menu icons** so the
+sub-panels become unreachable rather than dimming controls inside each.
+
+Catalog (E0 settings menu = `DefineSprite_1748` frame `main`; the grid
+is placed at `controlPanel` depth 15 — tag-dump `PlaceObject2 chid:1748
+dpt:15`, matching §2). The `main` frame's `DoAction` wires eight named
+buttons, each `this._parent.gotoAndStop("<frame>")`:
+
+| button | → frame | screen | policy |
+|--------|---------|--------|--------|
+| `doneButton` | (exits) | — | keep |
+| `clockButton` | `clock` | E5 | keep (12/24h + TZ policy) |
+| `volumeButton` | `volume` | E1 | keep (wanted) |
+| `microphoneButton` | `microphone` | E10 | keep (not requested) |
+| `networkButton` | `network` | E3 | **disable** |
+| `infoButton` | `info` | E6 | **disable** |
+| `touchscreenButton` | `touchscreen` | E4 | **disable** |
+| `brightnessButton` | `altBrightness`/`brightness` | E2 | **disable** |
+
+Because the buttons carry explicit instance names, a single
+`name:`-segment selector under the grid suffices (no depth fallback
+needed — unlike the clock rules, whose inner links are unnamed). Rules
+added to `fixtures/ui-policy.toml`: `settings-network`, `settings-info`,
+`settings-touchscreen`, `settings-brightness` (all `disable`).
+
+**Brightness caveat:** E2 is the plan's *final* milestone (doc 05 marks
+it "wanted"). Disabling now is correct because panel brightness is not
+wired yet — but the future brightness milestone MUST drop the
+`settings-brightness` rule when it lands. Recorded in the plan too.
+
+Deploy: fixtures-only (rules are data read by `ui_policy.rs` at
+startup — no binary rebuild). rsynced `fixtures/` to the Pi's
+`/usr/share/chumby-player/fixtures/`, wiped `/var/lib/chumby/fixtures`
+to re-seed, restarted `chumby-player`. Result: service active, 7 rules
+in the seeded policy (3 clock + 4 settings), TOML parses (verified
+locally: all 7 rules, correct actions/selector counts), no panics.
+On-device visual confirmation left to Jan.

@@ -557,6 +557,13 @@ Steps:
    Jan confirmed on-device that the NTP + SET TIME ZONE controls render
    disabled on Settings → TIME/DATE. UI-policy milestone (clock screen)
    complete.
+4. **Extension 2026-07-07 (user request):** disabled four Settings-menu
+   entries — Network (E3), Chumby Info (E6), Touchscreen (E4),
+   Brightness (E2) — via the same disable mechanism at the menu-icon
+   level (doc 18 §10). Fixtures-only change (4 rules in
+   `fixtures/ui-policy.toml`), deployed to the Pi; on-device visual
+   check by Jan pending. NB: `settings-brightness` must be dropped by
+   the final brightness milestone (noted there).
 
 Ordering: AFTER the `_setTimeZone` fix above; relation to widget
 channels start = user's call at CHECKPOINT UI1.
@@ -592,6 +599,10 @@ ordered is still open. When the new panel is in hand:
   `/proc/sys/sense1/brightness` writes (0–65535, via `_putFile`) and
   `_setLCDMute` (5,20) onto the real backlight; keep fixture fallback
   for desktop runs. Night mode (B4) on-device test closes it out.
+- **RE-ENABLE the brightness Settings entry**: the UI-policy rule
+  `settings-brightness` in `fixtures/ui-policy.toml` currently disables
+  the E2 menu icon (it was unwired). This milestone must drop that rule
+  so the panel's brightness screen is reachable again (doc 18 §10).
 
 ## Anti-patterns observed last time — explicit countermeasures
 - **Running in circles:** every step above ends in a named written artifact.

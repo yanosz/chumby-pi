@@ -41,3 +41,37 @@ selectors = [
   "controlPanel/depth:15/depth:1/name:timePanel/name:setTimezoneButton",
   "controlPanel/depth:15/depth:1/depth:1/depth:24",
 ]
+
+# Settings menu (E0, grid DS1748 @ controlPanel depth:15) entries for
+# features the Pi does not expose through the panel. Disabling the menu
+# icon (named child of the grid) makes the whole sub-panel unreachable —
+# the gotoAndStop("<frame>") in DefineSprite_1748/frame_1 never fires.
+# Kept live: clockButton (E5), volumeButton (E1), doneButton,
+# microphoneButton (not requested).
+
+# NETWORK: the Pi configures Wi-Fi/Ethernet at the OS level; the panel's
+# network wizard (E3 → DS612) is a no-op here.
+[[rule]]
+id        = "settings-network"
+action    = "disable"
+selectors = ["controlPanel/depth:15/name:networkButton"]
+
+# CHUMBY INFO (E6): diagnostics/about panel — disabled per user request.
+[[rule]]
+id        = "settings-info"
+action    = "disable"
+selectors = ["controlPanel/depth:15/name:infoButton"]
+
+# TOUCHSCREEN (E4): calibration is meaningless on the Pi's display path.
+[[rule]]
+id        = "settings-touchscreen"
+action    = "disable"
+selectors = ["controlPanel/depth:15/name:touchscreenButton"]
+
+# BRIGHTNESS (E2/altBrightness): not wired on the Pi yet. Disabled for
+# now; the future brightness milestone (plan) must RE-ENABLE this entry
+# (drop this rule) once panel brightness control lands.
+[[rule]]
+id        = "settings-brightness"
+action    = "disable"
+selectors = ["controlPanel/depth:15/name:brightnessButton"]
