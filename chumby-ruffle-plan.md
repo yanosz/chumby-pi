@@ -384,6 +384,10 @@ starts NEXT SESSION.**
   gates pushing.
 - **CHECKPOINT BC3 — CI green on both repos.**
   Includes fixing the doc-12 undeclared library deps.
+  **DONE 2026-07-07** (claude-docs/reference/15-ci.md): chumby-ruffle
+  run 28862399194 and chumby-pi run 28862410493 both green; deps
+  declared, debs at 0.2.0. Repo visibility per user decision:
+  chumby-ruffle public, chumby-pi private.
 - **CHECKPOINT BC4 — chumby-ruffle housekeeping** (added 2026-07-07,
   user; a LATER session, not the BC3 one) = milestone done. Details
   below.
