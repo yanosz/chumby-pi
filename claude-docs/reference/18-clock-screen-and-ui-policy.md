@@ -335,4 +335,5 @@ startup — no binary rebuild). rsynced `fixtures/` to the Pi's
 to re-seed, restarted `chumby-player`. Result: service active, 7 rules
 in the seeded policy (3 clock + 4 settings), TOML parses (verified
 locally: all 7 rules, correct actions/selector counts), no panics.
-On-device visual confirmation left to Jan.
+Jan confirmed on-device 2026-07-07: all four Settings-menu icons render
+disabled/inert.

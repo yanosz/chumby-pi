@@ -561,9 +561,10 @@ Steps:
    entries — Network (E3), Chumby Info (E6), Touchscreen (E4),
    Brightness (E2) — via the same disable mechanism at the menu-icon
    level (doc 18 §10). Fixtures-only change (4 rules in
-   `fixtures/ui-policy.toml`), deployed to the Pi; on-device visual
-   check by Jan pending. NB: `settings-brightness` must be dropped by
-   the final brightness milestone (noted there).
+   `fixtures/ui-policy.toml`), deployed to the Pi; **Jan confirmed
+   on-device 2026-07-07** that all four icons render disabled/inert.
+   NB: `settings-brightness` must be dropped by the final brightness
+   milestone (noted there).
 
 Ordering: AFTER the `_setTimeZone` fix above; relation to widget
 channels start = user's call at CHECKPOINT UI1.
