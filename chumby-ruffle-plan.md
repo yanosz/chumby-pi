@@ -401,7 +401,9 @@ starts NEXT SESSION.**
   per-index reference in the fork's README, README.ruffle.md swap,
   source-comment audit (indices ↔ names annotated both ways, hook
   numbering dropped per user 2026-07-07); local movie-start check
-  green — awaiting CHECKPOINT BC4b review by Jan.
+  green. **CHECKPOINT PASSED 2026-07-07: Jan accepted BC4b as done**
+  (detailed review still pending on his side; corrections may come
+  later). **This closes the Big Cleanup milestone.**
 
 ### Decisions for BC3 (recorded 2026-07-06)
 
@@ -446,6 +448,31 @@ the BC3 session). Two checkpoints (user 2026-07-07):
 
 After the cleanup: **widget channels** (user 2026-07-06, "one of the
 next sessions").
+
+### NEXT SESSION first: fix the _setTimeZone bug (user, 2026-07-07)
+
+Small, before or alongside the widget-channels start. The bug (found in
+the BC4b audit, confirmed by Jan against real hardware; fork README
+5,178 row, doc 17 §1):
+
+- **Bug:** `_setTimeZone` (5,178) falls into `FixtureHost`'s generic
+  `_set…` store, while `_getTimeZone` (5,177) reads `/psp/timezone`
+  from the virtual rootfs — so set → get does not round-trip. On a
+  real chumby it does.
+- **Fix:** give `_setTimeZone` an explicit arm in
+  `fixture.rs::native()` that writes the value to `/psp/timezone` via
+  the rootfs (mirroring the 5,177 read; trim/format to match the
+  seeded fixture file). Remove the `KNOWN BUG` comment at the
+  `_getTimeZone` arm and the bug wording in the README 5,178 row +
+  plan future-milestones line; doc 17 gets a dated "fixed" note.
+- **Acceptance:** set → get round-trips (exercise the natives — e.g. a
+  unit test in `fixture.rs` like the audio test, or a scripted run);
+  `/psp/timezone` in the state dir contains the set value; CI
+  movie-start still green on the (re-squashed) fork commit. Full
+  clock/timezone panel verification (B3, E5, E12) stays a separate
+  later item.
+- Branch discipline reminder: amend into the single fork commit and
+  `--force-with-lease`, do not stack a second commit.
 
 ## Future milestones (added at CHECKPOINT 2, 2026-06-12, by user decision)
 
