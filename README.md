@@ -1,65 +1,80 @@
-# chumby-pi — the Chumby control panel on a Raspberry Pi
+# Turn a Raspberry Pi into a Chumby
 
-This project boots a Raspberry Pi with a small touchscreen straight
-into the **original Chumby Classic control panel** — the real
-`controlpanel.swf` from the device firmware, unmodified — using
-[chumby-ruffle](https://github.com/yanosz/chumby-ruffle), a fork of the
-[Ruffle](https://ruffle.rs) Flash emulator that recreates the chumby's
-runtime environment (its vendor ActionScript natives, `exec://` URLs,
-device filesystem, and audio player). The panel believes it is running
-on a chumby: the clock widget plays, alarms ring, internet radio
-streams, volume and settings persist.
+> **Heads up:** this is an AI-generated hobby project, built for fun and
+> not actively maintained. No support and no warranty — but it works, and
+> it's yours to tinker with.
 
-What the fork does and how is documented in its
-[README](https://github.com/yanosz/chumby-ruffle/blob/chumby/README.md),
-including a per-index reference of every `ASnative(5,N)` vendor call.
-This repo carries everything around it:
+Remember the [Chumby](https://en.wikipedia.org/wiki/Chumby)? The little
+squeezable Wi-Fi gadget that showed widgets and woke you up in the
+morning, until its servers went dark. This project brings its control
+panel back to life on a Raspberry Pi with a small touchscreen — running
+the **real** `controlpanel.swf` from the original firmware, unmodified.
 
-| Path | What |
-|------|------|
-| `ruffle/` | the chumby-ruffle fork, as a git submodule |
-| `fixtures/` | the virtual chumby the panel talks to: HTTP endpoints, shell command responses, a writable rootfs ([fixtures/README.md](fixtures/README.md)) |
-| `pkg/` | Debian packaging: two debs + a boot-to-panel systemd/cage kiosk unit |
-| `run-controlpanel.sh` | run the panel in a window on a desktop machine |
-| `docs/` | end-user documentation — start with [docs/setup.md](docs/setup.md) |
-| `claude-docs/` | the internal engineering record (how every decision was reached) |
-| `swf-assets/` | drop zone for the copyrighted SWF assets (empty, gitignored) |
+It does that with [chumby-ruffle](https://github.com/yanosz/chumby-ruffle),
+a fork of the [Ruffle](https://ruffle.rs) Flash player that pretends to be
+Chumby hardware. The panel never notices the difference: the clock ticks,
+alarms ring, internet radio streams, and your volume and settings stick
+around between reboots.
 
-## Quick start
+## What you'll need
+
+- A **Raspberry Pi with a small touchscreen.** The reference build is a
+  Pi 3B+ with a 3.5″ SPI display and a USB audio dongle; other displays
+  and sound devices work too — see [docs/hardware.md](docs/hardware.md).
+- The **Chumby firmware files** — `controlpanel.swf`, the widgets, and
+  the alarm tones. These are copyrighted and **not included here**: pull
+  them from your own Chumby's backup, or ask the maintainer. Which file
+  goes where is in [docs/setup.md](docs/setup.md).
+
+## Try it on your computer first
+
+Before touching the Pi, you can run the panel in a window on any Linux
+machine:
 
 ```sh
 git clone --recursive https://github.com/yanosz/chumby-pi.git
 cd chumby-pi
-# put controlpanel.swf into swf-assets/ (see below), then either:
-
-# a) desktop window (any Linux machine)
+# drop controlpanel.swf into swf-assets/ first — see docs/setup.md
 (cd ruffle && cargo build -p ruffle_desktop)
 ./run-controlpanel.sh
-
-# b) Raspberry Pi kiosk — full walkthrough in docs/setup.md
 ```
 
-Using a different display or sound device than the reference hardware
-(Pi 3B+, ILI9486 3.5″ SPI TFT, USB audio)? See
-[docs/hardware.md](docs/hardware.md).
+Your PC has no bend sensor (the squeeze the Chumby is famous for), so
+long-press with the mouse to fake it.
 
-## The SWF assets are not included
+## Put it on the Pi
 
-`controlpanel.swf`, the widget SWFs, and the chumby alarm tones are
-copyrighted chumby firmware and are **not in this repository** and
-never will be. Get them from your own chumby's backup, or contact the
-maintainer. Where each file goes: [docs/setup.md §2](docs/setup.md).
-Anything you drop into `swf-assets/`, `fixtures/widgets/`, or
-`fixtures/rootfs/usr/chumby/alarmtones/` is gitignored. Never publish
-built `chumby-player-data` debs — they contain these files.
+The full walkthrough — flashing the card, installing the packages, and
+setting up the boot-to-panel kiosk — lives in
+**[docs/setup.md](docs/setup.md)**. Follow it to the end and the Pi boots
+straight into the control panel, no desktop in sight.
 
-## Status
+## What's in this repo
 
-Working on-device: boot-to-panel kiosk, clock widget, touch (with
-long-press standing in for the bend-sensor squeeze), control panel,
-alarms, My-Streams internet radio, volume/mute/night mode, settings
-persistence. Not yet: backlight/brightness control (blocked on
-dimmable panel hardware), widget channel management, USB music.
+| Directory | What's inside |
+|-----------|---------------|
+| `ruffle/` | the chumby-ruffle player, as a git submodule |
+| `fixtures/` | the fake Chumby the panel talks to — web endpoints, canned command output, and a writable filesystem |
+| `pkg/` | the Debian packages and the kiosk service that boots to the panel |
+| `docs/` | the setup and hardware guides — **start with [docs/setup.md](docs/setup.md)** |
+| `run-controlpanel.sh` | the desktop-window launcher used above |
+| `swf-assets/` | where the copyrighted firmware files go (empty, ignored by git) |
 
-Ruffle is Apache-2.0/MIT; this repo's own scripts, fixtures, and docs
-carry the same licenses.
+There's also a `claude-docs/` folder with blow-by-blow engineering notes
+from building this — handy if you want to know *why* something works, but
+not needed to use it.
+
+## What works, and what doesn't
+
+**Working on the Pi:** boot-to-panel kiosk, the clock, touch input
+(long-press = squeeze), alarms, My-Streams internet radio, volume, mute,
+and night mode — all with settings that persist across reboots.
+
+**Not yet:** screen brightness control (waiting on a dimmable panel),
+widget channel management, and USB music playback.
+
+## A note on sharing
+
+Never publish a built `chumby-player-data` package — it bundles the
+copyrighted firmware files. Everything else here (scripts, fixtures, and
+docs) is yours under Ruffle's Apache-2.0 / MIT licenses.
