@@ -4,7 +4,7 @@ Architecture: arm64
 Maintainer: Jan <jan@simula.no>
 Section: misc
 Priority: optional
-Depends: cage, mpv, pipewire-alsa, chumby-player-data
+Depends: cage, mpv, pipewire-alsa, chumby-player-data, libc6, libgcc-s1, libfontconfig1, libssl3t64, libasound2t64, libudev1
 Description: Chumby control panel player (chumby-fork Ruffle kiosk)
  Runs the original Chumby Classic control panel under a patched Ruffle
  (cargo feature "chumby") inside a cage Wayland kiosk on tty1.
@@ -12,6 +12,6 @@ Description: Chumby control panel player (chumby-fork Ruffle kiosk)
  Pi into "player mode"; SSH stays available, and
  "systemctl disable --now chumby-player" is the escape hatch.
  .
- Dependencies on stock trixie libraries (libasound2, libudev1, ...)
- are not declared; the binary is a private cross-build verified on the
- target image, not a policy-compliant Debian package.
+ Library dependencies match the NEEDED entries of the shipped binary
+ on Debian trixie (Raspberry Pi OS base); the package is still built
+ with plain dpkg-deb, not as a policy-compliant Debian source package.

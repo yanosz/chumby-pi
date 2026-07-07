@@ -1,0 +1,83 @@
+name: CI
+
+# BC3 acceptance for chumby-pi: the two debs build on arm64 and are
+# installable — with every dependency declared — on the Raspberry Pi OS
+# base (arm64 debian:trixie container), and the installed binaries run
+# (including starting the movie from the packaged SWF + fixtures).
+#
+# controlpanel.swf is copyrighted chumby firmware, fetched from a
+# private Nextcloud share via RCLONE_CONFIG_RSHARE_* Actions secrets.
+# It ends up inside chumby-player-data_*.deb, which therefore must
+# NEVER be uploaded as an artifact or release — only the SWF-free
+# chumby-player deb is uploaded.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  debs:
+    name: Build debs (arm64) and install-test on trixie
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2-dev libudev-dev libfontconfig-dev rclone
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-gnu
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ruffle
+
+      - name: Build ruffle_desktop (dist profile, chumby feature)
+        working-directory: ruffle
+        # --target keeps the output at the path build-debs.sh expects
+        # (target/aarch64-unknown-linux-gnu/dist/), same as the
+        # cross-build documented in claude-docs/reference/08-pi-build.md.
+        run: |
+          cargo build -p ruffle_desktop --features chumby \
+            --profile dist --target aarch64-unknown-linux-gnu
+
+      - name: Fetch controlpanel.swf from the private share
+        env:
+          RCLONE_CONFIG_RSHARE_TYPE: ${{ secrets.RCLONE_CONFIG_RSHARE_TYPE }}
+          RCLONE_CONFIG_RSHARE_URL: ${{ secrets.RCLONE_CONFIG_RSHARE_URL }}
+          RCLONE_CONFIG_RSHARE_VENDOR: ${{ secrets.RCLONE_CONFIG_RSHARE_VENDOR }}
+          RCLONE_CONFIG_RSHARE_USER: ${{ secrets.RCLONE_CONFIG_RSHARE_USER }}
+          RCLONE_CONFIG_RSHARE_PASS: ${{ secrets.RCLONE_CONFIG_RSHARE_PASS }}
+        run: |
+          rclone copy rshare:testdata/controlpanel.swf swf-assets/
+          test -f swf-assets/controlpanel.swf
+
+      - name: Build the debs
+        run: pkg/build-debs.sh
+
+      - name: Install and run the debs in an arm64 trixie container
+        run: |
+          docker run --rm \
+            -v "$PWD/pkg/out:/debs:ro" \
+            -v "$PWD/.github/scripts/deb-install-test.sh:/deb-install-test.sh:ro" \
+            debian:trixie /bin/sh /deb-install-test.sh
+
+      - name: Upload chumby-player deb (the data deb stays in CI)
+        uses: actions/upload-artifact@v4
+        with:
+          name: chumby-player-deb
+          path: pkg/out/chumby-player_*.deb
+          if-no-files-found: error

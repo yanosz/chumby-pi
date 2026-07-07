@@ -13,7 +13,7 @@ set -eu
 cd "$(dirname "$0")"
 REPO=$(cd .. && pwd)
 
-VERSION="${VERSION:-0.1.2}"
+VERSION="${VERSION:-0.2.0}"
 # dist = release + fat LTO + codegen-units=1 (what upstream ships);
 # measurably lighter on the Pi's CPU-bound rasterization (doc 11).
 BIN="$REPO/ruffle/target/aarch64-unknown-linux-gnu/dist/ruffle_desktop"

@@ -110,6 +110,12 @@ StateDirectory contents are not tracked by dpkg; delete manually).
 - **0.1.2**: H12 reverted; cursor fixed properly via the packaged udev
   rule `90-chumby-ignore-cec-pointer.rules` (+ postinst udev reload);
   this is the version verified in doc 11 §3.
+- **0.2.0** (2026-07-07, BC3): player binary now carries the 146
+  upstream commits merged at BC1; library deps declared in Depends
+  (libc6, libgcc-s1, libfontconfig1, libssl3t64, libasound2t64,
+  libudev1 — from the binary's NEEDED entries, trixie names), fixing
+  the §1 "not declared" caveat. Verified by the CI install test
+  (claude-docs/reference/15-ci.md).
 
 ## 4. Deployment results (2026-07-06 evening, Pi powered on)
 
