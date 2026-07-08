@@ -620,23 +620,34 @@ per step.
   channel playing its widgets; CI movie-start green; doc 19 + fixtures
   README updated.
   `CHECKPOINT W1: present the generated channel working; wait for feedback.`
-- **W2 — Preview picture.** The dashboard main-bar (B2) thumbnail shows the
+- **W2 — Preview picture.** DONE on desktop 2026-07-08 (commit `d73932b`);
+  on-device deferred. The dashboard main-bar (B2) thumbnail shows the
   current widget's preview via `loadMovie` of a fixture-provided static
-  thumbnail referenced from the profile XML. Confirm static-vs-live against
-  the device (oracle). Acceptance: thumbnail renders on desktop + on-device;
-  doc 19 updated.
+  thumbnail referenced from the profile XML. Delivered with no Ruffle/host
+  code change: an optional `<thumbnail href>` sidecar child (the generator
+  already deepcopies it into the profile) + a gitignored 80×60 JPEG per
+  widget. Desktop-verified: preview renders and swaps per widget (doc 19
+  §7). Acceptance: thumbnail renders on desktop + on-device; doc 19 updated.
   `CHECKPOINT W2: present the preview working; wait for feedback.`
-- **W3 — Disable controls not needed.** Add `fixtures/ui-policy.toml`
-  entries disabling the main-bar Channel button (makes D1-D7 picker/info/
-  add/reload unreachable) and Delete (B8); confirm Send (B10) / Rate (B7)
-  stay disabled (already `skip`). Same disable mechanism as the Settings
-  icons. Acceptance: the buttons render disabled/inert on desktop +
-  on-device; doc 19 + feature-decisions.md D-rows resolved.
+- **W3 — Disable controls not needed.** DONE on desktop 2026-07-08 (commit
+  `28e9a22`); on-device deferred. `fixtures/ui-policy.toml` rules disable
+  the main-bar CHANNEL (D1-D7 unreachable), DELETE (B8), and — per user
+  2026-07-08 — SEND (B10) / RATE (B7), which `updateButtons` keeps live
+  despite being scope=skip (so they aren't clickable dead-ends). All are
+  named children of the `mainButtons` sprite → single named selectors
+  (no depth fallback). Desktop-verified: all four dim; CHANNEL click-proven
+  inert (doc 19 §8; feature-decisions D-rows + B7/B8/B10 resolved).
+  Acceptance: buttons render disabled/inert on desktop + on-device.
   `CHECKPOINT W3 (= milestone done): present the disabled controls; wait.`
 
 Ordering note: W1 first means the Channel button is briefly reachable and
 dead-ends until W3 disables it — acceptable, since each step is verified on
 its own.
+
+**Milestone status (2026-07-08):** W1/W2/W3 all DONE and desktop-verified.
+Remaining: the single deferred **on-device pass** (deploy a freshly built
+player + fixtures to the Pi; confirm channel + preview + disabled controls
+together), then this milestone is fully closed.
 
 ## Future milestones (added at CHECKPOINT 2, 2026-06-12, by user decision)
 
