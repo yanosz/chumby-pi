@@ -12,7 +12,8 @@
 
 [Unit]
 Description=Chumby control panel kiosk (cage + ruffle)
-After=systemd-user-sessions.service getty@tty1.service
+After=systemd-user-sessions.service getty@tty1.service chumby-widget-channel.service
+Wants=chumby-widget-channel.service
 Conflicts=getty@tty1.service
 
 [Service]

@@ -29,6 +29,18 @@ fi
 
 [ -p "$CTL" ] || mkfifo -m 600 "$CTL"
 
+# The panel fetches its widget channel from this profile. It is (re)built
+# from the installed widgets by chumby-widget-channel.service, which runs
+# before us at boot — deliberately NOT invoked here, so a manual/debug
+# launch works without regenerating (a committed copy ships in the data
+# package). Refuse to start if the definition-list is somehow absent.
+PROFILE="$STATE/fixtures/http/xml.chumby.com/xml/profiles"
+if [ ! -s "$PROFILE" ]; then
+    echo "widget channel profile missing/empty at $PROFILE" >&2
+    echo "run: chumby-widget-channel --fixtures $STATE/fixtures" >&2
+    exit 1
+fi
+
 export RUST_LOG="${RUST_LOG:-warn}"
 
 # lavapipe (software Vulkan) worker threads: extra workers roughly

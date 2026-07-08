@@ -22,8 +22,7 @@
       </widget>
       <access access="private"/>
       <mode mode="timeout" time="86400"/>
-      <widget_parameters>
-      </widget_parameters>
+      <widget_parameters/>
     </widget_instance>
     <widget_instance id="2">
       <name>Clock</name>
@@ -38,8 +37,7 @@
       </widget>
       <access access="private"/>
       <mode mode="timeout" time="86400"/>
-      <widget_parameters>
-      </widget_parameters>
+      <widget_parameters/>
     </widget_instance>
   </widget_instances>
 </profile>

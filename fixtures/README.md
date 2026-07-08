@@ -70,11 +70,16 @@ Format gotchas (cost a debugging round each on 2026-07-06):
   CHUMBYPI001, minimal `dcid`, quiet handlers for headphone_mgr /
   widgetcache / musicsource / alarm-dismiss (`rm /psp/ifalarm`,
   `reload_backup_alarm`) commands.
-- `http/`: authorize + chumbies + a two-widget channel profile (modeled on
-  zurk's offline stubs): Unsubscribed Clock (default) + builtinclock.
-  Plus "no update", empty external music sources, inert FM radio.
-- `widgets/`: the channel's widget SWFs, referenced from the profile via
-  `file://` hrefs.
+- `http/`: authorize + chumbies + the widget-channel profile
+  (`xml/profiles`). The profile is **generated** from the widget sidecars
+  by `chumby-widget-channel` (repo root), not hand-edited — see
+  `claude-docs/reference/19-widget-channel.md`. Plus "no update", empty
+  external music sources, inert FM radio.
+- `widgets/`: one `<name>.swf` per widget plus its `<name>.widget.xml`
+  metadata sidecar (the `<widget>` element the panel reads). The generator
+  wraps every sidecar into the single channel = all installed widgets,
+  ordered by widget id (Unsubscribed Clock, then builtinclock). SWFs are
+  referenced from the profile via `file://` + `{FIXTURES}` hrefs.
 
 With these, the unmodified 2.8.87b3 panel boots the real device path
 (authorize → validate → normal operation) and plays the Unsubscribed Clock.

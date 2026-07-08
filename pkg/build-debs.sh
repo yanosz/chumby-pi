@@ -35,8 +35,10 @@ sed "s/@VERSION@/$VERSION/" chumby-player/DEBIAN/control > "$P/DEBIAN/control"
 install -m 755 chumby-player/DEBIAN/postinst chumby-player/DEBIAN/prerm "$P/DEBIAN/"
 install -m 755 "$BIN" "$P/usr/lib/chumby-player/ruffle_desktop"
 install -m 755 "$REPO/chumby-ctl" "$P/usr/bin/chumby-ctl"
+install -m 755 "$REPO/chumby-widget-channel" "$P/usr/bin/chumby-widget-channel"
 install -m 755 chumby-player/chumby-player-run "$P/usr/bin/chumby-player-run"
 install -m 644 chumby-player/chumby-player.service "$P/lib/systemd/system/"
+install -m 644 chumby-player/chumby-widget-channel.service "$P/lib/systemd/system/"
 install -m 644 chumby-player/90-chumby-ignore-cec-pointer.rules "$P/usr/lib/udev/rules.d/"
 find "$P" -type d -exec chmod 755 {} +
 dpkg-deb --build --root-owner-group "$P" "$OUT/chumby-player_${VERSION}_arm64.deb"
@@ -46,6 +48,8 @@ D="$BUILD/chumby-player-data"
 mkdir -p "$D/DEBIAN" "$D/usr/share/chumby-player/swf"
 sed "s/@VERSION@/$VERSION/" chumby-player-data/DEBIAN/control > "$D/DEBIAN/control"
 cp -a "$REPO/fixtures" "$D/usr/share/chumby-player/fixtures"
+# Ship a profile that matches the packaged widget sidecars.
+"$REPO/chumby-widget-channel" --fixtures "$D/usr/share/chumby-player/fixtures" --force --quiet
 install -m 644 "$SWF" "$D/usr/share/chumby-player/swf/controlpanel.swf"
 find "$D" -type d -exec chmod 755 {} +
 dpkg-deb --build --root-owner-group "$D" "$OUT/chumby-player-data_${VERSION}_all.deb"

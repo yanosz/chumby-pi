@@ -1,6 +1,10 @@
 # IDE state
 .idea/
 
+# Local-only investigation notes (device identities, GUIDs, anything
+# tied to the user's own hardware) — never committed.
+/claude-docs/private/
+
 # Deb build staging and output (pkg/build-debs.sh)
 /pkg/build/
 /pkg/out/
@@ -14,6 +18,10 @@
 *.wav
 /claude-docs/reference/appendix/
 /resources/zurks-offline-firmware-classic/
+
+# chumby-widget-channel's change-detection cache (runtime state, not source;
+# the committed profile + *.widget.xml sidecars are the source of truth).
+/fixtures/widgets/.channel.sig
 
 # Panel screenshots show chumby UI artwork — not published (BC1
 # checkpoint decision 2026-07-07); use Nextcloud for test images.
