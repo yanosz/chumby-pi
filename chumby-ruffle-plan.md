@@ -723,9 +723,15 @@ work STOPS for the user's feedback.
   colour); CI movie-start green; doc 20 + patch-notes/CHUMBY docs updated.
   **DONE on desktop 2026-07-08** (fork `dec173b47`; blue meter + real
   ip/gw/dns/mac verified with `--chumby-real-net`; doc 20 "I3" section).
-  Remaining: the on-device pass (aarch64 rebuild, `--chumby-real-net` in the
-  Pi launcher, deploy, confirm on the TFT) + feature-decisions network-class
-  row + CI.
+  Remaining: the on-device pass (aarch64 rebuild, deploy, confirm on the TFT)
+  + feature-decisions network-class row + CI. **TODO (user 2026-07-08), do BEFORE the Pi deploy:
+  (a) drop the `--chumby-real-net` flag — always read real, fall back to the
+  fixture when no interface is connected (the flag is an unnecessary footgun;
+  CI/movie-start stays green either way); (b) robustify the reader — Jan finds
+  the current `/proc/net/route` hex-parse + UDP-`local_addr` probe non-robust;
+  replace the IP/netmask read with `getifaddrs` (`libc`/`nix`, one dep line),
+  keeping `/proc/net/route` only for the default-route interface + gateway,
+  `resolv.conf` for DNS, `/sys` for MAC.**
   `CHECKPOINT I3 (= milestone done): user confirms on-device; wait.`
 
 ## Future milestones (added at CHECKPOINT 2, 2026-06-12, by user decision)
