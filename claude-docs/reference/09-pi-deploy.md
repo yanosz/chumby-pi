@@ -227,3 +227,37 @@ confirmed the NTP checkbox/label and the SET TIME ZONE globe render
 disabled (2026-07-07). This closes the last open item of the UI-policy
 milestone (fork CI `Build and start controlpanel.swf` was already green
 on `adeb6058d`).
+
+## Hot-replace deploy, 2026-07-08 (the I1 Licenses build)
+
+Same repeatable procedure as above, for the Info/Licenses milestone
+increment I1 (fork `86ae7f86a` = `36d4aa51a` + the `file://`→rootfs
+interception in `chumby/navigator.rs`). Pi still `192.168.42.30`, kiosk
+debs 0.1.2 (dpkg unchanged; on-disk files ahead of the package again).
+
+- Rebuilt the aarch64 dist binary (`--profile dist … --target
+  aarch64-unknown-linux-gnu --manifest-path ruffle/Cargo.toml`, 9m07s,
+  one harmless upstream neon `inline_always` warning). New binary sha256
+  `6d0cc800a34ae6bc3757927b5ec1cd6568c19e6be006b55e834bb55036e4b229`
+  (29 610 960 B), verified equal on the dev box and at
+  `/usr/lib/chumby-player/ruffle_desktop` after `install`. (Stale-binary
+  gotcha respected: the prior on-disk binary was the UI-policy build; a
+  fresh build was mandatory for the navigator change to take effect.)
+- `fixtures/` rsynced to `/usr/share/chumby-player/fixtures/`, carrying
+  the new `fixtures/rootfs/LICENSES/{gpl.txt,lgpl.txt,README}` and the
+  updated `fixtures/ui-policy.toml` (the `settings-info` rule dropped, so
+  the Settings → CHUMBY INFO icon is re-enabled — the gateway to E6/E7).
+  Runtime tree `/var/lib/chumby/fixtures` wiped so the launcher re-seeds;
+  confirmed after restart: LICENSES present (17617/25885/114 B, matching
+  the backup) and `settings-info` absent from the seeded policy.
+- controlpanel.swf NOT touched. Service `active`, panel running (pid),
+  no panics/errors in the journal (only cage's benign `xkbcomp … not
+  fatal`).
+
+On-device verification: the panel main bar (B2) auto-hides on a short
+inactivity timeout, so scripted `bend`→`click` over SSH races it — do
+the summon+click in one command (once inside Settings, which does not
+auto-hide, further clicks are unhurried). Visual confirmation of the
+Licenses viewer on the TFT was left to Jan (manual, next session). The
+desktop run had already proven the render + `file:// rootfs HIT` for
+gpl/lgpl (doc 20, I1).

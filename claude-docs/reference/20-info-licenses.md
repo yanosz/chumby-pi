@@ -71,3 +71,10 @@ walk-through):
 - `ssid:` is empty and no wifi link-quality line shows → the network fixture
   reports a non-wlan type; the dashboard shows full green signal bars (the
   static `signal_strength` fixture). Both go real in I3.
+
+On-device (2026-07-08, Jan's request — earlier than the plan's I3 pass):
+fork `86ae7f86a` hot-replaced to the Pi (`192.168.42.30`) — fresh aarch64
+dist binary + fixtures; service active, LICENSES seeded, Info icon re-enabled,
+no panics. Full record: doc 09 "Hot-replace deploy, 2026-07-08 (the I1
+Licenses build)". Visual confirmation of the viewer on the TFT left to Jan
+(the B2 main bar auto-hides, so scripted navigation over SSH is fiddly).
