@@ -14,6 +14,9 @@ Non-negotiable rules (duplicated from the plan because they matter most):
 - Work on ONE step at a time. Do not look ahead or start the next step's
   work while the current artifact is unfinished.
 - Commit to git after each completed step with the step number in the message.
+- Keep code comments brief. Code should speak for itself; comment only
+  what cannot be read from the code — the why, a non-obvious constraint, a
+  reference. Do not narrate what the code plainly does.
 - Every operation performed on the Raspberry Pi (packages installed,
   config.txt/overlay changes, systemd units, sysfs writes, build steps,
   anything typed over SSH that changes device state) must be documented
