@@ -17,8 +17,8 @@ of *undecided* with explicit user approval (project rule 5).
 | Music: USB / local files (C11) | **needed** | user; "USB" maps to local dirs on Pi |
 | Music: all other sources (C1, C3-C10, C12, C13) | **skip** | user: MyStreams + USB-local "is perfect" |
 | Widget channels / management (D1-D5, D7) | **single local channel + disabled UI** | "Single local widget channel" milestone (2026-07-08): one boot-generated channel = all installed widgets (W1); the CHANNEL button (→ D1-D7 picker/info/add/reload) is DISABLED via ui-policy (W3). Remote channels + registration remain the project's very last feature (D2-D5, D7 remote path). |
-| Info + Licenses (E6, E7) | **future-milestone** | ignore for now |
-| Geek panel (E8, E9) | **skip** | user: leave untouched, redundant to RPi |
+| Info + Licenses (E6, E7) | **needed** — "Info & Licenses + live WLAN signal" milestone (scoped 2026-07-08) | E7 licenses = the original chumby's `/LICENSES/{gpl.txt,lgpl.txt,README}` verbatim (I1). E6 info screen on fixture data; GUID/registration OUT of scope (unregistered → the `registered to / chumby name / channel name` block self-skips); geek `piButton` + `introButton` disabled via ui-policy (I2). Network diagnostics (ssid/ip/netmask/gw/dns) + the WLAN signal bar (dashboard + E6 link-quality) made REAL on the Pi via PiHost Rust readers, wired-aware — signal shown only when actually on wifi (I3). |
+| Geek panel (E8, E9) | **skip → disabled** | user: redundant to RPi. 2026-07-08 (E6/E7 milestone): the geek trigger is the Info screen's `piButton` — DISABLED via ui-policy so geek is unreachable (frames left untouched). |
 | First-time wizard (A2), activation (A4), safe mode (A6), network wizard (A8/E3), touchscreen calib (E4), rate (B7), send (B10), accept/decline (D6), microphone (E10), intercom (E11), firmware updates (B9, A6) | **skip** | user confirmed. Main-bar buttons for skip features that stay live (Rate B7, Send B10) are UI-disabled via ui-policy (W3, 2026-07-08) so they aren't clickable dead-ends. |
 | Main-bar Delete (B8) | **disabled** | W3 (2026-07-08): the boot-generated local channel is regenerated from the shipped widgets, so a delete can't persist; button disabled via ui-policy (dead-end otherwise). |
 
@@ -51,7 +51,8 @@ of *undecided* with explicit user approval (project rule 5).
 1. **Widget channels & management** — D1-D5, D7: channel switching, add
    widget, channel info; needs profile/catalog fixture design (zurk's
    profiles.sh is prior art, see 06 §3).
-2. **Info & Licenses panels** — E6, E7.
+2. **Info & Licenses panels** — E6, E7. NOW SCOPED & ACTIVE as the
+   "Info & Licenses + live WLAN signal" milestone (2026-07-08); see the plan.
 3. **Brightness & night mode** — E2, B4 (moved out of M2 2026-06-13, user):
    needs the Pi display backlight; do together with the Pi deployment
    milestone.

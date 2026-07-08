@@ -649,9 +649,78 @@ Remaining: the single deferred **on-device pass** (deploy a freshly built
 player + fixtures to the Pi; confirm channel + preview + disabled controls
 together), then this milestone is fully closed.
 
+## Milestone: Info & Licenses + live WLAN signal (E6/E7) (scoped 2026-07-08, user)
+
+Supersedes the old one-line "Info & Licenses panels" future-milestone entry.
+Delivers the Info/About screen (E6) and the Licenses viewer (E7), plus a **live
+WLAN signal-quality bar on the dashboard** so the user can diagnose network
+problems.
+
+**Direction (user decisions 2026-07-08):**
+- **WLAN signal = a real reading**, for troubleshooting — not cosmetic full
+  bars. It becomes the first real (non-fixture) `PiHost` behavior to land
+  (brightness, the other real binding, stays deferred to the very end).
+- **Info panel shows real network diagnostics** where they help troubleshooting;
+  everything else stays fixture. GUID / registration is explicitly OUT of scope
+  (the real per-Pi UUID stays with the deferred remote/registration feature), so
+  the panel's `registered to / chumby name / channel name` block — gated on
+  `g_authorized && hasNetwork` (`loadInfo`, frame_2 ~27177) — self-skips while
+  unregistered.
+- **Licenses = the original chumby's, verbatim**: ship the backup's
+  `/LICENSES/{gpl.txt,lgpl.txt,README}` unchanged.
+- **Geek (E8) removed**: the Info screen's `piButton` (`InfoPanel`, frame_2
+  ~27145) is the geek trigger — disabled via `fixtures/ui-policy.toml`, so geek
+  is unreachable. (Historic oddity Jan enjoyed: geek was summoned by "pi", and
+  we now run on a Raspberry Pi.)
+- **Intro deferred to the project's final milestone** (see bottom): in our
+  `localCache` mode the panel's `playIntro` (frame_2 ~5289) substitutes the
+  built-in clock and only loads `intro.swf` via `_startSlave` in its other
+  branch — but we own the AVM1 interpreter, so the option space is broader than
+  "edit the SWF or revive the slave system"; worked out then. For now
+  `introButton` is disabled via ui-policy (re-enabled by that final milestone).
+
+**Design principle (user 2026-07-08):** reimplement the exec touchpoints in Rust
+in `PiHost` (read `/proc/net/wireless`, rtnetlink, `/proc/net/route`, sysfs), NOT
+by shipping shell scripts or shelling out to `iw`/`ip`. This is a principle —
+deviate only with a convincing reason. The exec keys `network_status.sh` and
+`signal_strength` are just the command strings the SWF emits; the host
+intercepts them and returns Rust-built XML — no script by those names exists on
+the device.
+
+Contract rows: `signal_strength` (03 §2a, F2:8110/27226 — dashboard icon + E6
+link-quality line) and the network-status exec touchpoint (03 §2a). Screens:
+05-screens.md E6/E7. Written record accumulates in
+`claude-docs/reference/20-info-licenses.md`. Real chumby = read-only oracle
+(ask first) for on-device confirmation.
+
+Three increments, each ending in a demonstrable result and a `CHECKPOINT` where
+work STOPS for the user's feedback.
+
+- **I1 — Licenses (E7).** Ship the backup's `LICENSES/{gpl.txt,lgpl.txt,README}`
+  verbatim into the virtual rootfs; the licenses viewer renders them. Acceptance:
+  desktop fixture run shows the license text; doc 19→20 + fixtures README
+  updated.
+  `CHECKPOINT I1: present the licenses viewer; wait for feedback.`
+- **I2 — Info panel (E6).** The info screen is reachable and correct on fixture
+  data (GUID/versions/serial); `piButton` (geek) and `introButton` disabled via
+  `fixtures/ui-policy.toml`. Acceptance: desktop run shows the info screen with
+  both buttons dimmed/inert; doc 20 updated.
+  `CHECKPOINT I2: present the info screen + disabled buttons; wait.`
+- **I3 — Real network diagnostics + WLAN bar.** `PiHost` answers the
+  network-status and signal-strength exec touchpoints in Rust, reporting the REAL
+  interface type (wired-aware: on a wired Pi type=lan, no signal line/bar — the
+  panel's own `loadInfo` branch; on wifi type=wlan with link-quality/signal).
+  Desktop keeps the file fixtures. The dashboard wifi bar + E6 link-quality line
+  go live. Network-class change (signal_strength / network-status → real on the
+  Pi) recorded in feature-decisions.md. Acceptance: desktop fixture run +
+  **on-device confirm** (real ssid/ip/signal shown, bar reflects reality); CI
+  movie-start green; doc 20 + patch-notes/CHUMBY docs updated.
+  `CHECKPOINT I3 (= milestone done): user confirms on-device; wait.`
+
 ## Future milestones (added at CHECKPOINT 2, 2026-06-12, by user decision)
 
-- **Milestone: Info & Licenses panels** (05-screens.md E6, E7).
+- **Milestone: Info & Licenses panels** (05-screens.md E6, E7) — NOW SCOPED
+  & ACTIVE as the "Info & Licenses + live WLAN signal (E6/E7)" milestone above.
 - **Remote channels + registration** (05-screens.md D2-D5, D7 remote path;
   activation A4): the **very last feature** of the project (user
   2026-07-08). chumby.com on life support — revisit reviving registration/
@@ -665,6 +734,8 @@ together), then this milestone is fully closed.
   TZ/NTP selection disabled, 12/24h functional). The `_setTimeZone`
   round-trip bug found in BC4b was FIXED 2026-07-07 (see the
   "_setTimeZone" section above; doc 17 §1).
+- **Backup Alarm** (new topic, user 2026-07-08): to be scoped with the user —
+  placeholder, no interpretation implied yet.
 
 Scope decisions for all screens: `claude-docs/feature-decisions.md`.
 
@@ -687,6 +758,23 @@ ordered is still open. When the new panel is in hand:
   `settings-brightness` in `fixtures/ui-policy.toml` currently disables
   the E2 menu icon (it was unwired). This milestone must drop that rule
   so the panel's brightness screen is reachable again (doc 18 §10).
+
+## The very last milestone — Intro widget (moved here 2026-07-08, user)
+
+Deliberately the project's final milestone (user 2026-07-08), after Brightness.
+The Info screen's intro button plays `/usr/widgets/intro.swf`. In our
+`localCache` widget mode the panel's `playIntro` (frame_2 ~5289) substitutes the
+built-in clock and only loads `intro.swf` via `_startSlave` (the slave player we
+don't run) in its other branch — so as-is the button can't show the intro on our
+path. BUT we own the AVM1 interpreter, so the real option space is broader than
+"edit the SWF (rule 3) or revive the slave system" (an earlier assessment that
+ignored interpreter-level interception); the actual approach — VM-level
+interception of the branch / `attachMovie` / `_startSlave` / slave-var reads,
+routing `intro.swf` through the existing in-movie widget path — is worked out
+here.
+- Until then, `introButton` is disabled by a `fixtures/ui-policy.toml` rule
+  (added in the E6/E7 milestone, I2). **This milestone must drop that rule** and
+  make the intro actually play, then confirm on-device.
 
 ## Anti-patterns observed last time — explicit countermeasures
 - **Running in circles:** every step above ends in a named written artifact.
