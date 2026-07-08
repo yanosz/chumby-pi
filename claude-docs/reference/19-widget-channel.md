@@ -1,9 +1,10 @@
-# 19 — Single local widget channel (milestone; W1, W2)
+# 19 — Single local widget channel (milestone; W1, W2, W3)
 
 Date: 2026-07-08. Milestone "Single local widget channel"
 (`chumby-ruffle-plan.md`). This doc accumulates across W1/W2/W3: §1–5 are
 **W1 — the boot-generated channel** (CHECKPOINT W1); §7 is **W2 — the
-preview picture** (CHECKPOINT W2).
+preview picture** (CHECKPOINT W2); §8 is **W3 — disabling the unneeded
+management controls** (CHECKPOINT W3).
 
 Decision recap (user, 2026-07-08): one hardcoded channel = all installed
 widgets, generated at boot; remote channels + registration deferred to the
@@ -121,9 +122,8 @@ generated profile.
 
 ## 6. Deferred / next
 
-- **W3** — disable the Channel button (D1–D7) + Delete (B8) via
-  `fixtures/ui-policy.toml`, so the now-reachable management UI dead-ends
-  are removed. Then the single deferred on-device pass (see below).
+- The single deferred **on-device pass** (see "Pi operations"): deploy the
+  built player + fixtures to the Pi and confirm W1+W2+W3 together.
 
 ## 7. W2 — preview picture (CHECKPOINT W2)
 
@@ -187,9 +187,73 @@ Live run (`run-controlpanel.sh`, `DISPLAY=:11`, generated fixtures,
   The one `Load cancelled` line is a widget-*movie* reload from a
   double-tap on Next, unrelated to thumbnails.
 
+## 8. W3 — disable the unneeded controls (CHECKPOINT W3)
+
+### The main-bar targets (from the decompile)
+
+The dashboard bar is the sprite chid 784, placed on `controlPanel`
+(DS1766) frame `main`, **named `mainButtons`** (tag-dump.txt). Every
+control on it is an explicitly named child, so — unlike the clock rules,
+whose path crosses unnamed depth links — a single named selector suffices,
+no depth fallback (same style as the `settings-*` icon rules):
+
+- `main-channel` → `controlPanel/name:mainButtons/name:channelButton`
+- `main-delete`  → `controlPanel/name:mainButtons/name:deleteButton`
+- `main-send`    → `controlPanel/name:mainButtons/name:sendButton`
+- `main-rate`    → `controlPanel/name:mainButtons/name:rateButton`
+
+All four use the existing `disable` action (dim to `_alpha=45` +
+`enabled=false` on the button and its inner hit clip) — same mechanism as
+the Settings menu icons (doc 18 §10).
+
+**Why disabled, not hidden:**
+- CHANNEL opens the channel picker/info/add/reload sub-panel (D1–D7,
+  `controlPanel` frame `channel`, DS1627). Beyond the single
+  boot-generated local channel, that needs remote channel download +
+  registration, deferred to the project's last feature — so the whole
+  sub-panel is a dead-end here. Disabling the one button seals it off.
+- DELETE (B8) removes a widget from the channel; the local channel is
+  regenerated from the shipped widgets at boot, so a delete can't persist.
+- SEND (B10) and RATE (B7) are scope=skip (send is an excluded social
+  feature; rating needs the widget catalog service). `updateButtons`
+  (DoAction.as:7905) makes them visible/live whenever a widget shows, so
+  they too are disabled (user 2026-07-08) — no skip control on the bar
+  stays a live dead-end. (The plan's "confirm they stay disabled (already
+  skip)" referred to their *scope*, not the button state; the button state
+  is this decision.) STAY stays live: it's a local auto-advance toggle.
+
+### Desktop verification (2026-07-08)
+
+**NB — stale-binary catch:** `ruffle/target/debug/ruffle_desktop` was a
+pre-`ui_policy` build (it predated the milestone and lacked the
+`ui-policy.toml` load entirely), so the first W3 run applied *no* policy.
+Rebuilt `ruffle_desktop` from the current fork tree; the fresh binary logs
+`UI policy loaded: 9 rule(s)`. (W1/W2 were unaffected — neither uses
+ui_policy.) Redeploy/rebuild the player for the on-device pass.
+
+With the rebuilt binary, `run-controlpanel.sh` on `DISPLAY=:11`, control
+panel summoned:
+
+- Log: `ui-policy 'main-channel' … applying Disable` and the same for
+  `main-delete`, `main-send`, `main-rate` — all four acquire together.
+- Screenshot: CHANNEL (top-right), SEND, RATE, DELETE (bottom) render
+  dimmed (~45% alpha, greyed labels); STAY/MUTE/NIGHT/MUSIC/SETTINGS/
+  ALARMS stay fully opaque.
+- Inertness: clicking the dimmed CHANNEL produced **no** `channel()` /
+  `WidgetSateKeeper.setChannel` trace and no navigation to the channel
+  panel (a live button fires those on release). The others dim and apply
+  via the identical action; final per-button click confirmation folds into
+  the deferred on-device pass.
+
+Benign log noise: while the main bar is up, the single-selector
+`settings-*` rules (`controlPanel/depth:15/name:…Button`) log
+"screen present but control missing" — depth 15 is `mainButtons` here, not
+the settings grid; those rules acquire correctly once Settings is open.
+Pre-existing (any summon of the bar triggers it), not introduced by W3.
+
 ## Pi operations performed
 
-None — W1 and W2 are desktop + packaging only. Per user decision
+None — W1, W2 and W3 are desktop + packaging only. Per user decision
 2026-07-08, on-device testing for this milestone is deferred to a single
 pass **after W3**, once the full widget featureset (channel + preview +
 disabled controls) is in place. Record the deploy commands here when they
@@ -197,8 +261,9 @@ run (per CLAUDE.md).
 
 ## Status
 
-W1 committed 2026-07-08 (`e4b1e00`), desktop-verified. W2 (preview picture)
-implemented and desktop-verified 2026-07-08 (§7): thumbnail renders in the
-B2 slot for both widgets, no Ruffle/host code change (sidecar `<thumbnail>`
-+ gitignored JPEGs only). Not yet pushed; not yet on-device (deferred).
-Next: **W3 — disable the unneeded management controls** (§6).
+W1 committed 2026-07-08 (`e4b1e00`), desktop-verified. W2 committed
+2026-07-08 (`d73932b`), desktop-verified (§7). W3 implemented and
+desktop-verified 2026-07-08 (§8): CHANNEL, DELETE, SEND and RATE disabled
+via four `fixtures/ui-policy.toml` rules (single named selectors);
+CHANNEL click-proven inert. Milestone complete on desktop. Not yet pushed;
+the single on-device pass (W1+W2+W3) is still deferred.

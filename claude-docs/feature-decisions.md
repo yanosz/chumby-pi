@@ -16,10 +16,11 @@ of *undecided* with explicit user approval (project rule 5).
 | Music: My Streams (C2) | **needed** | user |
 | Music: USB / local files (C11) | **needed** | user; "USB" maps to local dirs on Pi |
 | Music: all other sources (C1, C3-C10, C12, C13) | **skip** | user: MyStreams + USB-local "is perfect" |
-| Widget channels / management (D1-D5, D7) | **future-milestone** | ignore for now; single fixture channel in M2 |
+| Widget channels / management (D1-D5, D7) | **single local channel + disabled UI** | "Single local widget channel" milestone (2026-07-08): one boot-generated channel = all installed widgets (W1); the CHANNEL button (→ D1-D7 picker/info/add/reload) is DISABLED via ui-policy (W3). Remote channels + registration remain the project's very last feature (D2-D5, D7 remote path). |
 | Info + Licenses (E6, E7) | **future-milestone** | ignore for now |
 | Geek panel (E8, E9) | **skip** | user: leave untouched, redundant to RPi |
-| First-time wizard (A2), activation (A4), safe mode (A6), network wizard (A8/E3), touchscreen calib (E4), rate (B7), send (B10), accept/decline (D6), microphone (E10), intercom (E11), firmware updates (B9, A6) | **skip** | user confirmed |
+| First-time wizard (A2), activation (A4), safe mode (A6), network wizard (A8/E3), touchscreen calib (E4), rate (B7), send (B10), accept/decline (D6), microphone (E10), intercom (E11), firmware updates (B9, A6) | **skip** | user confirmed. Main-bar buttons for skip features that stay live (Rate B7, Send B10) are UI-disabled via ui-policy (W3, 2026-07-08) so they aren't clickable dead-ends. |
+| Main-bar Delete (B8) | **disabled** | W3 (2026-07-08): the boot-generated local channel is regenerated from the shipped widgets, so a delete can't persist; button disabled via ui-policy (dead-end otherwise). |
 
 ## Confirmed at CHECKPOINT 3 (user, 2026-06-12)
 
