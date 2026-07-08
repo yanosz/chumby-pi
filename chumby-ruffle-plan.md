@@ -724,13 +724,32 @@ work STOPS for the user's feedback.
   **DONE on desktop 2026-07-08** (fork `dec173b47`; blue meter + real
   ip/gw/dns/mac verified with `--chumby-real-net`; doc 20 "I3" section).
   Remaining: the on-device pass (aarch64 rebuild, deploy, confirm on the TFT)
-  + feature-decisions network-class row + CI. DONE 2026-07-08 (fork `dec173b47`→`b9199a1f6`): (a) dropped the
+  + feature-decisions network-class row + CI. 2026-07-08 (fork `dec173b47`→`b9199a1f6`): (a) dropped the
   `--chumby-real-net` flag — `RealNetHost` always active, falls back to the
   fixture when no interface is connected; (b) robustified the reader — IP +
   netmask now via `getifaddrs` (target-gated `libc`), `/proc/net/route` kept
-  only for the default-route interface + gateway. Desktop-verified earlier
-  with the flag build (real IP + blue bar); this revision deployed to the Pi
-  (`192.168.42.30`, wired eth0) for Jan's manual on-device confirm.
+  only for the default-route interface + gateway.
+
+  **I3 NOT COMPLETE — bug found on-device 2026-07-08 (Jan).** The status page
+  is a *status* page and must derive every field from live state; I hardcoded
+  several. NEXT-SESSION TODOs:
+  - **BUG — network type is hardcoded.** `real_net.rs` reports a constant
+    `type="lan"`, so after switching the Pi wired→wifi (IP moved to
+    `.51`, read correctly) the page still showed "Ethernet" + blue bar.
+    Fix: detect the default-route interface's type (wireless iff
+    `/sys/class/net/<if>/wireless/` exists) and report `type="lan"` vs
+    `type="wlan"`; the indicator (blue tint vs green wifi signal) and the
+    signal line must follow the real type, not a constant. wlan SSID needs
+    nl80211/ioctl (sysfs has no SSID); signal from `/proc/net/wireless`.
+  - **AUDIT — verify NOTHING else on the network status is static.** Sweep the
+    `network_status.sh` + `signal_strength` outputs for any remaining
+    hardcoded value (known: `signal_strength` returns a fixed
+    `connected=1`/full; the `wired-eth-bar` tint is a static rule) and make
+    each reflect live state. General lesson recorded in memory
+    (status page = derive every field from live state; test the un-assumed
+    states before claiming "verified").
+  - Then: on-device re-confirm (wired AND wifi) + feature-decisions
+    network-class row + CI.
   `CHECKPOINT I3 (= milestone done): user confirms on-device; wait.`
 
 ## Future milestones (added at CHECKPOINT 2, 2026-06-12, by user decision)
