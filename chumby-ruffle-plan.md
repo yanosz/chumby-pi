@@ -724,14 +724,13 @@ work STOPS for the user's feedback.
   **DONE on desktop 2026-07-08** (fork `dec173b47`; blue meter + real
   ip/gw/dns/mac verified with `--chumby-real-net`; doc 20 "I3" section).
   Remaining: the on-device pass (aarch64 rebuild, deploy, confirm on the TFT)
-  + feature-decisions network-class row + CI. **TODO (user 2026-07-08), do BEFORE the Pi deploy:
-  (a) drop the `--chumby-real-net` flag — always read real, fall back to the
-  fixture when no interface is connected (the flag is an unnecessary footgun;
-  CI/movie-start stays green either way); (b) robustify the reader — Jan finds
-  the current `/proc/net/route` hex-parse + UDP-`local_addr` probe non-robust;
-  replace the IP/netmask read with `getifaddrs` (`libc`/`nix`, one dep line),
-  keeping `/proc/net/route` only for the default-route interface + gateway,
-  `resolv.conf` for DNS, `/sys` for MAC.**
+  + feature-decisions network-class row + CI. DONE 2026-07-08 (fork `dec173b47`→`b9199a1f6`): (a) dropped the
+  `--chumby-real-net` flag — `RealNetHost` always active, falls back to the
+  fixture when no interface is connected; (b) robustified the reader — IP +
+  netmask now via `getifaddrs` (target-gated `libc`), `/proc/net/route` kept
+  only for the default-route interface + gateway. Desktop-verified earlier
+  with the flag build (real IP + blue bar); this revision deployed to the Pi
+  (`192.168.42.30`, wired eth0) for Jan's manual on-device confirm.
   `CHECKPOINT I3 (= milestone done): user confirms on-device; wait.`
 
 ## Future milestones (added at CHECKPOINT 2, 2026-06-12, by user decision)

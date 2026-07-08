@@ -261,3 +261,21 @@ auto-hide, further clicks are unhurried). Visual confirmation of the
 Licenses viewer on the TFT was left to Jan (manual, next session). The
 desktop run had already proven the render + `file:// rootfs HIT` for
 gpl/lgpl (doc 20, I1).
+
+## Hot-replace deploy, 2026-07-08 (the I3 network build)
+
+Same procedure, for I3 (real network diagnostics + blue ethernet bar,
+fork `b9199a1f6`). No launcher change needed — `RealNetHost` is always
+active now (the `--chumby-real-net` flag was dropped), reading the live
+interface and falling back to the fixture when nothing is connected.
+
+- aarch64 dist binary sha256 `78d40a7f…`, verified equal on the dev box
+  and at `/usr/lib/chumby-player/ruffle_desktop` after `install`.
+- `fixtures/` rsynced (carried the `wired-eth-bar` tint rule + the
+  `type=lan` network fixture); `/var/lib/chumby/fixtures` wiped so the
+  launcher re-seeds. controlpanel.swf untouched. Service `active`, panel
+  running, no panics/errors in the journal.
+- The device is wired `eth0` = `192.168.42.30/24`, gw `192.168.42.1`,
+  dns `192.168.42.1`, MAC `b8:27:eb:93:08:b1` — so the Info screen should
+  show `type: Ethernet` + those values, and the main-bar meter should
+  render blue. Visual confirmation on the TFT left to Jan (manual).

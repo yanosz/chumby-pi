@@ -47,15 +47,20 @@ poll). First use: clock screen TZ/NTP controls disabled on the Pi
 (chumby-pi `claude-docs/reference/18-clock-screen-and-ui-policy.md`).
 
 Behavior note (Info/Licenses milestone I3, 2026-07-08, module-internal +
-one `main.rs`/`cli.rs` line each): `chumby/real_net.rs` adds `RealNetHost`,
-which wraps `FixtureHost` and answers the network `exec` touchpoints
-(`network_status.sh`/`signal_strength`/`macgen.sh`) from live kernel state
-(`/proc/net/route`, a UDP local-addr probe, `/etc/resolv.conf`, `/sys` —
-pure std, no shell). Gated by the new `--chumby-real-net` CLI flag
-(`cli.rs`) and wired in `main.rs` (wrap the fixture host when set); off by
-default, so desktop/CI stay pure fixtures. `chumby/ui_policy.rs` gains a
-`Tint(0xRRGGBB)` action (AVM1 `Color.setRGB` via `set_color_transform`) —
-used by the `wired-eth-bar` rule to repaint the dashboard wifi meter blue.
+one `main.rs` line): `chumby/real_net.rs` adds `RealNetHost`, which wraps
+`FixtureHost` and answers the network `exec` touchpoints
+(`network_status.sh`/`signal_strength`/`macgen.sh`) from live kernel state —
+default-route interface + gateway from `/proc/net/route`, the interface's
+IPv4 + netmask from `getifaddrs`, DNS from `/etc/resolv.conf`, MAC from
+`/sys/class/net`. No shell. It is **always active** (wrapped unconditionally
+in `main.rs`); a read that finds no connected interface returns `None` and
+the call falls back to the inner fixture, so desktop/CI with no usable
+network behave as before. `getifaddrs` needs `libc`, added target-gated to
+`core/Cargo.toml` (`[target.'cfg(unix)'.dependencies]`) and used only under
+`#[cfg(unix)]` (a `#[cfg(not(unix))]` stub keeps the wasm build clean).
+`chumby/ui_policy.rs` gains a `Tint(0xRRGGBB)` action (AVM1 `Color.setRGB`
+via `set_color_transform`) — used by the `wired-eth-bar` rule to repaint the
+dashboard wifi meter blue.
 
 Behavior note (Info/Licenses milestone I1, 2026-07-08, module-internal
 in `chumby/navigator.rs`): `ChumbyNavigator::intercept` now serves

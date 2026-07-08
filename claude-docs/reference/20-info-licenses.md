@@ -121,12 +121,18 @@ Implementation:
 - `chumby/real_net.rs` — `RealNetHost` wraps `FixtureHost` and overrides the
   `exec` touchpoints `network_status.sh` / `signal_strength` / `macgen.sh`
   from live kernel state: default-route interface + gateway from
-  `/proc/net/route`, IPv4 via a UDP `connect`+`local_addr` probe, netmask from
-  the interface's subnet route, DNS from `/etc/resolv.conf`, MAC from
-  `/sys/class/net/<if>/address`. Pure `std`, no shell (design principle).
-  Assumes one connected interface (Jan). Enabled by the `--chumby-real-net`
-  CLI flag; everything else delegates to the inner fixture host, so the
-  desktop default stays pure fixtures.
+  `/proc/net/route`, the interface's IPv4 + netmask from **`getifaddrs`**, DNS
+  from `/etc/resolv.conf`, MAC from `/sys/class/net/<if>/address`. No shell
+  (design principle). Assumes one connected interface (Jan).
+  **REVISED 2026-07-08 (fork `dec173b47`→`b9199a1f6`, user):** dropped the
+  `--chumby-real-net` flag — `RealNetHost` is now **always active**, and a
+  read that finds no interface returns `None` → falls back to the inner
+  fixture (so an offline desktop/CI run is unchanged). Also replaced the two
+  brittle bits (a UDP `local_addr` probe for the IP, and a `/proc/net/route`
+  hex-parse for the netmask) with `getifaddrs` — the canonical source, robust
+  to the edge cases the probe/parse weren't. `getifaddrs` uses `libc`, added
+  target-gated (`cfg(unix)`) to `core/Cargo.toml`; a `cfg(not(unix))` stub
+  keeps wasm building.
 - `chumby/ui_policy.rs` — new `Tint(0xRRGGBB)` action (AVM1 `Color.setRGB`
   flat-fill via `set_color_transform`), parsed from `color = "#RRGGBB"`.
 - `fixtures/ui-policy.toml` — rule `wired-eth-bar`, `color="#1E90FF"`,
