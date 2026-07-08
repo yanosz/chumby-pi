@@ -604,7 +604,14 @@ into whichever step needs it (no separate catalog step); the written record
 accumulates in `claude-docs/reference/19-widget-channel.md`. Real chumby =
 read-only oracle (ask first) for confirming on-device behavior.
 
-- **W1 — Boot-generated channel, used correctly.** A boot step enumerates
+**On-device testing deferred (user, 2026-07-08):** verify W1/W2/W3 on the
+desktop at their checkpoints; do the Pi deploy + on-device confirm ONCE,
+after W3, when the full widget featureset is in place. So the per-step
+"on-device" acceptance below is satisfied at that single later pass, not
+per step.
+
+- **W1 — Boot-generated channel, used correctly.** DONE on desktop
+  2026-07-08 (commit `e4b1e00`); on-device deferred per the note above. A boot step enumerates
   the shipped widgets and emits the single `profile.xml` ("all available
   widgets"); the panel loads and plays it. Investigate/confirm: how the
   channel is assembled and played, what holds "current channel" state, how

@@ -129,6 +129,13 @@ generated profile.
 
 ## Pi operations performed
 
-None yet — W1 is desktop + packaging only. On-device deploy and confirm
-happen at CHECKPOINT W1 with the user; record the deploy commands here when
-they run (per CLAUDE.md).
+None — W1 is desktop + packaging only. Per user decision 2026-07-08,
+on-device testing for this milestone is deferred to a single pass **after
+W3**, once the full widget featureset (channel + preview + disabled
+controls) is in place. Record the deploy commands here when they run
+(per CLAUDE.md).
+
+## Status
+
+W1 committed 2026-07-08 (`e4b1e00`), desktop-verified. Not yet pushed; not
+yet on-device (deferred). Next: **W2 — preview picture** (§6).
