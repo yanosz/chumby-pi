@@ -1,8 +1,9 @@
-# 19 — Single local widget channel (milestone; W1)
+# 19 — Single local widget channel (milestone; W1, W2)
 
 Date: 2026-07-08. Milestone "Single local widget channel"
-(`chumby-ruffle-plan.md`). This doc accumulates across W1/W2/W3; below is
-**W1 — the boot-generated channel** (CHECKPOINT W1).
+(`chumby-ruffle-plan.md`). This doc accumulates across W1/W2/W3: §1–5 are
+**W1 — the boot-generated channel** (CHECKPOINT W1); §7 is **W2 — the
+preview picture** (CHECKPOINT W2).
 
 Decision recap (user, 2026-07-08): one hardcoded channel = all installed
 widgets, generated at boot; remote channels + registration deferred to the
@@ -120,22 +121,84 @@ generated profile.
 
 ## 6. Deferred / next
 
-- **W2** — preview picture: add `<thumbnail href>` to each sidecar + ship
-  an 80×60 JPEG per widget; the panel `loadMovie`s it into the B2 slot
-  (`makeWidgetsURL`, DoAction.as:30612 → 8040; contract F2:4611). Real
-  chumby *downloaded* this from `widgets.chumby.com`; we ship it locally.
 - **W3** — disable the Channel button (D1–D7) + Delete (B8) via
-  `fixtures/ui-policy.toml`.
+  `fixtures/ui-policy.toml`, so the now-reachable management UI dead-ends
+  are removed. Then the single deferred on-device pass (see below).
+
+## 7. W2 — preview picture (CHECKPOINT W2)
+
+### How the panel shows a preview (verified from the decompile)
+
+Per widget instance the panel builds a thumbnail URL and loads it into the
+dashboard bar's B2 slot:
+
+1. On each widget change, `g_widgetThumbnailURL =
+   makeWidgetsURL(g_currentWidget.firstChildOfType("thumbnail").attributes.href)`
+   (DoAction.as:4611). `makeWidgetsURL` (30612) prepends `widgetsURL` only
+   to `/`-rooted paths; a `file://` href is returned unchanged — so our
+   local thumbnails need no host rewriting.
+2. `ControlPanelThumbnail.setThumbnail(url)` (8040) does
+   `createEmptyMovieClip("proxy").loadMovie(url)`. `loadMovie` decodes an
+   image (JPEG/PNG/GIF) as readily as a SWF, so a static JPEG is a valid
+   target — no live second render (matches the decided `localCache` path).
+3. **Gate:** `getCurrentWidgetThumbnailURL` returns `undefined` unless
+   `Object._chumby.hasNetwork` is true (3702). Our `network_status.sh`
+   fixture reports a healthy wired interface (no `<error>` child), so
+   `hasNetwork` is already true on the fixture boot path — no change needed.
+   A missing `<thumbnail>` element (or empty URL) is handled gracefully:
+   `setThumbnail` no-ops when the URL is empty, so thumbnails are optional
+   and additive per widget.
+
+### What W2 ships
+
+- Each `*.widget.xml` sidecar gains an optional `<thumbnail href>` child
+  pointing at `file:///{FIXTURES}/widgets/<name>.jpg`. The generator copies
+  the whole `<widget>` element (`copy.deepcopy`), so the thumbnail flows
+  into the profile with **no generator change** — verified: the regenerated
+  `xml/profiles` carries both `<thumbnail>` nodes.
+- An 80×60 JPEG preview per widget in `fixtures/widgets/`. These render
+  chumby widget artwork, so they are **gitignored** (`.gitignore`
+  `/fixtures/widgets/*.jpg`) exactly like the widget SWFs, and ride only in
+  the private `chumby-player-data` deb (`cp -a fixtures`). Real chumby
+  downloaded thumbnails from `widgets.chumby.com`; we ship them locally.
+- The two shipped previews were rendered from the widgets themselves with
+  the fork's `exporter` tool, then scaled to JPEG:
+
+      ruffle/target/debug/exporter fixtures/widgets/<name>.swf out.png \
+          --width 80 --height 60 --silent
+      convert out.png -resize 80x60 -background white -flatten -quality 85 \
+          fixtures/widgets/<name>.jpg
+
+  Frame-1 renders (the clocks show no live time, since the natives aren't
+  running under the exporter) but are recognizable previews of each
+  widget's layout.
+
+### Desktop verification (2026-07-08)
+
+Live run (`run-controlpanel.sh`, `DISPLAY=:11`, generated fixtures,
+`-PlocalCache=1`); control panel summoned with `bend`, screenshotted:
+
+- Channel `chumbypi-channel`, widget 1/2 "Unsubscribed Clock": the B2 slot
+  renders the unsubscribedclock preview (clock-face elements).
+- Advanced to widget 2/2 "Clock": the B2 slot swaps to the builtinclock
+  preview ("January … a.m." calendar). Dynamic per-widget load confirmed.
+- No `.jpg`/image load error in the run log (Ruffle logs image-load
+  failures; their absence over a successful boot is the success signal).
+  The one `Load cancelled` line is a widget-*movie* reload from a
+  double-tap on Next, unrelated to thumbnails.
 
 ## Pi operations performed
 
-None — W1 is desktop + packaging only. Per user decision 2026-07-08,
-on-device testing for this milestone is deferred to a single pass **after
-W3**, once the full widget featureset (channel + preview + disabled
-controls) is in place. Record the deploy commands here when they run
-(per CLAUDE.md).
+None — W1 and W2 are desktop + packaging only. Per user decision
+2026-07-08, on-device testing for this milestone is deferred to a single
+pass **after W3**, once the full widget featureset (channel + preview +
+disabled controls) is in place. Record the deploy commands here when they
+run (per CLAUDE.md).
 
 ## Status
 
-W1 committed 2026-07-08 (`e4b1e00`), desktop-verified. Not yet pushed; not
-yet on-device (deferred). Next: **W2 — preview picture** (§6).
+W1 committed 2026-07-08 (`e4b1e00`), desktop-verified. W2 (preview picture)
+implemented and desktop-verified 2026-07-08 (§7): thumbnail renders in the
+B2 slot for both widgets, no Ruffle/host code change (sidecar `<thumbnail>`
++ gitignored JPEGs only). Not yet pushed; not yet on-device (deferred).
+Next: **W3 — disable the unneeded management controls** (§6).

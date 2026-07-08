@@ -19,6 +19,7 @@
         <access sendable="false" deleteable="false" access="private" virtualable="false"/>
         <user username="jan"/>
         <movie href="file:///{FIXTURES}/widgets/unsubscribedclock.swf" contenttype="application/x-shockwave-flash"/>
+        <thumbnail href="file:///{FIXTURES}/widgets/unsubscribedclock.jpg" contenttype="image/jpeg"/>
       </widget>
       <access access="private"/>
       <mode mode="timeout" time="86400"/>
@@ -34,6 +35,7 @@
         <access sendable="false" deleteable="false" access="private" virtualable="false"/>
         <user username="jan"/>
         <movie href="file:///{FIXTURES}/widgets/builtinclock.swf" contenttype="application/x-shockwave-flash"/>
+        <thumbnail href="file:///{FIXTURES}/widgets/builtinclock.jpg" contenttype="image/jpeg"/>
       </widget>
       <access access="private"/>
       <mode mode="timeout" time="86400"/>

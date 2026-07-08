@@ -9,4 +9,5 @@
   <access sendable="false" deleteable="false" access="private" virtualable="false"/>
   <user username="jan"/>
   <movie href="file:///{FIXTURES}/widgets/unsubscribedclock.swf" contenttype="application/x-shockwave-flash"/>
+  <thumbnail href="file:///{FIXTURES}/widgets/unsubscribedclock.jpg" contenttype="image/jpeg"/>
 </widget>

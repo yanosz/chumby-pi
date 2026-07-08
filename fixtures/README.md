@@ -79,7 +79,13 @@ Format gotchas (cost a debugging round each on 2026-07-06):
   metadata sidecar (the `<widget>` element the panel reads). The generator
   wraps every sidecar into the single channel = all installed widgets,
   ordered by widget id (Unsubscribed Clock, then builtinclock). SWFs are
-  referenced from the profile via `file://` + `{FIXTURES}` hrefs.
+  referenced from the profile via `file://` + `{FIXTURES}` hrefs. An
+  optional `<thumbnail href>` sidecar child points at an 80×60 `<name>.jpg`
+  preview the panel `loadMovie`s into the dashboard bar (W2); the JPEGs are
+  chumby widget artwork, so — like the SWFs — they are gitignored and
+  provided locally (render one from the widget with the `exporter` tool,
+  `claude-docs/reference/19-widget-channel.md`). A widget without a
+  thumbnail sidecar simply shows no preview.
 
 With these, the unmodified 2.8.87b3 panel boots the real device path
 (authorize → validate → normal operation) and plays the Unsubscribed Clock.

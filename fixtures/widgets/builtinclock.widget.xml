@@ -8,4 +8,5 @@
   <access sendable="false" deleteable="false" access="private" virtualable="false"/>
   <user username="jan"/>
   <movie href="file:///{FIXTURES}/widgets/builtinclock.swf" contenttype="application/x-shockwave-flash"/>
+  <thumbnail href="file:///{FIXTURES}/widgets/builtinclock.jpg" contenttype="image/jpeg"/>
 </widget>
