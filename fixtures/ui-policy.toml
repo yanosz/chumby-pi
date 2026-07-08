@@ -56,11 +56,11 @@ id        = "settings-network"
 action    = "disable"
 selectors = ["controlPanel/depth:15/name:networkButton"]
 
-# CHUMBY INFO (E6): diagnostics/about panel — disabled per user request.
-[[rule]]
-id        = "settings-info"
-action    = "disable"
-selectors = ["controlPanel/depth:15/name:infoButton"]
+# CHUMBY INFO (E6): diagnostics/about panel. RE-ENABLED for the
+# "Info & Licenses + live WLAN signal" milestone (2026-07-08) — it is the
+# gateway to the Info screen (E6) and the Licenses viewer (E7). Its own
+# internal geek (piButton) and intro (introButton) buttons are disabled by
+# the info-* rules below instead.
 
 # TOUCHSCREEN (E4): calibration is meaningless on the Pi's display path.
 [[rule]]

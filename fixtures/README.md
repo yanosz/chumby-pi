@@ -41,7 +41,7 @@ and on the Pi.
 
 | Path | Answers | How to change |
 |------|---------|---------------|
-| `rootfs/` | `_getFile`/`_putFile`/`_fileExists`/… (ASnative 5,50-55,320) — the panel's whole filesystem view (`/psp`, `/tmp`, `/mnt`, …) | edit/create the file at the same path under `rootfs/`; panel writes land here too (e.g. `tmp/movieheartbeat`, `proc/sys/sense1/brightness`) |
+| `rootfs/` | `_getFile`/`_putFile`/`_fileExists`/… (ASnative 5,50-55,320) — the panel's whole filesystem view (`/psp`, `/tmp`, `/mnt`, …) — AND panel-hardcoded `file://` data loads (e.g. the licenses viewer's `file:////LICENSES/gpl.txt`) | edit/create the file at the same path under `rootfs/`; panel writes land here too (e.g. `tmp/movieheartbeat`, `proc/sys/sense1/brightness`) |
 | `exec/manifest.txt` | `_backtick` (5,52) and `exec://` commands | TAB-separated `command-prefix<TAB>response-file`; longest prefix wins; comment lines start with `#` |
 | `exec/*.{txt,xml}` | command stdout bodies | edit the file named in the manifest |
 | `http/<host>/<path>` | HTTP fetches to chumby hosts (`*.chumby.com`, `127.0.0.1`, `localhost`) | file at query-stripped, trailing-slash-stripped path; e.g. `http://xml.chumby.com/xml/chumbies/?id=…` → `http/xml.chumby.com/xml/chumbies` |
@@ -57,6 +57,9 @@ and on the Pi.
   panel-writable, so edits made in the UI persist here across runs.
 - `rootfs/usr/chumby/alarmtones/`: the 7 stock alarm MP3s from the device
   backup (the SWF `_fileExists`-checks them before offering them).
+- `rootfs/LICENSES/`: `gpl.txt`, `lgpl.txt`, `README` copied verbatim from the
+  device backup — the SOFTWARE LICENSE viewer (Settings → Chumby Info →
+  SOFTWARE LICENSE) loads `gpl.txt`/`lgpl.txt` via `file:////LICENSES/…`.
 
 Format gotchas (cost a debugging round each on 2026-07-06):
 - `psp/alarms`: the `time` attribute is **minutes** since midnight

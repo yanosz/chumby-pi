@@ -46,6 +46,14 @@ frame cadence from `avm::method` (rides the panel's per-frame `_bent`
 poll). First use: clock screen TZ/NTP controls disabled on the Pi
 (chumby-pi `claude-docs/reference/18-clock-screen-and-ui-policy.md`).
 
+Behavior note (Info/Licenses milestone I1, 2026-07-08, module-internal
+in `chumby/navigator.rs`): `ChumbyNavigator::intercept` now serves
+`file://` data loads from the virtual rootfs — panel-hardcoded chumby
+paths (the licenses viewer's `file:////LICENSES/gpl.txt`) resolve against
+`<fixtures>/rootfs/`, the same view the fs natives use. A rootfs miss
+returns `None` (pass through to the real navigator), so widget/thumbnail
+loads — which use `{FIXTURES}`-expanded real disk paths — are unaffected.
+
 Behavior note (2.2.6, module-internal, no upstream hook): the mpv audio
 backend (`chumby/audio.rs`, spawned process + Unix-socket IPC), ASnative
 log deduplication (`chumby/avm.rs`), and their fixtures live entirely
