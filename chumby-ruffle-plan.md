@@ -569,12 +569,77 @@ Steps:
 Ordering: AFTER the `_setTimeZone` fix above; relation to widget
 channels start = user's call at CHECKPOINT UI1.
 
+## Milestone: Single local widget channel (scoped 2026-07-08, user)
+
+Supersedes the old one-line "Widget channels & management" future-milestone
+entry. Scope narrowed by the user 2026-07-08 after discussion:
+
+**Direction (user decisions 2026-07-08):**
+- **One hardcoded channel = all available widgets**, generated at boot (a
+  boot step enumerates the widgets we ship and emits the single
+  `profile.xml`, replacing today's hand-written
+  `fixtures/http/xml.chumby.com/xml/profiles`).
+- **Remote channels + registration are deferred to the very last feature**
+  of the project. chumby.com is on life support (registration is *possible*
+  but not desirable now) — do NOT treat it as dead, and do NOT build a
+  server story here.
+- **Dashboard preview stays**, backed by a **static** thumbnail via
+  `loadMovie` (contract row F2:4611, `{widgets}+<thumbnail href>` — a
+  per-widget image/SWF the profile points at, NOT a live second render).
+  This is compatible with the chosen `localCache` single-instance playback
+  path — no revival of the rejected master/slave dual-instance system.
+- **Channel-management UI that is useless without remote/download gets
+  disabled** via the existing `fixtures/ui-policy.toml` mechanism (same as
+  the Settings-menu icons).
+
+**Widget playback architecture** stays the decided `localCache` in-movie
+path (feature-decisions.md). Widget-channel decisions come from
+`06-variant-diff.md §3` (zurk's offline `profiles.sh` multi-channel is the
+prior art) and `03-environment-contract.md §5a/5b` (profiles/setprofile/
+thumbnail rows).
+
+Three working increments, each ending in a demonstrable result and a
+`CHECKPOINT` where work STOPS for the user's feedback. Investigation folds
+into whichever step needs it (no separate catalog step); the written record
+accumulates in `claude-docs/reference/19-widget-channel.md`. Real chumby =
+read-only oracle (ask first) for confirming on-device behavior.
+
+- **W1 — Boot-generated channel, used correctly.** A boot step enumerates
+  the shipped widgets and emits the single `profile.xml` ("all available
+  widgets"); the panel loads and plays it. Investigate/confirm: how the
+  channel is assembled and played, what holds "current channel" state, how
+  the generator replaces the static fixture on both desktop and Pi.
+  Acceptance: desktop fixture run + on-device check show the generated
+  channel playing its widgets; CI movie-start green; doc 19 + fixtures
+  README updated.
+  `CHECKPOINT W1: present the generated channel working; wait for feedback.`
+- **W2 — Preview picture.** The dashboard main-bar (B2) thumbnail shows the
+  current widget's preview via `loadMovie` of a fixture-provided static
+  thumbnail referenced from the profile XML. Confirm static-vs-live against
+  the device (oracle). Acceptance: thumbnail renders on desktop + on-device;
+  doc 19 updated.
+  `CHECKPOINT W2: present the preview working; wait for feedback.`
+- **W3 — Disable controls not needed.** Add `fixtures/ui-policy.toml`
+  entries disabling the main-bar Channel button (makes D1-D7 picker/info/
+  add/reload unreachable) and Delete (B8); confirm Send (B10) / Rate (B7)
+  stay disabled (already `skip`). Same disable mechanism as the Settings
+  icons. Acceptance: the buttons render disabled/inert on desktop +
+  on-device; doc 19 + feature-decisions.md D-rows resolved.
+  `CHECKPOINT W3 (= milestone done): present the disabled controls; wait.`
+
+Ordering note: W1 first means the Channel button is briefly reachable and
+dead-ends until W3 disables it — acceptable, since each step is verified on
+its own.
+
 ## Future milestones (added at CHECKPOINT 2, 2026-06-12, by user decision)
 
-- **Milestone: Widget channels & management** — channel switching, channel
-  info, add widget (05-screens.md D1-D5, D7). Until then a single static
-  fixture channel.
 - **Milestone: Info & Licenses panels** (05-screens.md E6, E7).
+- **Remote channels + registration** (05-screens.md D2-D5, D7 remote path;
+  activation A4): the **very last feature** of the project (user
+  2026-07-08). chumby.com on life support — revisit reviving registration/
+  remote channel download only then. A real per-Pi device-identity (UUID)
+  hook — reimplementing `guidgen.sh` in `PiHost` off Pi hardware, currently
+  a fixed fixture GUID — belongs with this, if wanted.
 - Also still open from M2, not Pi-specific: Music from USB / local files
   (C11, decided *needed*) — requires `_getDirectoryEntry` object-filling
   (5,320); clock/time/timezone panels (B3, E5, E12) unverified (now
