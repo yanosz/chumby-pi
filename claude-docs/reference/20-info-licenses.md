@@ -72,6 +72,32 @@ walk-through):
   reports a non-wlan type; the dashboard shows full green signal bars (the
   static `signal_strength` fixture). Both go real in I3.
 
+## I3 planning note — the deploy device is WIRED (3B+), + the "ethernet bar"
+
+Corrected 2026-07-08 (Jan): the running device is a Pi **3B+ on WIRED
+Ethernet** (not the interim 3A+/wifi-only from doc 07). So I3's real
+`network-status` reports **`type=lan`** (Info screen E6 already renders
+"type: Ethernet / ip / netmask / gateway / dns" from that).
+
+Dashboard indicator on wired: the only network element is the
+`WifiIndicator` (class `frame_2:8060`, placed in `DefineSprite_776`) — a
+5-segment meter (`WifiSignalStrengthIndBar` bars, each `gotoAndStop
+("on"|"off")`, `frame_2:28646`). It shows only when the `signal_strength`
+XML has `connected="1"`, else hides; level = `(linkquality-50)*2` in 20%
+steps. There is **no wired/ethernet icon anywhere in the SWF**.
+
+Decision (Jan, 2026-07-08): repurpose the meter as an **ethernet
+indicator** — `signal_strength` (PiHost) returns `connected=1
+linkquality=100` on a healthy wired link (5 bars shown), and **recolour**
+the bars to a distinct non-wifi colour. Recolour is feasible without
+touching the SWF: the panel already tints clips via `new Color(mc).setRGB
+(...)` (e.g. buttons `frame_2:6833`), proven in our player; we drive the
+same from the host as a new **`tint`** action in the ui-policy mechanism,
+applied to the parent `WifiIndicator` (a child bar's `gotoAndStop` won't
+reset a parent colour transform), re-applied on frame entry. Need the
+`WifiIndicator` selector (find via `chumby_pick=debug`). Honesty: distinct
+colour + the Info screen's "type: Ethernet" line.
+
 On-device (2026-07-08, Jan's request — earlier than the plan's I3 pass):
 fork `86ae7f86a` hot-replaced to the Pi (`192.168.42.30`) — fresh aarch64
 dist binary + fixtures; service active, LICENSES seeded, Info icon re-enabled,

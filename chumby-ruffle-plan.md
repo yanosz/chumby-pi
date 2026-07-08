@@ -706,15 +706,21 @@ work STOPS for the user's feedback.
   `fixtures/ui-policy.toml`. Acceptance: desktop run shows the info screen with
   both buttons dimmed/inert; doc 20 updated.
   `CHECKPOINT I2: present the info screen + disabled buttons; wait.`
-- **I3 — Real network diagnostics + WLAN bar.** `PiHost` answers the
+- **I3 — Real network diagnostics + network bar.** `PiHost` answers the
   network-status and signal-strength exec touchpoints in Rust, reporting the REAL
-  interface type (wired-aware: on a wired Pi type=lan, no signal line/bar — the
-  panel's own `loadInfo` branch; on wifi type=wlan with link-quality/signal).
-  Desktop keeps the file fixtures. The dashboard wifi bar + E6 link-quality line
-  go live. Network-class change (signal_strength / network-status → real on the
-  Pi) recorded in feature-decisions.md. Acceptance: desktop fixture run +
-  **on-device confirm** (real ssid/ip/signal shown, bar reflects reality); CI
-  movie-start green; doc 20 + patch-notes/CHUMBY docs updated.
+  interface type. The actual deploy device is a **3B+ on WIRED Ethernet**
+  (`type=lan`; the interim 3A+/wifi note in doc 07 does not apply) — so the Info
+  screen (E6) shows Ethernet/ip/gateway/dns, and the dashboard meter becomes an
+  **"ethernet up" indicator**: `signal_strength` returns `connected=1
+  linkquality=100` on a healthy wired link (5 bars) and the bars are **recoloured**
+  to a distinct non-wifi colour via a new `tint` action in the ui-policy
+  mechanism (the panel's own `new Color().setRGB` idiom, driven from the host on
+  the `WifiIndicator`; doc 20 has the mechanics). On a wifi Pi the same path
+  reports `type=wlan` with real link-quality (green meter). Desktop keeps the
+  file fixtures. Network-class change (signal_strength / network-status → real on
+  the Pi) recorded in feature-decisions.md. Acceptance: desktop fixture run +
+  **on-device confirm** (real ip/gateway shown, ethernet bar renders in its
+  colour); CI movie-start green; doc 20 + patch-notes/CHUMBY docs updated.
   `CHECKPOINT I3 (= milestone done): user confirms on-device; wait.`
 
 ## Future milestones (added at CHECKPOINT 2, 2026-06-12, by user decision)

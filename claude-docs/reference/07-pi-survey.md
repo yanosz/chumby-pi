@@ -40,7 +40,7 @@ depend on the 3A+ specifically are marked; most transfer to the 3B+
 | backlight | `/sys/class/backlight/` is **empty** (HDMI panel). → Step 3.4 (real backlight control) is **untestable on the interim device**; revisit with the final TFT |
 | audio | card0 `vc4hdmi` (HDMI), card1 `bcm2835 Headphones` (3.5 mm jack), **card2 `UACDemoV1.0` (USB, the final route)** |
 | input | **none attached** — no keyboard, mouse, or touch. Only HDMI-CEC and the USB dongle's HID volume keys. All interaction must come via SSH / IPC / GPIO |
-| network | WiFi only (3A+ has no Ethernet), 192.168.210.159/24, regdom DE |
+| network | WiFi only (3A+ has no Ethernet), 192.168.210.159/24, regdom DE. **2026-07-08: the current deploy device is the 3B+ (`192.168.42.30`), which HAS Ethernet and Jan runs it WIRED — so for the running system the network is `type=lan`, not wifi. This "wifi-only" line describes only the interim 3A+ test unit.** |
 | GPIO | `/dev/gpiochip{0,1,4}`; `pinctrl` and `gpioset` (libgpiod) installed |
 | session | `graphical.target`; lightdm **autologin** user `pi` → session `rpd-labwc` (**Wayland**, labwc + wf-panel-pi + pcmanfm desktop) |
 | mpv | **not installed**; apt candidate 0.40.0-3+deb13u1 (fine — package dependency) |
