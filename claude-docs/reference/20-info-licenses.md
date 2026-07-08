@@ -104,3 +104,47 @@ dist binary + fixtures; service active, LICENSES seeded, Info icon re-enabled,
 no panics. Full record: doc 09 "Hot-replace deploy, 2026-07-08 (the I1
 Licenses build)". Visual confirmation of the viewer on the TFT left to Jan
 (the B2 main bar auto-hides, so scripted navigation over SSH is fiddly).
+
+## I3 — Real network diagnostics + ethernet bar — DONE (desktop) 2026-07-08
+
+Fork `86ae7f86a` → `dec173b47`. Three requirements (Jan 2026-07-08), all
+desktop-verified with `--chumby-real-net` on the dev box:
+1. **Blue meter for wired.** `signal_strength` → `connected=1 linkquality=100`
+   (5 bars) + a new ui-policy `tint` rule recolours the `WifiIndicator` blue.
+2. **Real IP of the connected interface.** `network_status.sh` → real
+   ip/netmask/gateway/dns; `macgen.sh` → real MAC.
+3. **Honest lan page** (Jan's pick over the ssid/speed trick): `type="lan"`
+   → the Info screen shows "type: Ethernet" + real ip/gw/dns, no ssid row and
+   no wifi link-quality line.
+
+Implementation:
+- `chumby/real_net.rs` — `RealNetHost` wraps `FixtureHost` and overrides the
+  `exec` touchpoints `network_status.sh` / `signal_strength` / `macgen.sh`
+  from live kernel state: default-route interface + gateway from
+  `/proc/net/route`, IPv4 via a UDP `connect`+`local_addr` probe, netmask from
+  the interface's subnet route, DNS from `/etc/resolv.conf`, MAC from
+  `/sys/class/net/<if>/address`. Pure `std`, no shell (design principle).
+  Assumes one connected interface (Jan). Enabled by the `--chumby-real-net`
+  CLI flag; everything else delegates to the inner fixture host, so the
+  desktop default stays pure fixtures.
+- `chumby/ui_policy.rs` — new `Tint(0xRRGGBB)` action (AVM1 `Color.setRGB`
+  flat-fill via `set_color_transform`), parsed from `color = "#RRGGBB"`.
+- `fixtures/ui-policy.toml` — rule `wired-eth-bar`, `color="#1E90FF"`,
+  selector `controlPanel/name:mainButtons/depth:136` (the WifiIndicator,
+  chid 776, is placed UNNAMED at depth 136 in `mainButtons`/DS784 — depth
+  selector required).
+- `fixtures/exec/network_status.xml` — desktop fixture aligned to `type="lan"`
+  so the desktop info page mirrors the honest wired page (real-net off).
+
+Desktop evidence: main-bar meter renders **blue** (was green); `wired-eth-bar`
+log `target acquired — applying Tint(0x1E90FF)`; Info page shows the dev box's
+real `ip 192.168.42.70`, gw/dns `192.168.42.1`, netmask `255.255.255.0`, MAC
+`bc:24:11:75:e4:56`, `type: Ethernet`, no wifi line.
+
+**Remaining (deferred — session paused 2026-07-08):** the on-device pass —
+aarch64 dist rebuild at `dec173b47`, add `--chumby-real-net` to the Pi
+launcher (`chumby-player-run`, a Pi op to document), deploy, confirm the Pi's
+real `eth0` IP + blue bar on the TFT. Then feature-decisions network-class row
+(signal_strength/network-status → real on Pi) + CI movie-start green close I3.
+Also still open: I2's `piButton`/`introButton` disable + the registration-block
+leave/blank decision (the fixture "registered to: jan" block still shows).

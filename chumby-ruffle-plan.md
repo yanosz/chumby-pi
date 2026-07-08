@@ -721,6 +721,11 @@ work STOPS for the user's feedback.
   the Pi) recorded in feature-decisions.md. Acceptance: desktop fixture run +
   **on-device confirm** (real ip/gateway shown, ethernet bar renders in its
   colour); CI movie-start green; doc 20 + patch-notes/CHUMBY docs updated.
+  **DONE on desktop 2026-07-08** (fork `dec173b47`; blue meter + real
+  ip/gw/dns/mac verified with `--chumby-real-net`; doc 20 "I3" section).
+  Remaining: the on-device pass (aarch64 rebuild, `--chumby-real-net` in the
+  Pi launcher, deploy, confirm on the TFT) + feature-decisions network-class
+  row + CI.
   `CHECKPOINT I3 (= milestone done): user confirms on-device; wait.`
 
 ## Future milestones (added at CHECKPOINT 2, 2026-06-12, by user decision)

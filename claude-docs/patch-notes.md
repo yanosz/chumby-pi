@@ -46,6 +46,17 @@ frame cadence from `avm::method` (rides the panel's per-frame `_bent`
 poll). First use: clock screen TZ/NTP controls disabled on the Pi
 (chumby-pi `claude-docs/reference/18-clock-screen-and-ui-policy.md`).
 
+Behavior note (Info/Licenses milestone I3, 2026-07-08, module-internal +
+one `main.rs`/`cli.rs` line each): `chumby/real_net.rs` adds `RealNetHost`,
+which wraps `FixtureHost` and answers the network `exec` touchpoints
+(`network_status.sh`/`signal_strength`/`macgen.sh`) from live kernel state
+(`/proc/net/route`, a UDP local-addr probe, `/etc/resolv.conf`, `/sys` —
+pure std, no shell). Gated by the new `--chumby-real-net` CLI flag
+(`cli.rs`) and wired in `main.rs` (wrap the fixture host when set); off by
+default, so desktop/CI stay pure fixtures. `chumby/ui_policy.rs` gains a
+`Tint(0xRRGGBB)` action (AVM1 `Color.setRGB` via `set_color_transform`) —
+used by the `wired-eth-bar` rule to repaint the dashboard wifi meter blue.
+
 Behavior note (Info/Licenses milestone I1, 2026-07-08, module-internal
 in `chumby/navigator.rs`): `ChumbyNavigator::intercept` now serves
 `file://` data loads from the virtual rootfs — panel-hardcoded chumby
