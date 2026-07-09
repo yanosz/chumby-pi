@@ -117,6 +117,13 @@ files that no longer exist; their content lives in the six documents above.
 merge, in both repos. This supersedes the fork's earlier "amend into the
 single squashed commit + `--force-with-lease`" discipline.
 
+**UI policy moved into the fork (2026-07-09, user):** the rules are now
+`ruffle/core/src/chumby/ui-policy.toml`, compiled in with `include_str!`.
+The fork only ever runs `controlpanel.swf`, so which of that SWF's controls
+are dead is a property of the player, not of the packaging. References to
+`fixtures/ui-policy.toml` below are historical; editing a rule now needs a
+rebuild.
+
 ---
 
 ## Milestone 1 — Understand the Control Panel
@@ -816,9 +823,10 @@ panel gets ordered is still open. When the new panel is in hand:
   `_setLCDMute` (5,20) onto the real backlight; keep fixture fallback
   for desktop runs. Night mode (B4) on-device test closes it out.
 - **RE-ENABLE the brightness Settings entry**: the UI-policy rule
-  `settings-brightness` in `fixtures/ui-policy.toml` currently disables
-  the E2 menu icon (it was unwired). This milestone must drop that rule
-  so the panel's brightness screen is reachable again.
+  `settings-brightness` currently disables the E2 menu icon (it was
+  unwired). This milestone must drop that rule so the panel's brightness
+  screen is reachable again. Since 2026-07-09 the rules live in the fork,
+  at `ruffle/core/src/chumby/ui-policy.toml`, compiled in.
 
 ## The very last milestone — Intro widget (moved here 2026-07-08, user)
 
@@ -833,9 +841,11 @@ ignored interpreter-level interception); the actual approach — VM-level
 interception of the branch / `attachMovie` / `_startSlave` / slave-var reads,
 routing `intro.swf` through the existing in-movie widget path — is worked out
 here.
-- Until then, `introButton` is disabled by a `fixtures/ui-policy.toml` rule
-  (added in the E6/E7 milestone, I2). **This milestone must drop that rule** and
-  make the intro actually play, then confirm on-device.
+- Until then, `introButton` was *supposed* to be disabled by a ui-policy rule
+  (E6/E7 milestone, I2). **It never was** — found 2026-07-09: no `introButton`
+  or `piButton` rule exists, so both the intro button and the geek trigger are
+  still live. Adding those two rules is owed work; this milestone then drops
+  the intro one and makes the intro actually play, confirmed on-device.
 
 ## Anti-patterns observed last time — explicit countermeasures
 - **Running in circles:** every step above ends with the engineering record

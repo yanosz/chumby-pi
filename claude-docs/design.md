@@ -15,7 +15,6 @@ fixtures/                everything the player answers the panel with
   exec/                  canned stdout for the panel's shell commands
   http/<host>/<path>     canned chumby.com responses
   widgets/               widget SWFs + per-widget XML sidecars + thumbnails
-  ui-policy.toml         which panel controls are dimmed and inert
 swf-assets/              controlpanel.swf — gitignored, you supply it
 pkg/                     Debian packaging + build-debs.sh
 chumby-widget-channel    boot-time generator of the single local channel
@@ -62,10 +61,12 @@ Everything else about the player — the vendor-call table, the host trait, how
 
 Two consequences worth stating.
 
-Changing what the panel is told needs **no rebuild**. The UI-policy rules,
-the network fixture, the widget channel and the seeded `/psp` values are all
-files; an rsync and a service restart are the whole deployment for a change
-that touches only them.
+Changing what the panel is told needs **no rebuild**. The network fixture,
+the widget channel and the seeded `/psp` values are all files; an rsync and
+a service restart are the whole deployment for a change that touches only
+them. The UI-policy rules are the exception — they live in the player and
+are compiled in, because which of the panel's controls are dead is a fact
+about the panel, not about this packaging.
 
 Paths inside fixture data may contain a `{FIXTURES}` token, which the player
 expands to the absolute fixtures directory when it serves the value. That is

@@ -65,17 +65,18 @@ as a live control that silently does nothing.
 | Delete / Send / Rate widget | **disabled** | delete can't persist; send and rate are chumby.com social features |
 | Info / About | **delivered** | with real network diagnostics |
 | Licenses | **delivered** | the original chumby's GPL and LGPL texts, verbatim |
-| Geek panel, file browser | **disabled** | redundant next to a Raspberry Pi; its trigger (the "π" button) is disabled |
-| Intro widget | **disabled** | deferred to the project's last milestone |
+| Geek panel, file browser | skip, **not yet disabled** | redundant next to a Raspberry Pi. Its trigger is the Info screen's "π" button, which is still live — a ui-policy rule for it is owed |
+| Intro widget | deferred, **not yet disabled** | the intro button is still live and cannot play on our widget path; a ui-policy rule for it is owed. Deferred to the project's last milestone |
 | Brightness, night mode | **disabled** | blocked on display hardware, see §3 |
 | Network setup wizard, touchscreen calibration | skip | the OS owns these |
 | First-time wizard, activation, safe mode, firmware update | skip | chumby.com and chumby firmware machinery |
 | Accept/decline sent widgets, intercom, microphone test | skip | social or pointless here |
 
-"Disabled" means the control renders dimmed and inert, via a rule in
-`fixtures/ui-policy.toml`. "Skip" means the screen is simply never
-navigated to; its frames stay inert, and its startup code — which does run —
-tolerates a failing environment.
+"Disabled" means the control renders dimmed and inert, via a rule in the
+player's compiled-in UI policy (`ruffle/core/src/chumby/ui-policy.toml` —
+the rules belong to the player, since it exists to run this one SWF).
+"Skip" means the screen is simply never navigated to; its frames stay inert,
+and its startup code — which does run — tolerates a failing environment.
 
 ### FR6 — Nothing reaches chumby.com
 
@@ -164,8 +165,9 @@ from memory or shell history.
 
 | Item | Blocked on |
 |------|-----------|
-| **Brightness + night mode** | Hardware. The current ILI9486 clone has its backlight LED rail tied straight to 3.3 V — GPIO22 is declared in the overlay but not routed on the board, and driving it does nothing (verified by watching the panel while toggling it). Dimming needs a different display; the candidates and their driver risk are in [design.md](design.md) §8. When it lands, it must also drop the `settings-brightness` rule from `fixtures/ui-policy.toml`. |
-| **Intro widget** | The panel only loads `intro.swf` through the slave player, which the chosen widget architecture does not run. Needs interpreter-level work in the fork. It must drop the `intro-button` ui-policy rule. |
+| **Brightness + night mode** | Hardware. The current ILI9486 clone has its backlight LED rail tied straight to 3.3 V — GPIO22 is declared in the overlay but not routed on the board, and driving it does nothing (verified by watching the panel while toggling it). Dimming needs a different display; the candidates and their driver risk are in [design.md](design.md) §8. When it lands, it must also drop the `settings-brightness` rule from the player's UI policy. |
+| **Intro widget** | The panel only loads `intro.swf` through the slave player, which the chosen widget architecture does not run. Needs interpreter-level work in the fork. |
+| **Geek + intro buttons still live** | Both were meant to be disabled and never were. Two ui-policy rules on the Info screen's `piButton` and `introButton` are owed. |
 | **Remote channels + registration** | Deliberately the project's last feature. |
 | **USB / local music files** | `_getDirectoryEntry` in the player. |
 | **Backup alarm** | Not yet scoped. |

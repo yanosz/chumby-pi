@@ -46,7 +46,6 @@ and on the Pi.
 | `exec/*.{txt,xml}` | command stdout bodies | edit the file named in the manifest |
 | `http/<host>/<path>` | HTTP fetches to chumby hosts (`*.chumby.com`, `127.0.0.1`, `localhost`) | file at query-stripped, trailing-slash-stripped path; e.g. `http://xml.chumby.com/xml/chumbies/?id=…` → `http/xml.chumby.com/xml/chumbies` |
 | (in code) | stateful natives (volume, mute, balance, touchclick, brightness, slave vars, platform=ironforge, env vars) | `core/src/chumby/fixture.rs` in the ruffle fork — `native()` match |
-| `ui-policy.toml` | which panel controls are dimmed/disabled (Pi owns timezone + NTP, so the clock screen's TZ/NTP controls are inert; 12/24h stays live) | edit the `[[rule]]` entries; format + selector syntax in the fork's `core/src/chumby/ui_policy.rs` header, which controls and why in `claude-docs/requirements.md` §1 FR5 |
 
 ## Current contents
 
