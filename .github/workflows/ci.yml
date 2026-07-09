@@ -5,6 +5,11 @@ name: CI
 # base (arm64 debian:trixie container), and the installed binaries run
 # (including starting the movie from the packaged SWF + fixtures).
 #
+# On a pull request the job builds the player and stops there: everything
+# past that point needs controlpanel.swf, which the data deb embeds. The
+# full deb build + install/run test therefore runs on push to `main` (i.e.
+# after the squash-merge) and on manual dispatch.
+#
 # controlpanel.swf is copyrighted chumby firmware, fetched from a
 # private Nextcloud share via RCLONE_CONFIG_RSHARE_* Actions secrets.
 # It ends up inside chumby-player-data_*.deb, which therefore must
@@ -59,6 +64,7 @@ jobs:
             --profile dist --target aarch64-unknown-linux-gnu
 
       - name: Fetch controlpanel.swf from the private share
+        if: github.event_name != 'pull_request'
         env:
           RCLONE_CONFIG_RSHARE_TYPE: webdav
           RCLONE_CONFIG_RSHARE_VENDOR: nextcloud
@@ -70,9 +76,11 @@ jobs:
           test -f ruffle/swf-assets/controlpanel.swf
 
       - name: Build the debs
+        if: github.event_name != 'pull_request'
         run: pkg/build-debs.sh
 
       - name: Install and run the debs in an arm64 trixie container
+        if: github.event_name != 'pull_request'
         run: |
           docker run --rm \
             -v "$PWD/pkg/out:/debs:ro" \
@@ -80,6 +88,7 @@ jobs:
             debian:trixie /bin/sh /deb-install-test.sh
 
       - name: Upload chumby-player deb (the data deb stays in CI)
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: chumby-player-deb

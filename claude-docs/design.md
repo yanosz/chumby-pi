@@ -209,6 +209,10 @@ One workflow per repository, and the acceptance criterion in both is **"the
 movie starts"** — not "it builds". An upstream merge can compile clean and
 still leave the vendor-call hooks dead.
 
+That criterion is only exercised **off** pull requests, though: starting the
+movie needs the copyrighted SWF, so a PR builds and stops, and the real check
+runs on push to the default branch. The pre-merge gate is a local run.
+
 The check: run the player headless under `timeout 45` with
 `chumby_host=info`; success is exit code 124 (still alive when the timeout
 fired) *and* `_getPlatform` in the log (a chumby native actually executed)

@@ -26,8 +26,12 @@ gh pr create --repo yanosz/chumby-pi --base main --head <branch> \
     --title "…" --body "…"
 ```
 
-Both workflows trigger on pull requests, so CI runs on the branch before it
-lands. Merging is the user's call.
+Both workflows run on pull requests, but **a PR only builds.** Everything
+past the build needs `controlpanel.swf` — copyrighted, on a private share —
+so the deb build, the install/run test and the fork's movie-start check run
+on push to the default branch, after the squash-merge, and on manual
+dispatch. Verify locally before opening a PR; CI will not catch it for you.
+Merging is the user's call.
 
 **Order matters when the session touched the player.** Bump the `ruffle/`
 gitlink in the same change that needs it, but merge the **fork's PR first**:
@@ -35,6 +39,15 @@ squash-merging replaces its commits with a new one, orphaning whatever the
 gitlink pinned. Then re-point the gitlink at the squashed commit, push, and
 only then merge this repo's PR. Otherwise `git clone --recursive` of `main`
 cannot fetch the submodule.
+
+The submodule tracks the fork's `chumby` branch (`branch = chumby` in
+`.gitmodules`), so re-pointing after a merge is:
+
+```sh
+git submodule update --remote ruffle    # fast-forward to origin/chumby
+git commit -am "Bump ruffle to the squashed <topic> commit"
+git push
+```
 
 ## 2. Player work happens in the submodule
 
