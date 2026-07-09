@@ -5,12 +5,13 @@ behave like a Chumby Classic: it boots into the original control panel,
 shows widgets, rings alarms, plays audio, and is configured through the
 panel's own screens — except where those screens are meaningless on a Pi.
 
-This repository is the **appliance**: packaging, fixture data, the kiosk,
+This repository is the **appliance**: packaging, the kiosk, hardware,
 end-user documentation, CI. The player is
 [chumby-ruffle](https://github.com/yanosz/chumby-ruffle), a Ruffle fork
-pinned here as the `ruffle/` submodule. How it works inside is that
-repository's business; what this one needs to know is how to build it, how
-to launch it, and what data to hand it — see [design.md](design.md) §2.
+pinned here as the `ruffle/` submodule, and it carries its own environment —
+the fixtures, the SWF, the run harness — so that player work needs only that
+repository. What this one needs to know is how to build the player, how to
+launch it, and where its data is; see [design.md](design.md) §2.
 
 ---
 
@@ -73,8 +74,7 @@ as a live control that silently does nothing.
 | Accept/decline sent widgets, intercom, microphone test | skip | social or pointless here |
 
 "Disabled" means the control renders dimmed and inert, via a rule in the
-player's compiled-in UI policy (`ruffle/core/src/chumby/ui-policy.toml` —
-the rules belong to the player, since it exists to run this one SWF).
+player's compiled-in UI policy (`ruffle/core/src/chumby/ui-policy.toml`).
 "Skip" means the screen is simply never navigated to; its frames stay inert,
 and its startup code — which does run — tolerates a failing environment.
 

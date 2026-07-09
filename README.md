@@ -34,8 +34,8 @@ machine:
 ```sh
 git clone --recursive https://github.com/yanosz/chumby-pi.git
 cd chumby-pi
-# drop controlpanel.swf into swf-assets/ first — see docs/setup.md
-(cd ruffle && cargo build -p ruffle_desktop)
+# drop controlpanel.swf into ruffle/swf-assets/ first — see docs/setup.md
+cd ruffle && cargo build -p ruffle_desktop
 ./run-controlpanel.sh
 ```
 
@@ -53,12 +53,9 @@ straight into the control panel, no desktop in sight.
 
 | Directory | What's inside |
 |-----------|---------------|
-| `ruffle/` | the chumby-ruffle player, as a git submodule |
-| `fixtures/` | the fake Chumby the panel talks to — web endpoints, canned command output, and a writable filesystem |
+| `ruffle/` | the chumby-ruffle player, as a git submodule. It brings its own `fixtures/` (the fake Chumby the panel talks to), the desktop launcher, and where the copyrighted firmware files go |
 | `pkg/` | the Debian packages and the kiosk service that boots to the panel |
 | `docs/` | the setup and hardware guides — **start with [docs/setup.md](docs/setup.md)** |
-| `run-controlpanel.sh` | the desktop-window launcher used above |
-| `swf-assets/` | where the copyrighted firmware files go (empty, ignored by git) |
 
 There's also a `claude-docs/` folder with the engineering record — what
 this thing has to do, how it's put together, and how to work on it. Handy

@@ -9,20 +9,18 @@ Building, deploying and the record of what was done to the device:
 ## 1. Repository layout
 
 ```
-ruffle/                  submodule → chumby-ruffle (the player)
-fixtures/                everything the player answers the panel with
-  rootfs/                the panel's virtual filesystem (/psp, /tmp, /LICENSES…)
-  exec/                  canned stdout for the panel's shell commands
-  http/<host>/<path>     canned chumby.com responses
-  widgets/               widget SWFs + per-widget XML sidecars + thumbnails
-swf-assets/              controlpanel.swf — gitignored, you supply it
+ruffle/                  submodule → chumby-ruffle. The player AND its
+                         environment: fixtures/, swf-assets/, the desktop
+                         launcher, chumby-ctl, chumby-widget-channel.
 pkg/                     Debian packaging + build-debs.sh
-chumby-widget-channel    boot-time generator of the single local channel
-chumby-ctl               shell client for the player's control FIFO
-run-controlpanel.sh      desktop run
 docs/                    end-user documentation
 claude-docs/             this engineering record
 ```
+
+The player owns everything it needs to run, so that player work happens in
+one repository. This repo packages it and puts it on a Pi; `build-debs.sh`
+reaches into the submodule for the binary, the fixtures, the SWF and the two
+helper scripts it installs.
 
 ## 2. What this repo knows about the player
 
@@ -49,24 +47,19 @@ ruffle_desktop \
 that a streaming load has not parsed yet. `-PlocalCache=1` selects the
 in-movie widget path. `--fullscreen` hides Ruffle's menu bar.
 
-**What data it wants.** A fixtures directory, laid out as above. The keys are
-the panel's own request strings — a command line, a URL path, a filesystem
-path — so a `chumby_host=info` log line names exactly the file that would
-have answered it.
+**What data it wants.** A fixtures directory — `rootfs/`, `exec/`, `http/`,
+`widgets/` — which ships inside the submodule. The keys are the panel's own
+request strings, so a `chumby_host=info` log line names exactly the file that
+would have answered it.
 
-Everything else about the player — the vendor-call table, the host trait, how
-`file://` is intercepted — belongs to chumby-ruffle's `claude-docs/`.
+Everything else about the player — the vendor-call table, the host trait, the
+UI policy, how `file://` is intercepted, how the widget channel is generated —
+belongs to chumby-ruffle's `claude-docs/`.
 
-## 3. Fixtures are data, not code
+## 3. Fixtures are data, and they ship with the player
 
-Two consequences worth stating.
-
-Changing what the panel is told needs **no rebuild**. The network fixture,
-the widget channel and the seeded `/psp` values are all files; an rsync and
-a service restart are the whole deployment for a change that touches only
-them. The UI-policy rules are the exception — they live in the player and
-are compiled in, because which of the panel's controls are dead is a fact
-about the panel, not about this packaging.
+The fixture tree lives in the submodule; its contents and their format are
+the player's business. Two properties of it shape this repo's design.
 
 Paths inside fixture data may contain a `{FIXTURES}` token, which the player
 expands to the absolute fixtures directory when it serves the value. That is
@@ -77,40 +70,25 @@ token is the fix.
 The rootfs is **read-write** — all of the panel's persistence (`/psp/alarms`,
 `/psp/volume`, `/psp/url_streams`, `/psp/clock_format`) lives there. A
 read-only copy under `/usr/share` therefore cannot be the live tree, which
-drives the state-directory design in §5.
+drives the state-directory design in §5. It also means a fixture change is
+deployed by rsync-and-restart, with no rebuild — unlike the UI-policy rules,
+which are compiled into the player.
 
-## 4. The single local widget channel
+## 4. Booting the widget channel
 
-Real chumby fetched a *channel* — a list of widget instances — from
-chumby.com. We generate one at boot from the widgets we ship.
+The player generates its single widget channel from the widgets it ships
+(`chumby-widget-channel`, in the submodule — design there). This repo owns
+only when that runs on the device.
 
-Each widget carries an XML sidecar next to its SWF
-(`unsubscribedclock.widget.xml`), holding exactly the `<widget>` element the
-panel consumes: name, description, version, mode, access, `<movie href>` and
-an optional `<thumbnail href>`. `chumby-widget-channel` (Python, XML in, XML
-out) enumerates the sidecars, wraps each in the
-`<widget_instance>`/`<profile>` envelope, assigns instance ids, and writes
-`fixtures/http/xml.chumby.com/xml/profiles` plus the two
-`/tmp/currentProfile*` files. Channel order is the sidecar's `id` attribute.
-
-It deep-copies the whole `<widget>` element, so the thumbnail rides along
-with no generator change. It skips the rewrite when a sha256 over the ordered
-sidecar set is unchanged. Its faithfulness was established by regenerating
-the previously hand-written, known-good profile fixture and finding the
-output canonical-XML equal.
-
-Boot wiring: a `chumby-widget-channel.service` oneshot runs
-`Before=chumby-player.service`, seeding the state directory if absent and
-then refreshing the profile. The player unit `Wants=` it rather than
-`Requires=` it, so a generator failure still lets the panel start and hit its
-own guard. The generator is deliberately **not** folded into the launcher —
-a debug launch must work without regenerating first — so both launchers only
-*check* that a non-empty profile exists and refuse with a hint otherwise.
-
-The dashboard preview is a static 80×60 JPEG per widget, `loadMovie`'d from
-the `<thumbnail href>`. `loadMovie` decodes an image as readily as a SWF, so
-this needs no second live render. The panel gates the thumbnail on
-`hasNetwork`, which our healthy `network_status.sh` answer already satisfies.
+A `chumby-widget-channel.service` oneshot runs `Before=chumby-player.service`,
+seeding the state directory if absent and then refreshing the profile. The
+player unit `Wants=` it rather than `Requires=` it, so a generator failure
+still lets the panel start and hit its own guard. The generator is
+deliberately **not** folded into the launcher — a debug launch must work
+without regenerating first — so the launcher only *checks* that a non-empty
+profile exists and refuses with a hint otherwise. `build-debs.sh` regenerates
+the profile in the staged data tree, so the shipped channel always matches
+the packaged widgets.
 
 ## 5. The two packages, and the kiosk
 

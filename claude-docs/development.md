@@ -18,27 +18,17 @@ bump the `ruffle/` gitlink in the same change that needs it.
 
 Pushing is the user's call, not the agent's.
 
-## 2. Run it on the desktop
+## 2. Player work happens in the submodule
 
-No Pi needed, and this is where almost all verification happens.
-
-```sh
-# controlpanel.swf into swf-assets/ first
-cargo build -p ruffle_desktop --manifest-path ruffle/Cargo.toml
-./run-controlpanel.sh
-```
-
-Drive it without touching the window:
+Running the panel, driving it, changing what it answers, reading the
+decompiled SWF: all of it lives in `ruffle/`, which carries its own
+`CLAUDE.md` and `claude-docs/`. Start there, not here:
 
 ```sh
-echo bend            > /tmp/chumby-ctl   # summon the button bar
-echo "click 448 458" > /tmp/chumby-ctl   # SETTINGS
+cd ruffle && ./run-controlpanel.sh
 ```
 
-Useful logging: `RUST_LOG=warn,chumby_host=info` (every host call and its
-answer), `avm_trace=trace` (the panel's own traces), `chumby_pick=debug`
-(what a click actually hit — the only way to tell a missed click from an
-inert control).
+Come back to this repo for packaging, the kiosk, the device, and CI.
 
 ## 3. Cross-build for the Pi
 
@@ -64,6 +54,9 @@ target-scoped `PKG_CONFIG_*`. Host builds are unaffected.
 cargo build --profile dist -p ruffle_desktop \
     --target aarch64-unknown-linux-gnu --manifest-path ruffle/Cargo.toml
 ```
+
+The binary, the fixtures, the SWF and the two helper scripts the debs
+install all come out of `ruffle/`; `build-debs.sh` knows where.
 
 `dist` (fat LTO, `codegen-units=1`) is what ships; `build-debs.sh` refuses a
 missing `dist` binary. Expect ~6 min warm, ~9 min cold, and a multi-minute
@@ -94,7 +87,7 @@ cd ruffle && cargo build --profile dist -p ruffle_desktop \
 
 scp ruffle/target/aarch64-unknown-linux-gnu/dist/ruffle_desktop \
     pi@<pi>:/tmp/ruffle_desktop.new
-rsync -a --delete --rsync-path="sudo rsync" fixtures/ \
+rsync -a --delete --rsync-path="sudo rsync" ruffle/fixtures/ \
     pi@<pi>:/usr/share/chumby-player/fixtures/
 
 ssh pi@<pi> '
@@ -114,10 +107,7 @@ Verify the binary's sha256 on both ends. Do not skip the rebuild: see §7.
 
 ## 5. Verify
 
-**On the desktop**, for anything with a UI surface: run it, drive it through
-the FIFO, screenshot, and read the log. `chumby_pick=debug` proves a disabled
-control is inert (the click *lands* on it and nothing happens) rather than
-merely unclicked.
+**On the desktop**, from the submodule — see its `claude-docs/development.md`.
 
 **On the device**, with `grim` against the cage session:
 
@@ -132,7 +122,7 @@ further clicks are unhurried.
 
 **In CI**, the movie-start assertion ([design.md](design.md) §9).
 
-### CI secrets and the fixtures tarball
+### CI secrets
 
 Set once per repository (the `PASS` value must be rclone's *obscured* form,
 not the plaintext password):
@@ -146,13 +136,8 @@ for repo in yanosz/chumby-ruffle yanosz/chumby-pi; do
 done
 ```
 
-The fork's CI reads `fixtures/` from the share, not from this repo. **Re-upload
-after every fixture change:**
-
-```sh
-git -C /home/jan/chumby-pi archive HEAD fixtures | gzip \
-  | rclone rcat rshare:testdata/fixtures.tar.gz
-```
+Both workflows fetch only `controlpanel.swf`; the fork's fixtures are in its
+own repo, so there is no fixtures tarball to keep in sync any more.
 
 chumby-ruffle is public; this repo is private. Its Actions minutes are billed
 against the account quota and the `dist` build is a long job.

@@ -30,9 +30,12 @@ own chumby backup (or from the maintainer), place:
 
 | File(s) | Where | Needed for |
 |---------|-------|------------|
-| `controlpanel.swf` (2.8.87b3 verified) | `swf-assets/controlpanel.swf` | everything |
-| widget SWFs referenced by the fixture channel (`unsubscribedclock.swf`, `builtinclock.swf`) | `fixtures/widgets/` | the clock widget on the home screen |
-| alarm tones (`*.mp3`) | `fixtures/rootfs/usr/chumby/alarmtones/` | alarm sounds (alarms themselves work without them) |
+| `controlpanel.swf` (2.8.87b3 verified) | `ruffle/swf-assets/controlpanel.swf` | everything |
+| widget SWFs referenced by the fixture channel (`unsubscribedclock.swf`, `builtinclock.swf`) | `ruffle/fixtures/widgets/` | the clock widget on the home screen |
+| alarm tones (`*.mp3`) | `ruffle/fixtures/rootfs/usr/chumby/alarmtones/` | alarm sounds (alarms themselves work without them) |
+
+(The player carries its own fixtures, so these all live in the `ruffle/`
+submodule.)
 
 All three locations are gitignored; nothing you drop there can end up
 in a commit.
@@ -137,14 +140,15 @@ The panel appears on the TFT and from now on comes up on every boot.
 For trying it out or hacking on fixtures, any Linux desktop works:
 
 ```sh
-cd ruffle && cargo build -p ruffle_desktop && cd ..
+cd ruffle
+cargo build -p ruffle_desktop
 ./run-controlpanel.sh
 ```
 
-This opens the panel in a window, reads `swf-assets/controlpanel.swf`
-(override with `CHUMBY_SWF=<path>`), uses the repo's `fixtures/`
+This opens the panel in a window, reads `ruffle/swf-assets/controlpanel.swf`
+(override with `CHUMBY_SWF=<path>`), uses the submodule's `fixtures/`
 directly, tees a full host-traffic log to `/tmp/chumby-run.log`, and
 creates `/tmp/chumby-ctl` — so `echo bend > /tmp/chumby-ctl` (or
 typing `bend` + Enter in the launch terminal, or pressing Home with
-the window focused) plays the squeeze. `fixtures/README.md` explains
-how every mocked answer can be changed.
+the window focused) plays the squeeze. `ruffle/fixtures/README.md`
+explains how every mocked answer can be changed.

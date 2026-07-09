@@ -117,12 +117,19 @@ files that no longer exist; their content lives in the six documents above.
 merge, in both repos. This supersedes the fork's earlier "amend into the
 single squashed commit + `--force-with-lease`" discipline.
 
-**UI policy moved into the fork (2026-07-09, user):** the rules are now
-`ruffle/core/src/chumby/ui-policy.toml`, compiled in with `include_str!`.
-The fork only ever runs `controlpanel.swf`, so which of that SWF's controls
-are dead is a property of the player, not of the packaging. References to
-`fixtures/ui-policy.toml` below are historical; editing a rule now needs a
-rebuild.
+**The fork is self-contained for player work (2026-07-09, user).** Moved
+into chumby-ruffle: `fixtures/`, `swf-assets/`, `run-controlpanel.sh`,
+`chumby-ctl`, `verify-screens.sh`, `chumby-widget-channel`, the ffdec
+`appendix/`, the screenshots, and a `CLAUDE.md` of its own. The UI-policy
+rules moved too, into `core/src/chumby/ui-policy.toml`, compiled in with
+`include_str!` — the fork only ever runs `controlpanel.swf`, so which of
+that SWF's controls are dead is a property of the player. Editing a rule
+now needs a rebuild.
+
+chumby-pi keeps the packaging, the kiosk, the hardware, the device record
+and the end-user docs; `pkg/build-debs.sh` reaches into the submodule for
+the binary, fixtures, SWF and helper scripts. Paths like
+`fixtures/ui-policy.toml` or `swf-assets/…` below are historical.
 
 ---
 

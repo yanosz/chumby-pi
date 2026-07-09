@@ -66,8 +66,8 @@ jobs:
           RCLONE_CONFIG_RSHARE_USER: ${{ secrets.RCLONE_CONFIG_RSHARE_USER }}
           RCLONE_CONFIG_RSHARE_PASS: ${{ secrets.RCLONE_CONFIG_RSHARE_PASS }}
         run: |
-          rclone copy rshare:testdata/controlpanel.swf swf-assets/
-          test -f swf-assets/controlpanel.swf
+          rclone copy rshare:testdata/controlpanel.swf ruffle/swf-assets/
+          test -f ruffle/swf-assets/controlpanel.swf
 
       - name: Build the debs
         run: pkg/build-debs.sh
