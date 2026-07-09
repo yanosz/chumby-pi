@@ -35,10 +35,12 @@ Non-negotiable rules:
   it against the scope table (`claude-docs/requirements.md` §1 FR5) and ask
   if it is not listed.
 - One feature branch per working session — in this repo and in the
-  `ruffle/` submodule. It lands as a pull request, merged with GitHub's
-  Squash and merge. Commit after each completed step. Bump the submodule
+  `ruffle/` submodule. **Finishing the session means pushing it and opening
+  the pull request** in each repo you touched; do that yourself. Jan reviews
+  and squash-merges. Commit after each completed step. Bump the submodule
   gitlink in the same change that needs it, and merge the fork's PR before
-  this repo's. Pushing and merging are the user's call.
+  this repo's (squashing replaces the commit the gitlink pins — see
+  `claude-docs/development.md` §1).
 - Keep code comments brief. Code should speak for itself; comment only
   what cannot be read from the code — the why, a non-obvious constraint, a
   reference. Do not narrate what the code plainly does.

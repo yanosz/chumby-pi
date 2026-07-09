@@ -13,14 +13,28 @@ This document is the engineering record: it keeps the reasons and the traps.
 ## 1. Branch and commit policy
 
 **One feature branch per working session, squashed on merge**, in both this
-repository and the submodule. Work lands through a pull request, merged with
-GitHub's **Squash and merge**. When the session's work touches the player,
-bump the `ruffle/` gitlink in the same change that needs it — and merge the
-fork's PR first, or the gitlink points at a commit that squashing is about
-to replace.
+repository and the submodule.
+
+**Finishing a session means opening the pull request** — push the branch and
+create the PR yourself, in each repo the session touched. A pushed branch
+with no PR is an unfinished session. Jan reviews and merges with GitHub's
+*Squash and merge*.
+
+```sh
+git push -u origin <branch>
+gh pr create --repo yanosz/chumby-pi --base main --head <branch> \
+    --title "…" --body "…"
+```
 
 Both workflows trigger on pull requests, so CI runs on the branch before it
-lands. Pushing and merging are the user's call, not the agent's.
+lands. Merging is the user's call.
+
+**Order matters when the session touched the player.** Bump the `ruffle/`
+gitlink in the same change that needs it, but merge the **fork's PR first**:
+squash-merging replaces its commits with a new one, orphaning whatever the
+gitlink pinned. Then re-point the gitlink at the squashed commit, push, and
+only then merge this repo's PR. Otherwise `git clone --recursive` of `main`
+cannot fetch the submodule.
 
 ## 2. Player work happens in the submodule
 
