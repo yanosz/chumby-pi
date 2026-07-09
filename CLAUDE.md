@@ -1,11 +1,16 @@
 # Project: Chumby control panel on Raspberry Pi via modified Ruffle
 
-The authoritative plan is in `chumby-ruffle-plan.md`. Read it fully before
-doing anything. Follow it step by step, in order.
+`ROADMAP.md` is what is left, what is done, and the decisions that still
+bind. Read it first — it is short. It was compressed from a much longer
+plan and says so: treat it as a map, not as evidence. When it, a doc, and
+the code disagree, **the code wins** — grep for the artifact before
+believing a claim about it.
 
-Non-negotiable rules (duplicated from the plan because they matter most):
-- STOP at every CHECKPOINT in the plan. Summarize findings, ask the user,
-  and wait for an answer. Never proceed past a checkpoint on your own.
+Non-negotiable rules:
+- STOP at every CHECKPOINT. Summarize findings, ask the user, and wait for
+  an answer. Never proceed past a checkpoint on your own. When scope is
+  ambiguous, ask — one clarifying question beats an exploratory detour, and
+  a question from the user is a question, not a licence to start coding.
 - Every step must end with the engineering record under `claude-docs/`
   updated (`docs/` is end-user documentation). There are exactly three
   documents per repo — `requirements.md`, `design.md`, `development.md` —
@@ -25,7 +30,10 @@ Non-negotiable rules (duplicated from the plan because they matter most):
 - Never modify controlpanel.swf or any extracted SWF.
 - /home/jan/chumby_backup is read-only ground truth. Never write there.
 - Work on ONE step at a time. Do not look ahead or start the next step's
-  work while the current artifact is unfinished.
+  work while the current step is unfinished.
+- Scope creep guard: before implementing support for a panel screen, check
+  it against the scope table (`claude-docs/requirements.md` §1 FR5) and ask
+  if it is not listed.
 - One feature branch per working session, squashed on merge — in this
   repo and in the `ruffle/` submodule. Commit after each completed step
   with the step number in the message. Bump the submodule gitlink in the
