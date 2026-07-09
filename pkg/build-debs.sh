@@ -3,8 +3,8 @@
 #   chumby-player       arm64  binary, launcher, chumby-ctl, kiosk unit
 #   chumby-player-data  all    fixtures tree + controlpanel.swf (PRIVATE)
 #
-# Inputs: the cross-compiled dist binary (claude-docs/reference/
-# 08-pi-build.md) and controlpanel.swf from swf-assets/ (override with
+# Inputs: the cross-compiled dist binary (claude-docs/development.md §3)
+# and controlpanel.swf from swf-assets/ (override with
 # CHUMBY_SWF). Output: pkg/out/*.deb. Staging in pkg/build/ (both
 # gitignored).
 

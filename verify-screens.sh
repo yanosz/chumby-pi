@@ -2,7 +2,7 @@
 # Automated screen verification for the chumby control panel.
 #
 # Navigates to Alarms, Music → My Streams, and Settings → Volume,
-# taking a screenshot at each screen and saving to claude-docs/reference/images/.
+# taking a screenshot at each screen and saving to claude-docs/images/.
 #
 # Requires: xdotool, import (ImageMagick), mpv (for audio screens)
 # The panel must NOT be running before you call this — the script starts it.
@@ -27,7 +27,7 @@
 set -e
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
-IMGDIR="$DIR/claude-docs/reference/images"
+IMGDIR="$DIR/claude-docs/images"
 CTL=/tmp/chumby-ctl
 LOG=/tmp/chumby-verify.log
 

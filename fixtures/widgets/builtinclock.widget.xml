@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Per-widget metadata sidecar; see claude-docs/reference/19-widget-channel.md. -->
+<!-- Per-widget metadata sidecar; see claude-docs/design.md §4. -->
 <widget id="2">
   <name>Clock</name>
   <description>Built-in chumby clock</description>

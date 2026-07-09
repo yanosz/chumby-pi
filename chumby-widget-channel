@@ -16,7 +16,7 @@ sidecar set changed (tracked in <fixtures>/widgets/.channel.sig).
 --fixtures defaults to the tree next to this script (dev box); the Pi
 service passes /var/lib/chumby/fixtures.
 
-Design and rationale: claude-docs/reference/19-widget-channel.md.
+Design and rationale: claude-docs/design.md §4.
 """
 
 import argparse

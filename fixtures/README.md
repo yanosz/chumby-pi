@@ -29,7 +29,7 @@ the state machine still answers correctly but stays silent. Set
 `alsa/plughw:CARD=UACDemoV10`; list with `mpv --audio-device=help`) to
 route mpv to a specific output — used on the Pi for the USB card.
 Screen-flow regression check: `./verify-screens.sh all` (xdotool;
-screenshots into `claude-docs/reference/images/`).
+screenshots into `claude-docs/images/`).
 
 Fixture bodies (exec and http) may contain the token `{FIXTURES}`; the
 FixtureHost expands it to the absolute fixtures directory at read time.
@@ -46,7 +46,7 @@ and on the Pi.
 | `exec/*.{txt,xml}` | command stdout bodies | edit the file named in the manifest |
 | `http/<host>/<path>` | HTTP fetches to chumby hosts (`*.chumby.com`, `127.0.0.1`, `localhost`) | file at query-stripped, trailing-slash-stripped path; e.g. `http://xml.chumby.com/xml/chumbies/?id=…` → `http/xml.chumby.com/xml/chumbies` |
 | (in code) | stateful natives (volume, mute, balance, touchclick, brightness, slave vars, platform=ironforge, env vars) | `core/src/chumby/fixture.rs` in the ruffle fork — `native()` match |
-| `ui-policy.toml` | which panel controls are dimmed/disabled (Pi owns timezone + NTP, so the clock screen's TZ/NTP controls are inert; 12/24h stays live) | edit the `[[rule]]` entries; format + selector syntax in the fork's `core/src/chumby/ui_policy.rs` header, catalog in `claude-docs/reference/18-clock-screen-and-ui-policy.md` |
+| `ui-policy.toml` | which panel controls are dimmed/disabled (Pi owns timezone + NTP, so the clock screen's TZ/NTP controls are inert; 12/24h stays live) | edit the `[[rule]]` entries; format + selector syntax in the fork's `core/src/chumby/ui_policy.rs` header, which controls and why in `claude-docs/requirements.md` §1 FR5 |
 
 ## Current contents
 
@@ -76,7 +76,7 @@ Format gotchas (cost a debugging round each on 2026-07-06):
 - `http/`: authorize + chumbies + the widget-channel profile
   (`xml/profiles`). The profile is **generated** from the widget sidecars
   by `chumby-widget-channel` (repo root), not hand-edited — see
-  `claude-docs/reference/19-widget-channel.md`. Plus "no update", empty
+  `claude-docs/design.md` §4. Plus "no update", empty
   external music sources, inert FM radio.
 - `widgets/`: one `<name>.swf` per widget plus its `<name>.widget.xml`
   metadata sidecar (the `<widget>` element the panel reads). The generator
@@ -87,7 +87,7 @@ Format gotchas (cost a debugging round each on 2026-07-06):
   preview the panel `loadMovie`s into the dashboard bar (W2); the JPEGs are
   chumby widget artwork, so — like the SWFs — they are gitignored and
   provided locally (render one from the widget with the `exporter` tool,
-  `claude-docs/reference/19-widget-channel.md`). A widget without a
+  `claude-docs/design.md` §4). A widget without a
   thumbnail sidecar simply shows no preview.
 
 With these, the unmodified 2.8.87b3 panel boots the real device path
@@ -96,4 +96,4 @@ The control panel bar is summoned with the simulated bend sensor: type
 `bend` (or `tap`) + Enter in the launch terminal, `echo bend >
 /tmp/chumby-ctl`, or press Home with the window focused. Verified
 reachable on fixtures: alarms (B5), Music → My Streams (C0/C2),
-Settings → Volume (E0/E1) — see `claude-docs/progress.md`.
+Settings → Volume (E0/E1) — see `verify-screens.sh`.

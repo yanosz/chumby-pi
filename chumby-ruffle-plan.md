@@ -21,8 +21,9 @@ API extensions, script calls, frame control).
 4. Any functionality living OUTSIDE the SWF (shell scripts, daemons, downloaded
    updates) must be cataloged so it can be re-implemented for the Pi.
 5. The SWF has more screens than we want. **Before implementing support for any
-   screen, present it to the user and ask whether it is in scope.** Maintain a
-   `claude-docs/feature-decisions.md` with status: needed / skip / undecided.
+   screen, present it to the user and ask whether it is in scope.** The scope
+   table lives in `claude-docs/requirements.md` §1 FR5, with status
+   delivered / disabled / skip / wanted-not-built.
 6. Prefer small, verifiable steps with a written result over broad exploration.
    If you find yourself reading code for more than ~30 minutes without producing
    a documented finding, stop and write down what you have, then reassess.
@@ -90,6 +91,31 @@ API extensions, script calls, frame control).
 - UNDECIDED pending the M1 screen catalog: music sources (iPod/USB playback,
   btplay), alarms, anything else found. The catalog in 05-screens.md exists
   precisely so the user can decide these — present them, don't implement.
+
+---
+
+## Documentation & branch policy (revised 2026-07-09, user)
+
+**Docs are split like the code, three per repo.** The numbered reference
+docs (01–20), `patch-notes.md`, `design/chumby-host.md`, `progress.md` and
+`feature-decisions.md` were consolidated on 2026-07-09 into:
+
+- `ruffle/claude-docs/{requirements,design,development}.md` — everything
+  about the Rust player: what the panel demands of it, the host boundary,
+  building/verifying/rebasing. The fork also knows chumby-pi exists.
+- `claude-docs/{requirements,design,development}.md` — everything about the
+  appliance: scope, packaging, kiosk, fixtures, hardware, CI, and the
+  device record. This repo knows only how to build, launch and feed the
+  player — nothing about its internals.
+
+No fourth file, no per-session records. What survives a milestone is the
+decision and its reason, folded into the document it belongs in. Historical
+references to `claude-docs/reference/NN-*.md` further down this plan name
+files that no longer exist; their content lives in the six documents above.
+
+**Branch policy:** one feature branch per working session, squashed on
+merge, in both repos. This supersedes the fork's earlier "amend into the
+single squashed commit + `--force-with-lease`" discipline.
 
 ---
 
@@ -748,8 +774,8 @@ work STOPS for the user's feedback.
     each reflect live state. General lesson recorded in memory
     (status page = derive every field from live state; test the un-assumed
     states before claiming "verified").
-  - Then: on-device re-confirm (wired AND wifi) + feature-decisions
-    network-class row + CI.
+  - Then: on-device re-confirm (wired AND wifi) + CI. Both TODOs are also
+    carried in `ruffle/claude-docs/requirements.md` §3 and `design.md` §7.
   `CHECKPOINT I3 (= milestone done): user confirms on-device; wait.`
 
 ## Future milestones (added at CHECKPOINT 2, 2026-06-12, by user decision)
@@ -772,16 +798,16 @@ work STOPS for the user's feedback.
 - **Backup Alarm** (new topic, user 2026-07-08): to be scoped with the user —
   placeholder, no interpretation implied yet.
 
-Scope decisions for all screens: `claude-docs/feature-decisions.md`.
+Scope decisions for all screens: `claude-docs/requirements.md` §1 FR5.
 
 ## Final milestone — Brightness & night mode (E2, B4) (moved 2026-07-06)
 
 Deliberately LAST (user decision 2026-07-06): blocked on new display
-hardware — the current TFT clone cannot dim (13-brightness-hardware.md
-has the evidence and researched alternatives), and which panel gets
-ordered is still open. When the new panel is in hand:
+hardware — the current TFT clone cannot dim (`claude-docs/requirements.md`
+§3 has the evidence, `design.md` §8 the researched alternatives), and which
+panel gets ordered is still open. When the new panel is in hand:
 - New display bring-up first: overlay swap, DRM device name in the
-  kiosk unit, touch recalibration (doc 13 lists per-candidate driver
+  kiosk unit, touch recalibration (design.md §8 lists per-candidate driver
   caveats — the Waveshare (C) route needs driver work, the PiTFT
   route is drop-in).
 - Then the original 3.4 content: real backlight control as the first
@@ -792,7 +818,7 @@ ordered is still open. When the new panel is in hand:
 - **RE-ENABLE the brightness Settings entry**: the UI-policy rule
   `settings-brightness` in `fixtures/ui-policy.toml` currently disables
   the E2 menu icon (it was unwired). This milestone must drop that rule
-  so the panel's brightness screen is reachable again (doc 18 §10).
+  so the panel's brightness screen is reachable again.
 
 ## The very last milestone — Intro widget (moved here 2026-07-08, user)
 
@@ -812,11 +838,12 @@ here.
   make the intro actually play, then confirm on-device.
 
 ## Anti-patterns observed last time — explicit countermeasures
-- **Running in circles:** every step above ends in a named written artifact.
-  If an artifact can't be produced, that itself is the finding — write it down
-  and ask the user.
-- **Scope creep into screens nobody wants:** feature-decisions.md + rule 5.
-- **Diffuse Ruffle edits:** rule 2; patch-notes.md is part of acceptance.
+- **Running in circles:** every step above ends with the engineering record
+  updated. If a finding can't be written down, that itself is the finding —
+  write *that* down and ask the user.
+- **Scope creep into screens nobody wants:** requirements.md §1 FR5 + rule 5.
+- **Diffuse Ruffle edits:** rule 2; the patch-surface table in the fork's
+  `claude-docs/design.md` §8 is part of acceptance.
 - **Guessing chumby behavior:** the backup at /home/jan/chumby_backup is
   ground truth; the wiki is the spec; the SWF export is the law. When all
   three disagree, ask the user.

@@ -1,7 +1,7 @@
 # UI policy: panel controls the Pi does not support, neutralized from the
 # Rust side (chumby-ruffle core/src/chumby/ui_policy.rs — file format and
-# action semantics documented there). Catalog and decisions:
-# claude-docs/reference/18-clock-screen-and-ui-policy.md (CHECKPOINT UI1).
+# action semantics documented there). Which controls, and why:
+# claude-docs/requirements.md §1 FR5.
 #
 # The Pi OS owns timezone and NTP (systemd-timesyncd), so on the clock
 # settings screen (Settings → TIME/DATE) the timezone is display-only and

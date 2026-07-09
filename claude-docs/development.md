@@ -1,0 +1,259 @@
+# Development
+
+How to build, run, deploy and verify — and the record of everything ever done
+to the Raspberry Pi. Concepts: [design.md](design.md). What the appliance
+must do: [requirements.md](requirements.md). The player's internals belong to
+[chumby-ruffle](https://github.com/yanosz/chumby-ruffle)'s own `claude-docs/`.
+
+`docs/setup.md` and `docs/hardware.md` are the end-user versions of §2–§4.
+This document is the engineering record: it keeps the reasons and the traps.
+
+---
+
+## 1. Branch and commit policy
+
+**One feature branch per working session, squashed on merge**, in both this
+repository and the submodule. When the session's work touches the player,
+bump the `ruffle/` gitlink in the same change that needs it.
+
+Pushing is the user's call, not the agent's.
+
+## 2. Run it on the desktop
+
+No Pi needed, and this is where almost all verification happens.
+
+```sh
+# controlpanel.swf into swf-assets/ first
+cargo build -p ruffle_desktop --manifest-path ruffle/Cargo.toml
+./run-controlpanel.sh
+```
+
+Drive it without touching the window:
+
+```sh
+echo bend            > /tmp/chumby-ctl   # summon the button bar
+echo "click 448 458" > /tmp/chumby-ctl   # SETTINGS
+```
+
+Useful logging: `RUST_LOG=warn,chumby_host=info` (every host call and its
+answer), `avm_trace=trace` (the panel's own traces), `chumby_pick=debug`
+(what a click actually hit — the only way to tell a missed click from an
+inert control).
+
+## 3. Cross-build for the Pi
+
+Native building on the Pi is not viable (rustc wants gigabytes; the 3B+ has
+one). One-time setup on an amd64 Debian box:
+
+```sh
+rustup target add aarch64-unknown-linux-gnu
+sudo dpkg --add-architecture arm64 && sudo apt-get update
+sudo apt-get install gcc-aarch64-linux-gnu \
+    libasound2-dev:arm64 libudev-dev:arm64 \
+    libssl-dev:arm64 libwayland-dev:arm64 libfontconfig-dev:arm64
+```
+
+Those arm64 `-dev` packages cover the `*-sys` crates that link at build time.
+`fontconfig` is the one that is easy to forget — its build script fails
+without it. `x11-dl` and `ring` need nothing (dlopen / self-contained).
+
+`.cargo/config.toml` at this repo's root sets the linker and the
+target-scoped `PKG_CONFIG_*`. Host builds are unaffected.
+
+```sh
+cargo build --profile dist -p ruffle_desktop \
+    --target aarch64-unknown-linux-gnu --manifest-path ruffle/Cargo.toml
+```
+
+`dist` (fat LTO, `codegen-units=1`) is what ships; `build-debs.sh` refuses a
+missing `dist` binary. Expect ~6 min warm, ~9 min cold, and a multi-minute
+link even on a one-line change. Use `--release` while iterating.
+
+Upstream Ruffle needs a JVM at build time to compile its ActionScript stdlib.
+
+## 4. Build, install, deploy
+
+```sh
+pkg/build-debs.sh                 # VERSION=x.y.z overrides
+scp pkg/out/*.deb pi@<pi>:
+# on the Pi
+sudo apt install ./chumby-player_*.deb ./chumby-player-data_*.deb
+sudo systemctl start chumby-player      # or reboot; postinst enabled it
+```
+
+Leaving player mode: `sudo systemctl stop chumby-player` (once), or
+`sudo systemctl disable --now chumby-player`. State in `/var/lib/chumby`
+survives removal *and* purge — `StateDirectory` contents are not tracked by
+dpkg. Delete it by hand.
+
+### Hot-replace (a build without a deb round trip)
+
+```sh
+cd ruffle && cargo build --profile dist -p ruffle_desktop \
+    --target aarch64-unknown-linux-gnu
+
+scp ruffle/target/aarch64-unknown-linux-gnu/dist/ruffle_desktop \
+    pi@<pi>:/tmp/ruffle_desktop.new
+rsync -a --delete --rsync-path="sudo rsync" fixtures/ \
+    pi@<pi>:/usr/share/chumby-player/fixtures/
+
+ssh pi@<pi> '
+  sudo systemctl stop chumby-player &&
+  sudo install -m 755 -o root -g root /tmp/ruffle_desktop.new \
+      /usr/lib/chumby-player/ruffle_desktop &&
+  sudo rm -rf /var/lib/chumby/fixtures &&   # launcher re-seeds on start
+  sudo systemctl start chumby-player'
+```
+
+Wiping the state directory is what makes new fixture content take effect; it
+also discards persisted volume and alarms. `dpkg` still reports the old
+version afterwards — the on-disk files are ahead of the package until the
+next install.
+
+Verify the binary's sha256 on both ends. Do not skip the rebuild: see §7.
+
+## 5. Verify
+
+**On the desktop**, for anything with a UI surface: run it, drive it through
+the FIFO, screenshot, and read the log. `chumby_pick=debug` proves a disabled
+control is inert (the click *lands* on it and nothing happens) rather than
+merely unclicked.
+
+**On the device**, with `grim` against the cage session:
+
+```sh
+XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-0 grim /tmp/x.png
+```
+
+The main button bar auto-hides after a short inactivity timeout, so a
+scripted `bend` followed by a separate `click` races it — do the summon and
+the click in one command. Once inside Settings, which does not auto-hide,
+further clicks are unhurried.
+
+**In CI**, the movie-start assertion ([design.md](design.md) §9).
+
+### CI secrets and the fixtures tarball
+
+Set once per repository (the `PASS` value must be rclone's *obscured* form,
+not the plaintext password):
+
+```sh
+for repo in yanosz/chumby-ruffle yanosz/chumby-pi; do
+  awk -F' = ' '$1=="url"{print $2}'  ~/.config/rclone/rclone.conf \
+    | gh secret set RCLONE_CONFIG_RSHARE_URL  -R "$repo"
+  awk -F' = ' '$1=="user"{print $2}' ~/.config/rclone/rclone.conf \
+    | gh secret set RCLONE_CONFIG_RSHARE_USER -R "$repo"
+done
+```
+
+The fork's CI reads `fixtures/` from the share, not from this repo. **Re-upload
+after every fixture change:**
+
+```sh
+git -C /home/jan/chumby-pi archive HEAD fixtures | gzip \
+  | rclone rcat rshare:testdata/fixtures.tar.gz
+```
+
+chumby-ruffle is public; this repo is private. Its Actions minutes are billed
+against the account quota and the `dist` build is a long job.
+
+## 6. The device record
+
+Everything ever changed on the Pi, so the howto can be rebuilt from here.
+The current device is a **Pi 3B+**, arm64 Raspberry Pi OS trixie, wired
+Ethernet, with the ILI9486 480×320 SPI TFT and a USB sound card. An earlier
+Pi 3A+ (512 MB, wifi-only, HDMI) was used for the first bring-up; findings
+that were specific to it are not repeated here.
+
+**Packages installed:** `mpv`, `cage`, `grim`, `pipewire-alsa`. The last one
+is not optional — without it ALSA clients (the player's `cpal`) have no route
+into PipeWire and audio-device creation fails. mpv talks to PipeWire natively
+and never needed it.
+
+**`/boot/firmware/config.txt`** (backups `config.txt.bak`, `config.txt.bak-tft`):
+
+```
+dtparam=spi=on
+dtoverlay=piscreen,speed=24000000,rotate=0,drm,swapxy=on,invy=on
+```
+
+`,drm` selects the mainline tiny driver over fbtft. `rotate=0` is correct
+*because* of the `drm` parameter — DRM's base orientation is landscape, so
+this is fbtft's `rotate=90`. `swapxy=on` and `invy=on` came from four
+physical taps: screen-x was device-y, screen-y was inverted device-x. Note
+`swapxy=on` **deletes** the `touchscreen-swapped-x-y` property; it is an
+inverted boolean.
+
+The overlay can be swapped at runtime, reversibly, without a reboot:
+`sudo dtoverlay -r piscreen && sudo dtoverlay piscreen speed=24000000 rotate=0 drm`.
+
+**Kiosk**: `chumby-player.service` and `chumby-widget-channel.service`, both
+shipped by the deb. `postinst` enables the player unit and reloads udev.
+
+**udev**, shipped as `/usr/lib/udev/rules.d/90-chumby-ignore-cec-pointer.rules`:
+
+```
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="vc4-hdmi", ENV{LIBINPUT_IGNORE_DEVICE}="1"
+```
+
+This removes the phantom mouse cursor ([design.md](design.md) §7). It was
+first tested from `/etc/udev/rules.d/` with
+`udevadm control --reload && udevadm trigger /dev/input/event*`; that copy was
+removed once the packaged rule shipped, so the device carries exactly one.
+
+**`LP_NUM_THREADS=1`** is a launcher default, not a device file. It was
+trialled through `/etc/default/chumby-player`, which was then removed — the
+device carries no local override.
+
+**Desktop session**: `systemctl disable --now lightdm`, with
+`loginctl enable-linger pi` set **first** so the user manager (and PipeWire)
+survive without a login session.
+
+**Audio**: the USB sink is PipeWire's default; hardware volume was set to
+35%. The panel's volume slider live-controls mpv and persists to
+`psp/volume`; `alarm_volume` is a separate fixture value.
+
+**Never written to `/home/jan/chumby_backup`** — it is read-only ground
+truth. The Pi never reads it either; the SWF is copied at build time.
+
+**Measurements** (idle on the clock widget, 480×320, packaged defaults):
+~215% CPU before the two levers, ~103% after. Of the original 215%, roughly
+170 was lavapipe's four raster worker threads. Temperature ~60 °C with the
+soft-limit sticky bit set.
+
+Things that did **not** help, recorded so nobody retries them: `--quality low`
+(MSAA is not the cost driver); rebuilding Mesa or swapping lavapipe for a GL
+path (the same llvmpipe rasterizer sits underneath); a client-side
+`set_cursor_visible` hook (the cursor is server-drawn); `wlrctl`'s virtual
+pointer under headless cage (never reaches the client).
+
+## 7. Traps
+
+- **The stale binary.** Rebuild before concluding anything. A UI-policy
+  change that appeared to do nothing was a `target/debug` binary predating the
+  feature — it never loaded the policy file. On the device the same mistake
+  is one `install` away.
+- **The stale `target/` after a tree rename.** Build scripts bake
+  `CARGO_MANIFEST_DIR` in as an absolute path and cargo fingerprints do not
+  notice a rename, so the build fails looking for `asc.jar` where it no
+  longer is. `cargo clean -p` does not fix it — build-script outputs survive.
+  `rm -rf ruffle/target/<profile>` does.
+- **`pkill -f ruffle_desktop`** also matches the SSH session's own `bash -c`
+  command line and kills the session, exit 255. Use `pkill -x`.
+- **Orphaned mpv.** SIGTERM on the player skips destructors, so its mpv child
+  survives and keeps playing. `pkill -x mpv` too.
+- **DRM card numbers move between boots.** Always the `by-path` name.
+- **Clicks that silently miss** on the desktop: raise the window first
+  (`xdotool windowraise`) or the pointer lands on whatever overlaps it.
+- **A fixture change is not deployed** until `/var/lib/chumby/fixtures` is
+  wiped and re-seeded.
+
+## 8. Documentation
+
+Three documents, this one included. Requirements state what must be true,
+design states how and why, development states how to work on it and what was
+done to the device. A note that fits none of the three is obsolete, or it
+belongs to the player and goes to chumby-ruffle's `claude-docs/`.
+
+Per-session or per-milestone records are not kept. What survives a milestone
+is the decision and the reason, folded into the document it belongs in.

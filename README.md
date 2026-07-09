@@ -60,9 +60,10 @@ straight into the control panel, no desktop in sight.
 | `run-controlpanel.sh` | the desktop-window launcher used above |
 | `swf-assets/` | where the copyrighted firmware files go (empty, ignored by git) |
 
-There's also a `claude-docs/` folder with blow-by-blow engineering notes
-from building this — handy if you want to know *why* something works, but
-not needed to use it.
+There's also a `claude-docs/` folder with the engineering record — what
+this thing has to do, how it's put together, and how to work on it. Handy
+if you want to know *why* something works, but not needed to use it. The
+player has its own record, in the `ruffle/` submodule.
 
 ## What works, and what doesn't
 
