@@ -193,12 +193,10 @@ dtparam=spi=on
 dtoverlay=piscreen,speed=24000000,rotate=0,drm,swapxy=on,invy=on
 ```
 
-`,drm` selects the mainline tiny driver over fbtft. `rotate=0` is correct
-*because* of the `drm` parameter — DRM's base orientation is landscape, so
-this is fbtft's `rotate=90`. `swapxy=on` and `invy=on` came from four
-physical taps: screen-x was device-y, screen-y was inverted device-x. Note
-`swapxy=on` **deletes** the `touchscreen-swapped-x-y` property; it is an
-inverted boolean.
+`,drm` selects the mainline tiny driver over fbtft. Why `rotate=0` is the
+landscape value, and why `swapxy=on` is an inverted boolean, are in
+[design.md](design.md) §6. The touch values came from four physical taps:
+screen-x was device-y, screen-y was inverted device-x.
 
 The overlay can be swapped at runtime, reversibly, without a reboot:
 `sudo dtoverlay -r piscreen && sudo dtoverlay piscreen speed=24000000 rotate=0 drm`.
@@ -245,22 +243,18 @@ pointer under headless cage (never reaches the client).
 
 ## 7. Traps
 
-- **The stale binary.** Rebuild before concluding anything. A UI-policy
-  change that appeared to do nothing was a `target/debug` binary predating the
-  feature — it never loaded the policy file. On the device the same mistake
-  is one `install` away.
-- **The stale `target/` after a tree rename.** Build scripts bake
-  `CARGO_MANIFEST_DIR` in as an absolute path and cargo fingerprints do not
-  notice a rename, so the build fails looking for `asc.jar` where it no
-  longer is. `cargo clean -p` does not fix it — build-script outputs survive.
-  `rm -rf ruffle/target/<profile>` does.
-- **`pkill -f ruffle_desktop`** also matches the SSH session's own `bash -c`
-  command line and kills the session, exit 255. Use `pkill -x`.
+The traps of working on the player itself — the stale `target/`, missed
+clicks on the desktop — are in the fork's `claude-docs/development.md` §7.
+These are the ones this repo owns.
+
+- **The stale binary.** Rebuild before concluding anything. On the device
+  the mistake is one `install` away, and the symptom is a feature that looks
+  unimplemented.
+- **`pkill -f ruffle_desktop`** over SSH also matches the session's own
+  `bash -c` command line and kills the session, exit 255. Use `pkill -x`.
 - **Orphaned mpv.** SIGTERM on the player skips destructors, so its mpv child
   survives and keeps playing. `pkill -x mpv` too.
 - **DRM card numbers move between boots.** Always the `by-path` name.
-- **Clicks that silently miss** on the desktop: raise the window first
-  (`xdotool windowraise`) or the pointer lands on whatever overlaps it.
 - **A fixture change is not deployed** until `/var/lib/chumby/fixtures` is
   wiped and re-seeded.
 

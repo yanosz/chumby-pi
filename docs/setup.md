@@ -7,10 +7,10 @@ alongside — every hardware-specific value below has an override point.
 Reference hardware:
 
 - Raspberry Pi 3B+ (any arm64-capable Pi should work; the 3B+ is the
-  verified floor — the panel runs software-rendered at ~2 CPU cores)
+  verified floor — the panel runs software-rendered at about one core)
 - 3.5″ 480×320 SPI TFT with ILI9486 controller and XPT2046/ADS7846
-  resistive touch (sold as "piscreen", Waveshare 3.5″ (B/C), and many
-  clones)
+  resistive touch (sold as "piscreen", Waveshare 3.5″ (B), and many
+  clones). It needs a mainline DRM overlay — see [hardware.md](hardware.md)
 - USB audio adapter (the Pi's headphone jack works too)
 - Raspberry Pi OS **arm64** Lite (Debian 13 "trixie" base), SSH access
 
@@ -66,8 +66,8 @@ cd ..
 
 The chumby code is always built in this fork — no feature flag needed
 (before 2026-07 this required `--features chumby`). The `dist` profile
-(fat LTO) takes a while (~15–25 min cold) but measurably lowers CPU on
-the Pi.
+(fat LTO) takes several minutes, dominated by the link step, but
+measurably lowers CPU on the Pi.
 
 ## 4. Build the debs
 

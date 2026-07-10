@@ -53,7 +53,7 @@ as a live control that silently does nothing.
 | Area | Status | Notes |
 |------|--------|-------|
 | Boot path, idle, main button bar, play-trap | **delivered** | the core |
-| Built-in offline clock | **delivered** | also the entry path we take |
+| Built-in offline clock | **delivered** | `builtinclock.swf`, one of the widgets in the generated channel |
 | Volume | **delivered** | |
 | Alarms — list, editor, ring screen | **delivered** | |
 | Clock / time / timezone | **partly** | 12/24h toggle is live; the timezone picker and the NTP toggle are **disabled** — the Pi OS owns time and time sync |
@@ -66,10 +66,10 @@ as a live control that silently does nothing.
 | Delete / Send / Rate widget | **disabled** | delete can't persist; send and rate are chumby.com social features |
 | Info / About | **delivered** | with real network diagnostics |
 | Licenses | **delivered** | the original chumby's GPL and LGPL texts, verbatim |
-| Geek panel, file browser | skip, **not yet disabled** | redundant next to a Raspberry Pi. Its trigger is the Info screen's "π" button, which is still live — a ui-policy rule for it is owed |
-| Intro widget | deferred, **not yet disabled** | the intro button is still live and cannot play on our widget path; a ui-policy rule for it is owed. Deferred to the project's last milestone |
+| Geek panel, file browser | skip, **not yet disabled** | redundant next to a Raspberry Pi; the rule is owed, see §3 |
+| Intro widget | deferred, **not yet disabled** | cannot play on our widget path; the rule is owed, see §3 |
 | Brightness, night mode | **disabled** | blocked on display hardware, see §3 |
-| Network setup wizard, touchscreen calibration | skip | the OS owns these |
+| Network setup wizard, touchscreen calibration | **disabled** | the OS owns these; both Settings icons carry a ui-policy rule |
 | First-time wizard, activation, safe mode, firmware update | skip | chumby.com and chumby firmware machinery |
 | Accept/decline sent widgets, intercom, microphone test | skip | social or pointless here |
 
@@ -145,11 +145,9 @@ that line changed. `docs/hardware.md` is the user-facing version of this.
 The content was authored for a 350 MHz ARM9. On a Pi 3B+ at 480×320 and
 12 fps the player sits at roughly one core; the remainder is software
 rasterization, which is the floor for this renderer. Two levers got it
-there from ~215%: `LP_NUM_THREADS=1` (lavapipe otherwise spawns one raster
-worker per core, and the parallelization overhead roughly *doubles* total
-CPU at this frame size) and building with the fat-LTO `dist` profile. A
-heatsink is recommended; the SoC brushes its soft thermal limit under
-sustained load.
+there: `LP_NUM_THREADS=1` and the fat-LTO `dist` profile — measurements and
+the lavapipe explanation in [development.md](development.md) §6. A heatsink
+is recommended; the SoC brushes its soft thermal limit under sustained load.
 
 ### NFR5 — Every device change is written down as it happens
 

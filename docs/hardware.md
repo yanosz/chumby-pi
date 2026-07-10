@@ -107,9 +107,9 @@ No sound at all? mpv missing = silent-stub mode (the UI still works);
 ## A different Pi
 
 - Any Pi that runs 64-bit Raspberry Pi OS should work; the deb is
-  arm64. The Pi 3B+ (4×1.4 GHz) runs the panel at roughly two busy
-  cores with `LP_NUM_THREADS=1` — faster Pis have headroom, a Pi Zero
-  2 W is untested but has the same architecture.
+  arm64. The Pi 3B+ (4×1.4 GHz) runs the panel at roughly one busy
+  core with `LP_NUM_THREADS=1` (about two without it) — faster Pis have
+  headroom, a Pi Zero 2 W is untested but has the same architecture.
 - The only model-specific default is the SPI controller address in
   `WLR_DRM_DEVICES` (see above).
 - The kiosk unit assumes user `pi` exists (it runs the compositor as

@@ -205,7 +205,8 @@ unchanged.
 
 ## 9. CI
 
-One workflow per repository, and the acceptance criterion in both is **"the
+One chumby workflow per repository (the fork also carries upstream's, kept
+so merges stay conflict-free), and the acceptance criterion in both is **"the
 movie starts"** — not "it builds". An upstream merge can compile clean and
 still leave the vendor-call hooks dead.
 

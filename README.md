@@ -65,11 +65,11 @@ player has its own record, in the `ruffle/` submodule.
 ## What works, and what doesn't
 
 **Working on the Pi:** boot-to-panel kiosk, the clock, touch input
-(long-press = squeeze), alarms, My-Streams internet radio, volume, mute,
-and night mode — all with settings that persist across reboots.
+(long-press = squeeze), alarms, My-Streams internet radio, volume, and
+mute — all with settings that persist across reboots.
 
-**Not yet:** screen brightness control (waiting on a dimmable panel),
-widget channel management, and USB music playback.
+**Not yet:** screen brightness and night mode (both waiting on a dimmable
+panel), widget channel management, and USB music playback.
 
 ## A note on sharing
 
