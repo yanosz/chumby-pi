@@ -167,5 +167,4 @@ from memory or shell history.
 | **Intro widget** | The panel only loads `intro.swf` through the slave player, which the chosen widget architecture does not run. Needs interpreter-level work in the fork. |
 | **Remote channels + registration** | Deliberately the project's last feature. |
 | **USB / local music files** | `_getDirectoryEntry` in the player. |
-| **Backup alarm** | Not yet scoped. |
 | **Widget-channel on-device pass** | The channel, the preview picture and the disabled controls were verified on the desktop; the single combined on-device confirmation is still outstanding. Deploy a **freshly built** player — a stale binary has already produced one false "it doesn't work". |

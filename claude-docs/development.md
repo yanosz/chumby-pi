@@ -105,6 +105,13 @@ sudo apt install ./chumby-player_*.deb ./chumby-player-data_*.deb
 sudo systemctl start chumby-player      # or reboot; postinst enabled it
 ```
 
+Or all of it in one command: `pkg/deploy-pi.sh <pi>` rebuilds the dist
+binary (§7: never trust a stale one), rebuilds the debs into a clean
+`pkg/out/`, installs them on the Pi (`--reinstall`, so redeploying the
+same version still replaces the files) and restarts the player.
+`build-debs.sh` strips the build box's generated `rootfs/psp/guid` from
+the data deb — a package must not ship one machine's dev identity.
+
 Leaving player mode: `sudo systemctl stop chumby-player` (once), or
 `sudo systemctl disable --now chumby-player`. State in `/var/lib/chumby`
 survives removal *and* purge — `StateDirectory` contents are not tracked by
@@ -203,6 +210,9 @@ The overlay can be swapped at runtime, reversibly, without a reboot:
 
 **Kiosk**: `chumby-player.service` and `chumby-widget-channel.service`, both
 shipped by the deb. `postinst` enables the player unit and reloads udev.
+Installed version: **0.2.0** (deployed 2026-07-10 via `pkg/deploy-pi.sh`,
+player at fork `chumby` tip `41fb650` — real network diagnostics, backup
+alarm, real device identity; binary sha256 verified on both ends).
 
 **udev**, shipped as `/usr/lib/udev/rules.d/90-chumby-ignore-cec-pointer.rules`:
 
