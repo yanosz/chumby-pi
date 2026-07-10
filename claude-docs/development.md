@@ -130,9 +130,11 @@ ssh pi@<pi> '
 ```
 
 Wiping the state directory is what makes new fixture content take effect; it
-also discards persisted volume and alarms. `dpkg` still reports the old
-version afterwards — the on-disk files are ahead of the package until the
-next install.
+also discards persisted volume and alarms — so for a **binary-only** change,
+skip the fixture rsync and the wipe (done for the FR10 deploy, 2026-07-10:
+volume/alarms survived, real network diagnostics verified on-screen).
+`dpkg` still reports the old version afterwards — the on-disk files are
+ahead of the package until the next install.
 
 Verify the binary's sha256 on both ends. Do not skip the rebuild: see §7.
 
@@ -176,8 +178,10 @@ against the account quota and the `dist` build is a long job.
 ## 6. The device record
 
 Everything ever changed on the Pi, so the howto can be rebuilt from here.
-The current device is a **Pi 3B+**, arm64 Raspberry Pi OS trixie, wired
-Ethernet, with the ILI9486 480×320 SPI TFT and a USB sound card. An earlier
+The current device is a **Pi 3B+**, arm64 Raspberry Pi OS trixie, on wifi
+(SSID "LXC", brcmfmac; moved off wired ethernet before 2026-07-10 — eth0
+stays cabled-off), with the ILI9486 480×320 SPI TFT and a USB sound card.
+An earlier
 Pi 3A+ (512 MB, wifi-only, HDMI) was used for the first bring-up; findings
 that were specific to it are not repeated here.
 
