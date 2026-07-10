@@ -56,6 +56,7 @@ as a live control that silently does nothing.
 | Built-in offline clock | **delivered** | `builtinclock.swf`, one of the widgets in the generated channel |
 | Volume | **delivered** | |
 | Alarms — list, editor, ring screen | **delivered** | |
+| Backup alarm (dead-man beep) | **delivered** | in-player watcher on `/psp/ifalarm`, missed-alarm boot path included — fork's requirements.md FR13; loudness check on the Pi still owed (§3) |
 | Clock / time / timezone | **partly** | 12/24h toggle is live; the timezone picker and the NTP toggle are **disabled** — the Pi OS owns time and time sync |
 | Music: My Streams | **delivered** | real network; the stream list is local data, no chumby.com |
 | Music: USB / local files | **wanted, not built** | needs `_getDirectoryEntry` in the player |
@@ -167,5 +168,5 @@ from memory or shell history.
 | **Intro widget** | The panel only loads `intro.swf` through the slave player, which the chosen widget architecture does not run. Needs interpreter-level work in the fork. |
 | **Remote channels + registration** | Deliberately the project's last feature. |
 | **USB / local music files** | `_getDirectoryEntry` in the player. |
-| **Backup alarm** | Not yet scoped. |
 | **Widget-channel on-device pass** | The channel, the preview picture and the disabled controls were verified on the desktop; the single combined on-device confirmation is still outstanding. Deploy a **freshly built** player — a stale binary has already produced one false "it doesn't work". |
+| **Backup-alarm on-device pass** | Implemented in the player (fork's requirements.md FR13, 2026-07-10) and verified on the desktop; still owed on the Pi: that the Klaxon at mpv volume 100 through the 35 % hardware volume is genuinely loud enough to wake someone. If not, escalate to sink/hw volume bumping — a decision recorded in FR13. |

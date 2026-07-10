@@ -41,8 +41,12 @@ Roughly in order. The player-side detail lives in the fork's
 3. **USB / local music files (C11).** Wanted. Needs `_getDirectoryEntry`
    (5,320) to fill objects; `RootFs::dir_entry` exists, the native stubs.
 
-4. **Backup alarm.** A topic Jan raised 2026-07-08. Not scoped — no
-   interpretation implied. Scope it with him before touching anything.
+4. **Backup alarm: the on-device loudness check.** The feature itself
+   shipped 2026-07-10 (see Done); what remains is confirming on the Pi that
+   the Klaxon at mpv volume 100 through the 35 % hardware volume genuinely
+   wakes someone. If not: escalate to sink/hw volume bumping (decision
+   recorded in the fork's requirements.md FR13). Rides along with item 2's
+   on-device pass.
 
 5. **Brightness & night mode (E2, B4).** Blocked on hardware: the current
    TFT's backlight rail is tied to 3.3 V and cannot dim. Needs a panel that
@@ -98,3 +102,4 @@ These still bind. Changing one is a decision, not drift.
 | 2026-07-08 | **Info & Licenses.** The licenses viewer, the info screen, and the first real (non-fixture) host behaviour: live network diagnostics. **Incomplete** — see open item 1. |
 | 2026-07-09 | **Docs & repo split.** Three docs per repo; the fork made self-contained for player work (fixtures, harness, decompile, its own `CLAUDE.md`); the UI policy compiled into the player. |
 | 2026-07-10 | **The two owed ui-policy rules.** `info-geek` and `info-intro` disable the Info screen's π trigger and INTRO button; verified live (targets acquired, clicks inert). |
+| 2026-07-10 | **Backup alarm.** Scoped with Jan (in-process watcher, option "A2"; missed-alarm boot path in; fixed duration; Klaxon), implemented in the fork (`backup_alarm.rs`, FR13), verified on the desktop end-to-end incl. the panel arming and dismissing for real. mpv's silent-stall-on-WLAN-loss measured and recorded — it is the failure this guards. On-device loudness check owed (open item 4). |
