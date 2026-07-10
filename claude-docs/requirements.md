@@ -66,8 +66,8 @@ as a live control that silently does nothing.
 | Delete / Send / Rate widget | **disabled** | delete can't persist; send and rate are chumby.com social features |
 | Info / About | **delivered** | with real network diagnostics |
 | Licenses | **delivered** | the original chumby's GPL and LGPL texts, verbatim |
-| Geek panel, file browser | skip, **not yet disabled** | redundant next to a Raspberry Pi; the rule is owed, see §3 |
-| Intro widget | deferred, **not yet disabled** | cannot play on our widget path; the rule is owed, see §3 |
+| Geek panel, file browser | **disabled** | redundant next to a Raspberry Pi; the Info screen's π trigger is inert (rule `info-geek`) |
+| Intro widget | deferred, **disabled** | cannot play on our widget path; rule `info-intro` dims the INTRO button and must be dropped when intro lands, see §3 |
 | Brightness, night mode | **disabled** | blocked on display hardware, see §3 |
 | Network setup wizard, touchscreen calibration | **disabled** | the OS owns these; both Settings icons carry a ui-policy rule |
 | First-time wizard, activation, safe mode, firmware update | skip | chumby.com and chumby firmware machinery |
@@ -165,7 +165,6 @@ from memory or shell history.
 |------|-----------|
 | **Brightness + night mode** | Hardware. The current ILI9486 clone has its backlight LED rail tied straight to 3.3 V — GPIO22 is declared in the overlay but not routed on the board, and driving it does nothing (verified by watching the panel while toggling it). Dimming needs a different display; the candidates and their driver risk are in [design.md](design.md) §8. When it lands, it must also drop the `settings-brightness` rule from the player's UI policy. |
 | **Intro widget** | The panel only loads `intro.swf` through the slave player, which the chosen widget architecture does not run. Needs interpreter-level work in the fork. |
-| **Geek + intro buttons still live** | Both were meant to be disabled and never were. Two ui-policy rules on the Info screen's `piButton` and `introButton` are owed. |
 | **Remote channels + registration** | Deliberately the project's last feature. |
 | **USB / local music files** | `_getDirectoryEntry` in the player. |
 | **Backup alarm** | Not yet scoped. |
