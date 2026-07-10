@@ -5,27 +5,16 @@
 # tied to the user's own hardware) — never committed.
 /claude-docs/private/
 
-# Deb build staging and output (pkg/build-debs.sh)
+# Deb build staging and output (pkg/build-debs.sh). The staged data deb
+# contains the copyrighted SWFs and tones — never publish it.
 /pkg/build/
 /pkg/out/
 
-# Copyrighted chumby material — never commit any of it (BC1 audit,
-# claude-docs/reference/14-big-cleanup.md). controlpanel.swf and other SWF
-# assets belong in swf-assets/ (untracked) or come from your own
-# chumby backup; alarm tones likewise. Widget preview thumbnails
-# (fixtures/widgets/*.jpg) render chumby widget artwork — same posture as
-# the widget SWFs they come from (W2, 19-widget-channel.md).
+# Copyrighted chumby material. The player's own copies (controlpanel.swf,
+# widget SWFs, thumbnails, alarm tones, the decompiled panel) live in the
+# ruffle/ submodule and are gitignored there. Kept here as a backstop.
 *.swf
 *.mp3
 *.wav
-/fixtures/widgets/*.jpg
-/claude-docs/reference/appendix/
+
 /resources/zurks-offline-firmware-classic/
-
-# chumby-widget-channel's change-detection cache (runtime state, not source;
-# the committed profile + *.widget.xml sidecars are the source of truth).
-/fixtures/widgets/.channel.sig
-
-# Panel screenshots show chumby UI artwork — not published (BC1
-# checkpoint decision 2026-07-07); use Nextcloud for test images.
-/claude-docs/reference/images/

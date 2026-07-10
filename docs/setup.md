@@ -7,10 +7,10 @@ alongside — every hardware-specific value below has an override point.
 Reference hardware:
 
 - Raspberry Pi 3B+ (any arm64-capable Pi should work; the 3B+ is the
-  verified floor — the panel runs software-rendered at ~2 CPU cores)
+  verified floor — the panel runs software-rendered at about one core)
 - 3.5″ 480×320 SPI TFT with ILI9486 controller and XPT2046/ADS7846
-  resistive touch (sold as "piscreen", Waveshare 3.5″ (B/C), and many
-  clones)
+  resistive touch (sold as "piscreen", Waveshare 3.5″ (B), and many
+  clones). It needs a mainline DRM overlay — see [hardware.md](hardware.md)
 - USB audio adapter (the Pi's headphone jack works too)
 - Raspberry Pi OS **arm64** Lite (Debian 13 "trixie" base), SSH access
 
@@ -30,9 +30,12 @@ own chumby backup (or from the maintainer), place:
 
 | File(s) | Where | Needed for |
 |---------|-------|------------|
-| `controlpanel.swf` (2.8.87b3 verified) | `swf-assets/controlpanel.swf` | everything |
-| widget SWFs referenced by the fixture channel (`unsubscribedclock.swf`, `builtinclock.swf`) | `fixtures/widgets/` | the clock widget on the home screen |
-| alarm tones (`*.mp3`) | `fixtures/rootfs/usr/chumby/alarmtones/` | alarm sounds (alarms themselves work without them) |
+| `controlpanel.swf` (2.8.87b3 verified) | `ruffle/swf-assets/controlpanel.swf` | everything |
+| widget SWFs referenced by the fixture channel (`unsubscribedclock.swf`, `builtinclock.swf`) | `ruffle/fixtures/widgets/` | the clock widget on the home screen |
+| alarm tones (`*.mp3`) | `ruffle/fixtures/rootfs/usr/chumby/alarmtones/` | alarm sounds (alarms themselves work without them) |
+
+(The player carries its own fixtures, so these all live in the `ruffle/`
+submodule.)
 
 All three locations are gitignored; nothing you drop there can end up
 in a commit.
@@ -63,8 +66,8 @@ cd ..
 
 The chumby code is always built in this fork — no feature flag needed
 (before 2026-07 this required `--features chumby`). The `dist` profile
-(fat LTO) takes a while (~15–25 min cold) but measurably lowers CPU on
-the Pi.
+(fat LTO) takes several minutes, dominated by the link step, but
+measurably lowers CPU on the Pi.
 
 ## 4. Build the debs
 
@@ -137,14 +140,15 @@ The panel appears on the TFT and from now on comes up on every boot.
 For trying it out or hacking on fixtures, any Linux desktop works:
 
 ```sh
-cd ruffle && cargo build -p ruffle_desktop && cd ..
+cd ruffle
+cargo build -p ruffle_desktop
 ./run-controlpanel.sh
 ```
 
-This opens the panel in a window, reads `swf-assets/controlpanel.swf`
-(override with `CHUMBY_SWF=<path>`), uses the repo's `fixtures/`
+This opens the panel in a window, reads `ruffle/swf-assets/controlpanel.swf`
+(override with `CHUMBY_SWF=<path>`), uses the submodule's `fixtures/`
 directly, tees a full host-traffic log to `/tmp/chumby-run.log`, and
 creates `/tmp/chumby-ctl` — so `echo bend > /tmp/chumby-ctl` (or
 typing `bend` + Enter in the launch terminal, or pressing Home with
-the window focused) plays the squeeze. `fixtures/README.md` explains
-how every mocked answer can be changed.
+the window focused) plays the squeeze. `ruffle/fixtures/README.md`
+explains how every mocked answer can be changed.

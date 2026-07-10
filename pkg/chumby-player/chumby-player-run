@@ -46,7 +46,7 @@ export RUST_LOG="${RUST_LOG:-warn}"
 # lavapipe (software Vulkan) worker threads: extra workers roughly
 # double total CPU for the same 12 fps output on the Pi 3B+ —
 # measured 215% (4 threads) vs 103% (1 thread), see
-# claude-docs/reference/11-perf-and-input-cleanup.md.
+# claude-docs/requirements.md NFR4.
 export LP_NUM_THREADS="${LP_NUM_THREADS:-1}"
 
 exec /usr/lib/chumby-player/ruffle_desktop \
