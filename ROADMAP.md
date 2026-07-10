@@ -63,8 +63,10 @@ Roughly in order. The player-side detail lives in the fork's
 
 7. **Remote channels + registration.** Deliberately the *last* feature.
    chumby.com is on life support — registration is possible, just not wanted
-   yet. A real per-Pi device identity (reimplementing `guidgen.sh` in the
-   host, today a fixed fixture GUID) rides with it.
+   yet. The per-Pi device identity that once rode with it was pulled forward
+   on 2026-07-10 (Jan's call): GUID and serial now derive from the Pi's SoC
+   serial (fork's requirements.md FR10). Registration itself remains out and
+   the GUID still never leaves the process.
 
 > Items 6 and 7 were both once called "the very last" thing. Their order
 > relative to each other was never actually settled. Ask.
@@ -103,3 +105,4 @@ These still bind. Changing one is a decision, not drift.
 | 2026-07-09 | **Docs & repo split.** Three docs per repo; the fork made self-contained for player work (fixtures, harness, decompile, its own `CLAUDE.md`); the UI policy compiled into the player. |
 | 2026-07-10 | **The two owed ui-policy rules.** `info-geek` and `info-intro` disable the Info screen's π trigger and INTRO button; verified live (targets acquired, clicks inert). |
 | 2026-07-10 | **Backup alarm.** Scoped with Jan (in-process watcher, option "A2"; missed-alarm boot path in; fixed duration; Klaxon), implemented in the fork (`backup_alarm.rs`, FR13), verified on the desktop end-to-end incl. the panel arming and dismissing for real. mpv's silent-stall-on-WLAN-loss measured and recorded — it is the failure this guards. On-device loudness check owed (open item 4). |
+| 2026-07-10 | **Info-screen fixes: firmware version + real device identity.** `FW:` was showing 1.7.2 (fixture bug; ground truth `1830` — third dot-field of `firmware_build`, per the original `chumby_version` script). GUID and `HW#:` serial now derive from the Pi's SoC serial (salted md5 / model tag `RPI3B-…`, "PC" off-Pi), `md5sum` computed honestly — pulled forward from item 7, registration stays out. Fork's requirements.md FR10. |
