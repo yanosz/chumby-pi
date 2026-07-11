@@ -49,6 +49,8 @@ D="$BUILD/chumby-player-data"
 mkdir -p "$D/DEBIAN" "$D/usr/share/chumby-player/swf"
 sed "s/@VERSION@/$VERSION/" chumby-player-data/DEBIAN/control > "$D/DEBIAN/control"
 cp -a "$REPO/ruffle/fixtures" "$D/usr/share/chumby-player/fixtures"
+# Never ship the build box's generated dev identity (fork FR10).
+rm -f "$D/usr/share/chumby-player/fixtures/rootfs/psp/guid"
 # Ship a profile that matches the packaged widget sidecars.
 "$REPO/ruffle/chumby-widget-channel" --fixtures "$D/usr/share/chumby-player/fixtures" --force --quiet
 install -m 644 "$SWF" "$D/usr/share/chumby-player/swf/controlpanel.swf"
