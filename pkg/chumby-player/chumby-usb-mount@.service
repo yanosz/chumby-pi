@@ -8,7 +8,12 @@ After=dev-%i.device
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-# First filesystem wins — the panel browses exactly /media/chumby-usb;
-# extra partitions and second sticks are ignored (scope: /mnt/usb2..4
-# stay honestly absent).
-ExecStart=/bin/sh -c 'mountpoint -q /media/chumby-usb || exec systemd-mount --no-block --collect --options=ro,nosuid,nodev,noexec /dev/%I /media/chumby-usb'
+# Two guards. findmnt: never touch a device that is already mounted
+# somewhere — on a Pi booting from a USB disk the root/boot partitions
+# match the udev rule, and without this the panel would offer the
+# rootfs as USB music. (Default unit dependencies put us after
+# local-fs.target at boot, so fstab mounts are visible by then.)
+# mountpoint: first filesystem wins — the panel browses exactly
+# /media/chumby-usb; extra partitions and second sticks are ignored
+# (scope: /mnt/usb2..4 stay honestly absent).
+ExecStart=/bin/sh -c 'findmnt --source /dev/%I > /dev/null && exit 0; mountpoint -q /media/chumby-usb || exec systemd-mount --no-block --collect --options=ro,nosuid,nodev,noexec /dev/%I /media/chumby-usb'

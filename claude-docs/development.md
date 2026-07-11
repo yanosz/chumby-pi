@@ -236,6 +236,24 @@ surgery; everything below ships in `chumby-player`):
   `udevadm trigger --subsystem-match=block --action=add` so a stick already
   inserted at install time mounts immediately.
 
+Packaging audit for a *plain* Pi (2026-07-11, after the milestone closed):
+deb contents and control verified from the built artifacts —
+rule/unit/`/media/chumby-usb`/updated scripts all present, `Depends`
+already carries `cage, mpv, pipewire-alsa, python3, chumby-player-data` +
+libs, and the guards' tools (`findmnt`, `mountpoint`) are util-linux
+(essential). One real gap found and fixed: on a Pi **booting from a USB
+disk**, the root/boot partitions match the udev rule, and the panel would
+have been offered the rootfs as USB music (also triggered at install time
+by postinst's block trigger). The unit now short-circuits for any device
+`findmnt` shows as already mounted; boot-time fstab mounts are visible to
+that check because default unit dependencies order the service after
+`local-fs.target`. Two non-issues, checked and left alone: simultaneous
+partition events serialize on the single transient mount-unit name, and
+dpkg's rmdir of a busy `/media/chumby-usb` on package removal fails
+silently and harmlessly. Redeployed (0.3.0 rebuilt) and the guard proven
+on-device: `systemctl start chumby-usb-mount@mmcblk0p2` (the mounted root
+partition) exits success and mounts nothing.
+
 Verified on the device 2026-07-11: the symlink conversion at restart; My
 Music Files over an *empty* `/media/chumby-usb` shows "No files available"
 (panel driven over the control FIFO; screenshots with
@@ -246,9 +264,20 @@ the TFT browsed the image's folder and tracks, PLAY ALL had mpv playing
 `/var/lib/chumby/fixtures/rootfs/mnt/usb/tone-a4.mp3` through the symlink,
 and `findmnt` confirmed `ro,nosuid,nodev,noexec`; teardown
 (`systemctl stop chumby-usb-mount@loop1 'media-chumby\x2dusb.mount'`,
-`losetup -d`) returned the panel to the empty state. **Still outstanding:
-the physical-stick pass** — the udev `ID_BUS=usb` match and
-unplug-while-mounted are the two paths a loop device cannot exercise.
+`losetup -d`) returned the panel to the empty state.
+
+**Physical-stick pass** (2026-07-11, later the same day, Jan's 114.6 GB
+SanDisk with one vfat partition): plug-in fired the udev match with no
+manual step — `chumby-usb-mount@sda1` active within the minute, vfat ro at
+`/media/chumby-usb`. The TFT browsed it correctly: four MP3s listed, the
+stick's `.exe`/`.dmg`/`.pdf` cruft filtered by the panel's own extension
+match, `System Volume Information` shown as an ordinary folder. Tapping a
+track played it audibly through the USB sound card (mpv on the resolved
+rootfs path). **Yank while playing**: the service went inactive via its
+device binding, the `systemd-mount` unit garbage-collected, the mountpoint
+returned to an empty dir, mpv exited, no player errors or panic; the
+browser showed its stale listing until screen re-entry (it re-lists only
+on entry — known), then "No files available". Milestone closed.
 Alarm-from-USB was verified on the desktop (fork development.md §5) and
 rides exactly the native + mpv path proven here; not re-run on device.
 
