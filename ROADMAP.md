@@ -29,15 +29,23 @@ Roughly in order. The player-side detail lives in the fork's
    and disabled controls were verified on the desktop only. Deploy a
    **freshly built** player — a stale binary has already faked this failure.
 
-2. **Configuration file support.** Read once at player start; no write
+2. **Backup alarm: the on-device loudness check.** The feature itself
+   shipped 2026-07-10 (see Done); what remains is confirming on the Pi that
+   the Klaxon at mpv volume 100 through the 35 % hardware volume genuinely
+   wakes someone. If not: escalate to sink/hw volume bumping (decision
+   recorded in the fork's requirements.md FR13). Rides along with item 1's
+   on-device pass. (Restored 2026-07-11 — the roadmap sync `fa8087f` had
+   silently dropped it.)
+
+3. **Configuration file support.** Read once at player start; no write
    support for now. Options as of today (Jan, 2026-07-11): **volume cap**
    (in %) and **access chumby.com** (0/1). The latter is the future switch
-   for the remote-channels milestone (item 6) and must default to 0 —
+   for the remote-channels milestone (item 7) and must default to 0 —
    NFR6 ("nothing reaches chumby.com") stays the standing state until it
    is flipped deliberately. File location/format is design work in the
    fork.
 
-3. **Music sources: reconsider scope.** USB/local files (C11) may have
+4. **Music sources: reconsider scope.** USB/local files (C11) may have
    opened gates to other sources — go through the panel's source list
    (`MusicPlayer.musicSources`) and re-decide the blanket "skip every
    other source" row in the scope table (this repo's requirements §1 FR5).
@@ -45,20 +53,20 @@ Roughly in order. The player-side detail lives in the fork's
    are proven; dead services (MP3tunes, Chumbcast, CBS/NYT podcasts …)
    stay dead.
 
-4. **Brightness & night mode (E2, B4).** Blocked on hardware: the current
+5. **Brightness & night mode (E2, B4).** Blocked on hardware: the current
    TFT's backlight rail is tied to 3.3 V and cannot dim. Needs a panel that
    can, then map the panel's `/proc/sys/sense1/brightness` writes (0–65535)
    and `_setLCDMute` (5,20) onto a real backlight. Must drop the
    `settings-brightness` ui-policy rule. Candidates and driver risk:
    `claude-docs/design.md` §8.
 
-5. **Intro widget.** `playIntro` only reaches `intro.swf` through the slave
+6. **Intro widget.** `playIntro` only reaches `intro.swf` through the slave
    player, which the `localCache` path does not run. We own the AVM1
    interpreter, so the option space is wider than "edit the SWF or revive the
    slave system" — VM-level interception is the intended route. Must drop
    the `info-intro` ui-policy rule.
 
-6. **Remote channels + registration.** Deliberately the *last* feature.
+7. **Remote channels + registration.** Deliberately the *last* feature.
    chumby.com is on life support — registration is possible, just not wanted
    yet. Its device-identity prerequisite already landed (fork PR #16): the
    GUID and HW# are real, derived from the SoC serial; a machine without one
@@ -66,7 +74,7 @@ Roughly in order. The player-side detail lives in the fork's
    requirements FR10, 2026-07-10). Revisit that in-player generation here:
    a CI run must never present a registrable identity to chumby.com.
 
-> Items 5 and 6 (intro widget, remote channels) were both once called "the
+> Items 6 and 7 (intro widget, remote channels) were both once called "the
 > very last" thing. Their order relative to each other was never actually
 > settled. Ask.
 
