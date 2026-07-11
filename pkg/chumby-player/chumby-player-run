@@ -39,6 +39,11 @@ if [ ! -L "$USB_LINK" ]; then
     ln -s /media/chumby-usb "$USB_LINK"
 fi
 
+# Owner config (volume cap, chumby.com access — fork FR14/FR15). The
+# player reads <fixtures>/player.toml once at start; the real file is a
+# dpkg conffile in /etc, so edits survive upgrades and fixture re-seeds.
+ln -sf /etc/chumby-player/player.toml "$STATE/fixtures/player.toml"
+
 [ -p "$CTL" ] || mkfifo -m 600 "$CTL"
 
 # The panel fetches its widget channel from this profile. It is (re)built

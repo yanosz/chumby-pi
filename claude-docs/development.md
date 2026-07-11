@@ -214,10 +214,33 @@ The overlay can be swapped at runtime, reversibly, without a reboot:
 
 **Kiosk**: `chumby-player.service` and `chumby-widget-channel.service`, both
 shipped by the deb. `postinst` enables the player unit and reloads udev.
-Installed version: **0.3.0** (deployed 2026-07-11 via `pkg/deploy-pi.sh`,
-player at fork branch `usb-music` `b218502` — USB/local music C11). 0.2.0
+Installed version: **0.4.0** (deployed 2026-07-11 via `pkg/deploy-pi.sh`,
+player at fork branch `config/player-toml` `2e8343fc9`, PR #19 —
+player.toml config FR14 + music source policy FR15). Earlier: 0.3.0
+(2026-07-11, fork `usb-music` `b218502` — USB/local music C11); 0.2.0
 (2026-07-10, fork tip `41fb650`) brought real network diagnostics, the
 backup alarm and real device identity; binary sha256 verified on both ends.
+
+**Owner config** (2026-07-11, shipped with 0.4.0): the player reads
+`<fixtures>/player.toml` once at start (fork FR14). On the device the real
+file is `/etc/chumby-player/player.toml` — a dpkg **conffile** (default
+content = the fork's `player.toml.example`), which `chumby-player-run`
+links into the live fixtures root at every start
+(`ln -sf … /var/lib/chumby/fixtures/player.toml`), so the setting survives
+both deb upgrades and fixture re-seed wipes. On this device
+`access_chumby_com` was set to 1 (Jan's decision, 2026-07-11):
+
+```sh
+sudo sed -i 's/^access_chumby_com = 0/access_chumby_com = 1/' \
+    /etc/chumby-player/player.toml && sudo systemctl restart chumby-player
+```
+
+Result verified on the TFT: the Music source list shows SHOUTcast Radio /
+blue octy radio / Sleep Sounds / My Streams / My Music Files (Squeezebox
+stays hidden, `enable_lyrion = 0`); the SHOUTcast directory loaded live
+through the revived chumby.com proxy, and station 1 (ANTENNE BAYERN)
+played through mpv (`http://stream.antenne.de:80/antenne`, panel volume
+60). Playback stopped and the kiosk restarted to its idle state afterwards.
 
 **USB music automount** (2026-07-11, deployed with 0.3.0 — no manual device
 surgery; everything below ships in `chumby-player`):

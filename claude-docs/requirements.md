@@ -60,7 +60,9 @@ as a live control that silently does nothing.
 | Clock / time / timezone | **partly** | 12/24h toggle is live; the timezone picker and the NTP toggle are **disabled** — the Pi OS owns time and time sync |
 | Music: My Streams | **delivered** | real network; the stream list is local data, no chumby.com |
 | Music: USB / local files | **delivered** | `_getDirectoryEntry` in the player + read-only automount to `/media/chumby-usb`; alarm-from-USB included. Physical-stick pass done 2026-07-11 (hotplug, playback, yank-while-playing) |
-| Music: every other source | skip | SHOUTcast, iPod, FM, MP3tunes, NOAA, Internode, podcasts, Chumbcast, sleep sounds, Squeezebox, Pandora et al. — dead services or absent hardware |
+| Music: SHOUTcast, blue octy radio, Sleep Sounds | **delivered**, opt-in | alive via the revived chumby.com music proxies (verified live 2026-07-11); hidden unless `access_chumby_com=1` in the owner config `/etc/chumby-player/player.toml`, which also passes exactly their two hosts through — fork's requirements.md FR15 |
+| Music: Squeezebox Server | hidden, opt-in | player side complete; Lyrion server behavior unverified and out of scope (2026-07-11) — `enable_lyrion=1` shows it (fork FR15) |
+| Music: every other source | hidden / skip | iPod, NOAA and CBS podcasts spliced out by the player (NOAA and CBS confirmed dead on a real chumby, 2026-07-11); FM, MP3tunes, Internode self-hide via their own failing probes |
 | Widget channel | **delivered** | exactly one channel, generated at boot from the widgets we ship |
 | Channel management (picker, info, add, reload) | **disabled** | needs remote download + registration |
 | Widget preview picture on the dashboard | **delivered** | a static per-widget thumbnail |

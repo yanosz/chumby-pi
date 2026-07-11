@@ -14,7 +14,7 @@ set -eu
 cd "$(dirname "$0")"
 REPO=$(cd .. && pwd)
 
-VERSION="${VERSION:-0.3.0}"
+VERSION="${VERSION:-0.4.0}"
 # dist = release + fat LTO + codegen-units=1 (what upstream ships);
 # measurably lighter on the Pi's CPU-bound rasterization (doc 11).
 BIN="$REPO/ruffle/target/aarch64-unknown-linux-gnu/dist/ruffle_desktop"
@@ -32,9 +32,15 @@ mkdir -p "$BUILD" "$OUT"
 P="$BUILD/chumby-player"
 mkdir -p "$P/DEBIAN" "$P/usr/bin" "$P/usr/lib/chumby-player" \
          "$P/lib/systemd/system" "$P/usr/lib/udev/rules.d" \
-         "$P/media/chumby-usb"
+         "$P/media/chumby-usb" "$P/etc/chumby-player"
 sed "s/@VERSION@/$VERSION/" chumby-player/DEBIAN/control > "$P/DEBIAN/control"
 install -m 755 chumby-player/DEBIAN/postinst chumby-player/DEBIAN/prerm "$P/DEBIAN/"
+# Owner config (fork FR14/FR15): shipped as a dpkg conffile so local edits
+# survive upgrades. Default content is the fork's committed template; the
+# launcher links it into the live fixtures root at every start.
+install -m 644 chumby-player/DEBIAN/conffiles "$P/DEBIAN/"
+install -m 644 "$REPO/ruffle/fixtures/player.toml.example" \
+    "$P/etc/chumby-player/player.toml"
 install -m 755 "$BIN" "$P/usr/lib/chumby-player/ruffle_desktop"
 install -m 755 "$REPO/ruffle/chumby-ctl" "$P/usr/bin/chumby-ctl"
 install -m 755 "$REPO/ruffle/chumby-widget-channel" "$P/usr/bin/chumby-widget-channel"

@@ -103,7 +103,13 @@ python3, `chumby-player-data`, plus the library dependencies read off the
 binary's `NEEDED` entries (`libc6`, `libgcc-s1`, `libfontconfig1`,
 `libssl3t64`, `libasound2t64`, `libudev1` — note trixie's time64 renames).
 `postinst` enables the unit but does not start it; installing means "player
-mode on next boot".
+mode on next boot". It also ships the owner config
+`/etc/chumby-player/player.toml` as a dpkg **conffile** (default content =
+the fork's committed `player.toml.example`): the player reads
+`<fixtures>/player.toml` once at start, and the launcher symlinks the /etc
+file into the live fixtures root on every start — so an owner edit (e.g.
+`access_chumby_com = 1`) survives deb upgrades *and* the fixture re-seed
+wipe that discards everything else under `/var/lib/chumby/fixtures`.
 
 **`chumby-player-data`** (all) — the `fixtures/` tree and `controlpanel.swf`.
 Private use only (NFR1).
