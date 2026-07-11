@@ -29,23 +29,44 @@ Roughly in order. The player-side detail lives in the fork's
    and disabled controls were verified on the desktop only. Deploy a
    **freshly built** player — a stale binary has already faked this failure.
 
-2. **USB / local music files (C11).** Wanted. Needs `_getDirectoryEntry`
-   (5,320) to fill objects; `RootFs::dir_entry` exists, the native stubs.
+2. **Backup alarm: the on-device loudness check.** The feature itself
+   shipped 2026-07-10 (see Done); what remains is confirming on the Pi that
+   the Klaxon at mpv volume 100 through the 35 % hardware volume genuinely
+   wakes someone. If not: escalate to sink/hw volume bumping (decision
+   recorded in the fork's requirements.md FR13). Rides along with item 1's
+   on-device pass. (Restored 2026-07-11 — the roadmap sync `fa8087f` had
+   silently dropped it.)
 
-3. **Brightness & night mode (E2, B4).** Blocked on hardware: the current
+3. **Configuration file support.** Read once at player start; no write
+   support for now. Options as of today (Jan, 2026-07-11): **volume cap**
+   (in %) and **access chumby.com** (0/1). The latter is the future switch
+   for the remote-channels milestone (item 7) and must default to 0 —
+   NFR6 ("nothing reaches chumby.com") stays the standing state until it
+   is flipped deliberately. File location/format is design work in the
+   fork.
+
+4. **Music sources: reconsider scope.** USB/local files (C11) may have
+   opened gates to other sources — go through the panel's source list
+   (`MusicPlayer.musicSources`) and re-decide the blanket "skip every
+   other source" row in the scope table (this repo's requirements §1 FR5).
+   Candidates worth a look now that filesystem browsing and mpv playback
+   are proven; dead services (MP3tunes, Chumbcast, CBS/NYT podcasts …)
+   stay dead.
+
+5. **Brightness & night mode (E2, B4).** Blocked on hardware: the current
    TFT's backlight rail is tied to 3.3 V and cannot dim. Needs a panel that
    can, then map the panel's `/proc/sys/sense1/brightness` writes (0–65535)
    and `_setLCDMute` (5,20) onto a real backlight. Must drop the
    `settings-brightness` ui-policy rule. Candidates and driver risk:
    `claude-docs/design.md` §8.
 
-4. **Intro widget.** `playIntro` only reaches `intro.swf` through the slave
+6. **Intro widget.** `playIntro` only reaches `intro.swf` through the slave
    player, which the `localCache` path does not run. We own the AVM1
    interpreter, so the option space is wider than "edit the SWF or revive the
    slave system" — VM-level interception is the intended route. Must drop
    the `info-intro` ui-policy rule.
 
-5. **Remote channels + registration.** Deliberately the *last* feature.
+7. **Remote channels + registration.** Deliberately the *last* feature.
    chumby.com is on life support — registration is possible, just not wanted
    yet. Its device-identity prerequisite already landed (fork PR #16): the
    GUID and HW# are real, derived from the SoC serial; a machine without one
@@ -53,8 +74,9 @@ Roughly in order. The player-side detail lives in the fork's
    requirements FR10, 2026-07-10). Revisit that in-player generation here:
    a CI run must never present a registrable identity to chumby.com.
 
-> Items 4 and 5 were both once called "the very last" thing. Their order
-> relative to each other was never actually settled. Ask.
+> Items 6 and 7 (intro widget, remote channels) were both once called "the
+> very last" thing. Their order relative to each other was never actually
+> settled. Ask.
 
 ## Standing decisions
 
@@ -91,3 +113,4 @@ These still bind. Changing one is a decision, not drift.
 | 2026-07-10 | **The two owed ui-policy rules.** `info-geek` and `info-intro` disable the Info screen's π trigger and INTRO button; verified live (targets acquired, clicks inert). |
 | 2026-07-10 | **I3 finished — real network diagnostics.** Type from the default-route interface, live SSID and signal, every `network_status.sh`/`signal_strength` field audited live (fork PR #15, FR10). |
 | 2026-07-10 | **Backup alarm (FR13) + real device identity.** In-process dead-man beep on `/psp/ifalarm`, missed-alarm boot check; GUID/HW# derived from the SoC serial, `md5sum` computed for real (fork PR #16). |
+| 2026-07-11 | **USB / local music (C11), closed same day.** Real `_getDirectoryEntry` (5,320) in the player (fork `usb-music`), My Music Files browse/play + alarm-from-USB desktop-verified; appliance automount (udev + `chumby-usb-mount@`, read-only `/media/chumby-usb`, seed-time symlink) deployed as 0.3.0. Physical-stick pass complete: hotplug automount, audible playback on the TFT, yank-while-playing cleaned up honestly. `externalmusic.xml` stays faithful. |

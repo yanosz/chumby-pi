@@ -27,6 +27,18 @@ if [ ! -d "$STATE/fixtures" ]; then
     mv "$STATE/fixtures.seed" "$STATE/fixtures"
 fi
 
+# The panel browses /mnt/usb (My Music Files). On the device that must
+# be the real stick, not the demo tones the fixtures carry for desktop
+# and CI runs: replace the seeded directory with a symlink to the
+# read-only automount (99-chumby-usb-music.rules + chumby-usb-mount@).
+# Idempotent, so an upgrade re-seed gets converted again.
+USB_LINK="$STATE/fixtures/rootfs/mnt/usb"
+if [ ! -L "$USB_LINK" ]; then
+    rm -rf "$USB_LINK"
+    mkdir -p "${USB_LINK%/*}"
+    ln -s /media/chumby-usb "$USB_LINK"
+fi
+
 [ -p "$CTL" ] || mkfifo -m 600 "$CTL"
 
 # The panel fetches its widget channel from this profile. It is (re)built

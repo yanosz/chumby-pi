@@ -56,9 +56,10 @@ as a live control that silently does nothing.
 | Built-in offline clock | **delivered** | `builtinclock.swf`, one of the widgets in the generated channel |
 | Volume | **delivered** | |
 | Alarms — list, editor, ring screen | **delivered** | |
+| Backup alarm (dead-man beep) | **delivered** | in-player watcher on `/psp/ifalarm`, missed-alarm boot path included — fork's requirements.md FR13; loudness check on the Pi still owed (§3) |
 | Clock / time / timezone | **partly** | 12/24h toggle is live; the timezone picker and the NTP toggle are **disabled** — the Pi OS owns time and time sync |
 | Music: My Streams | **delivered** | real network; the stream list is local data, no chumby.com |
-| Music: USB / local files | **wanted, not built** | needs `_getDirectoryEntry` in the player |
+| Music: USB / local files | **delivered** | `_getDirectoryEntry` in the player + read-only automount to `/media/chumby-usb`; alarm-from-USB included. Physical-stick pass done 2026-07-11 (hotplug, playback, yank-while-playing) |
 | Music: every other source | skip | SHOUTcast, iPod, FM, MP3tunes, NOAA, Internode, podcasts, Chumbcast, sleep sounds, Squeezebox, Pandora et al. — dead services or absent hardware |
 | Widget channel | **delivered** | exactly one channel, generated at boot from the widgets we ship |
 | Channel management (picker, info, add, reload) | **disabled** | needs remote download + registration |
@@ -166,5 +167,5 @@ from memory or shell history.
 | **Brightness + night mode** | Hardware. The current ILI9486 clone has its backlight LED rail tied straight to 3.3 V — GPIO22 is declared in the overlay but not routed on the board, and driving it does nothing (verified by watching the panel while toggling it). Dimming needs a different display; the candidates and their driver risk are in [design.md](design.md) §8. When it lands, it must also drop the `settings-brightness` rule from the player's UI policy. |
 | **Intro widget** | The panel only loads `intro.swf` through the slave player, which the chosen widget architecture does not run. Needs interpreter-level work in the fork. |
 | **Remote channels + registration** | Deliberately the project's last feature. |
-| **USB / local music files** | `_getDirectoryEntry` in the player. |
 | **Widget-channel on-device pass** | The channel, the preview picture and the disabled controls were verified on the desktop; the single combined on-device confirmation is still outstanding. Deploy a **freshly built** player — a stale binary has already produced one false "it doesn't work". |
+| **Backup-alarm on-device pass** | Implemented in the player (fork's requirements.md FR13, 2026-07-10) and verified on the desktop; still owed on the Pi: that the Klaxon at mpv volume 100 through the 35 % hardware volume is genuinely loud enough to wake someone. If not, escalate to sink/hw volume bumping — a decision recorded in FR13. |

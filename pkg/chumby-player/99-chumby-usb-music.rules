@@ -1,0 +1,6 @@
+# A USB filesystem (stick partition or whole-disk) triggers the mount
+# service that puts it read-only at /media/chumby-usb, where the control
+# panel's My Music Files browses it through the rootfs symlink made by
+# chumby-player-run. Read-only because the panel never writes to the
+# stick (fork claude-docs/requirements.md FR5).
+ACTION=="add", SUBSYSTEM=="block", ENV{ID_BUS}=="usb", ENV{ID_FS_USAGE}=="filesystem", TAG+="systemd", ENV{SYSTEMD_WANTS}+="chumby-usb-mount@%k.service"

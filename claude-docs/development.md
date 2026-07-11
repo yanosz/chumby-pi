@@ -105,6 +105,13 @@ sudo apt install ./chumby-player_*.deb ./chumby-player-data_*.deb
 sudo systemctl start chumby-player      # or reboot; postinst enabled it
 ```
 
+Or all of it in one command: `pkg/deploy-pi.sh <pi>` rebuilds the dist
+binary (§7: never trust a stale one), rebuilds the debs into a clean
+`pkg/out/`, installs them on the Pi (`--reinstall`, so redeploying the
+same version still replaces the files) and restarts the player.
+`build-debs.sh` strips the build box's generated `rootfs/psp/guid` from
+the data deb — a package must not ship one machine's dev identity.
+
 Leaving player mode: `sudo systemctl stop chumby-player` (once), or
 `sudo systemctl disable --now chumby-player`. State in `/var/lib/chumby`
 survives removal *and* purge — `StateDirectory` contents are not tracked by
@@ -207,6 +214,76 @@ The overlay can be swapped at runtime, reversibly, without a reboot:
 
 **Kiosk**: `chumby-player.service` and `chumby-widget-channel.service`, both
 shipped by the deb. `postinst` enables the player unit and reloads udev.
+Installed version: **0.3.0** (deployed 2026-07-11 via `pkg/deploy-pi.sh`,
+player at fork branch `usb-music` `b218502` — USB/local music C11). 0.2.0
+(2026-07-10, fork tip `41fb650`) brought real network diagnostics, the
+backup alarm and real device identity; binary sha256 verified on both ends.
+
+**USB music automount** (2026-07-11, deployed with 0.3.0 — no manual device
+surgery; everything below ships in `chumby-player`):
+
+- `/usr/lib/udev/rules.d/99-chumby-usb-music.rules` — a USB block device
+  carrying a filesystem (`ID_BUS=usb`, `ID_FS_USAGE=filesystem`) pulls in
+  `chumby-usb-mount@<kernel-name>.service`.
+- `/lib/systemd/system/chumby-usb-mount@.service` — oneshot, first-wins
+  (`mountpoint -q` guard: extra partitions and second sticks are ignored),
+  runs `systemd-mount --no-block --collect -o ro,nosuid,nodev,noexec` onto
+  `/media/chumby-usb`. Read-only because the panel never writes to the
+  stick (fork requirements FR5). `BindsTo=dev-%i.device` plus `--collect`
+  unmount and garbage-collect on unplug.
+- `/media/chumby-usb` is shipped by the deb, so the mountpoint — and the
+  panel's `/mnt/usb` — always resolves: empty dir = no stick, which the
+  panel answers with its own "No files available" screen.
+- `chumby-player-run` replaces the seeded `fixtures/rootfs/mnt/usb`
+  directory (desktop demo tones) with a symlink to `/media/chumby-usb` at
+  every start (idempotent, survives an upgrade re-seed); `postinst` gained
+  `udevadm trigger --subsystem-match=block --action=add` so a stick already
+  inserted at install time mounts immediately.
+
+Packaging audit for a *plain* Pi (2026-07-11, after the milestone closed):
+deb contents and control verified from the built artifacts —
+rule/unit/`/media/chumby-usb`/updated scripts all present, `Depends`
+already carries `cage, mpv, pipewire-alsa, python3, chumby-player-data` +
+libs, and the guards' tools (`findmnt`, `mountpoint`) are util-linux
+(essential). One real gap found and fixed: on a Pi **booting from a USB
+disk**, the root/boot partitions match the udev rule, and the panel would
+have been offered the rootfs as USB music (also triggered at install time
+by postinst's block trigger). The unit now short-circuits for any device
+`findmnt` shows as already mounted; boot-time fstab mounts are visible to
+that check because default unit dependencies order the service after
+`local-fs.target`. Two non-issues, checked and left alone: simultaneous
+partition events serialize on the single transient mount-unit name, and
+dpkg's rmdir of a busy `/media/chumby-usb` on package removal fails
+silently and harmlessly. Redeployed (0.3.0 rebuilt) and the guard proven
+on-device: `systemctl start chumby-usb-mount@mmcblk0p2` (the mounted root
+partition) exits success and mounts nothing.
+
+Verified on the device 2026-07-11: the symlink conversion at restart; My
+Music Files over an *empty* `/media/chumby-usb` shows "No files available"
+(panel driven over the control FIFO; screenshots with
+`XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-0 grim`); the mount
+unit exercised with a loop-backed vfat image (`/usr/sbin/mkfs.vfat` on a
+file, `losetup -f --show`, `systemctl start chumby-usb-mount@loop1`) —
+the TFT browsed the image's folder and tracks, PLAY ALL had mpv playing
+`/var/lib/chumby/fixtures/rootfs/mnt/usb/tone-a4.mp3` through the symlink,
+and `findmnt` confirmed `ro,nosuid,nodev,noexec`; teardown
+(`systemctl stop chumby-usb-mount@loop1 'media-chumby\x2dusb.mount'`,
+`losetup -d`) returned the panel to the empty state.
+
+**Physical-stick pass** (2026-07-11, later the same day, Jan's 114.6 GB
+SanDisk with one vfat partition): plug-in fired the udev match with no
+manual step — `chumby-usb-mount@sda1` active within the minute, vfat ro at
+`/media/chumby-usb`. The TFT browsed it correctly: four MP3s listed, the
+stick's `.exe`/`.dmg`/`.pdf` cruft filtered by the panel's own extension
+match, `System Volume Information` shown as an ordinary folder. Tapping a
+track played it audibly through the USB sound card (mpv on the resolved
+rootfs path). **Yank while playing**: the service went inactive via its
+device binding, the `systemd-mount` unit garbage-collected, the mountpoint
+returned to an empty dir, mpv exited, no player errors or panic; the
+browser showed its stale listing until screen re-entry (it re-lists only
+on entry — known), then "No files available". Milestone closed.
+Alarm-from-USB was verified on the desktop (fork development.md §5) and
+rides exactly the native + mpv path proven here; not re-run on device.
 
 **udev**, shipped as `/usr/lib/udev/rules.d/90-chumby-ignore-cec-pointer.rules`:
 
