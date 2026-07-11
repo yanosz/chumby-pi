@@ -50,29 +50,35 @@ Roughly in order. The player-side detail lives in the fork's
    slave system" — VM-level interception is the intended route. Must drop
    the `info-intro` ui-policy rule.
 
-5. **Remote channels + registration.** Deliberately the *last* feature.
-   chumby.com is on life support — registration is possible, just not wanted
-   yet. Its device-identity prerequisite already landed (fork PR #16): the
-   GUID and HW# are real, derived from the SoC serial; a machine without one
-   (dev box, CI) generates its own random GUID once and persists it (fork
-   requirements FR10, 2026-07-10). Revisit that in-player generation here:
-   a CI run must never present a registrable identity to chumby.com. The
-   owner switch it will ride on (`access_chumby_com`) already exists and
-   today opens only the music proxies (fork FR14/FR15, 2026-07-11).
-
-> Items 4 and 5 (intro widget, remote channels) were both once called "the
-> very last" thing. Their order relative to each other was never actually
-> settled. Ask.
+5. **Remote channels + registration.** *Registration and channel/widget
+   download are done and verified live* (2026-07-11): DCID reverse-engineered
+   on a real registered box (identity is the crypto-processor GUID; DCID
+   `skin` is only branding, no signature to reproduce), register-the-Pi
+   chosen over cloning, and the panel's own register wizard + the account's
+   real widget channel made to work under `access_chumby_com` + a stable
+   identity (hardware serial or `device_guid`), CI/dev structurally excluded
+   (NFR6). End-to-end on the TFT: boot → wizard → tap ovals + claim on
+   chumby.com → main; the account's widget downloaded, cached and rendered;
+   CHANNEL/DELETE enabled. Fork branch `registration-phase2`, fork
+   requirements §3 / design §12; device record in this repo's development.md.
+   **The social surface** (add-widget browse, rating, send+mail) is
+   **out of scope** (Jan, 2026-07-11) — `main-send`/`main-rate` stay
+   disabled and those endpoints are never passed through. Item 5 is closed.
 
 ## Standing decisions
 
 These still bind. Changing one is a decision, not drift.
 
 - **`controlpanel.swf` is never modified.** Everything is exerted from Rust.
-- **Nothing reaches chumby.com** — not at boot, not from CI. The GUID must
-  not leak. Since 2026-07-11 the *owner* may open exactly the music-proxy
-  slice of this (`access_chumby_com=1` in `/etc/chumby-player/player.toml`,
-  fork FR15); identity traffic stays blocked in every configuration.
+- **Nothing reaches chumby.com by default** — not at boot, not from CI.
+  Since 2026-07-11 the *owner* may open two slices with
+  `access_chumby_com=1` (`/etc/chumby-player/player.toml`): the music
+  proxies (fork FR15, no identity), and the registration endpoints
+  `/xml/authorize` + `/xml/registerchumby`, which carry the device GUID.
+  The identity slice is additionally gated on a real hardware serial, so a
+  CI/dev box can never present a registrable identity (fork NFR6). Default
+  and CI stay fully offline; the GUID leaves only on the owner's opt-in
+  from real hardware.
 - **Widget playback uses the panel's `localCache` in-movie path**, not the
   master/slave dual-instance system (confirmed at CHECKPOINT 3, 2026-06-12).
 - **`--load-behavior blocking` is mandatory** — the panel jumps to frame
@@ -102,4 +108,5 @@ These still bind. Changing one is a decision, not drift.
 | 2026-07-10 | **I3 finished — real network diagnostics.** Type from the default-route interface, live SSID and signal, every `network_status.sh`/`signal_strength` field audited live (fork PR #15, FR10). |
 | 2026-07-10 | **Backup alarm (FR13) + real device identity.** In-process dead-man beep on `/psp/ifalarm`, missed-alarm boot check; GUID/HW# derived from the SoC serial, `md5sum` computed for real (fork PR #16). |
 | 2026-07-11 | **Config file + music sources (items 3 & 4 of the 07-09 plan).** `player.toml` read once at start (fork FR14: volume cap as a scale, `access_chumby_com`, `enable_lyrion`; template ships as `/etc/chumby-player/player.toml`, a conffile the launcher links into the live fixtures). Music scope re-decided against live endpoints (fork FR15): SHOUTcast / blue octy radio / Sleep Sounds are *alive* on the revived chumby.com and opt-in via the switch — SHOUTcast browsed and played audibly on the desktop; iPod/NOAA/CBS hidden (NOAA+CBS confirmed dead on a real chumby); Squeezebox behind `enable_lyrion` (player side done, Lyrion unverified). Fork PR #19, appliance 0.4.0. |
+| 2026-07-11 | **Registration + remote channels (item 5).** DCID reverse-engineered on a real registered box (identity = crypto-processor GUID; DCID `skin` = branding only, no signature); register-the-Pi chosen over cloning. `access_chumby_com` + a stable identity (serial or `device_guid`) opens the panel's own register wizard and the account's real widget channel — authorize/registerchumby/chumbies/profiles/widgets pass through to the revived chumby.com (`update.chumby.com` never), CI/dev structurally excluded (NFR6). Widget SWFs download via a Rust reimplementation of the panel's `curl` cache. Verified end-to-end on the TFT: boot → wizard → tap ovals + claim on chumby.com → main; account widget downloaded, cached, rendered; CHANNEL/DELETE enabled. Fork branch `registration-phase2`, fork design §12. Social surface (add-widget/rating/send+mail) de-scoped — item 5 closed. |
 | 2026-07-11 | **USB / local music (C11), closed same day.** Real `_getDirectoryEntry` (5,320) in the player (fork `usb-music`), My Music Files browse/play + alarm-from-USB desktop-verified; appliance automount (udev + `chumby-usb-mount@`, read-only `/media/chumby-usb`, seed-time symlink) deployed as 0.3.0. Physical-stick pass complete: hotplug automount, audible playback on the TFT, yank-while-playing cleaned up honestly. `externalmusic.xml` stays faithful. |
