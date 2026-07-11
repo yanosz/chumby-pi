@@ -14,7 +14,7 @@ set -eu
 cd "$(dirname "$0")"
 REPO=$(cd .. && pwd)
 
-VERSION="${VERSION:-0.2.0}"
+VERSION="${VERSION:-0.3.0}"
 # dist = release + fat LTO + codegen-units=1 (what upstream ships);
 # measurably lighter on the Pi's CPU-bound rasterization (doc 11).
 BIN="$REPO/ruffle/target/aarch64-unknown-linux-gnu/dist/ruffle_desktop"
@@ -31,7 +31,8 @@ mkdir -p "$BUILD" "$OUT"
 # --- chumby-player (arm64) ---
 P="$BUILD/chumby-player"
 mkdir -p "$P/DEBIAN" "$P/usr/bin" "$P/usr/lib/chumby-player" \
-         "$P/lib/systemd/system" "$P/usr/lib/udev/rules.d"
+         "$P/lib/systemd/system" "$P/usr/lib/udev/rules.d" \
+         "$P/media/chumby-usb"
 sed "s/@VERSION@/$VERSION/" chumby-player/DEBIAN/control > "$P/DEBIAN/control"
 install -m 755 chumby-player/DEBIAN/postinst chumby-player/DEBIAN/prerm "$P/DEBIAN/"
 install -m 755 "$BIN" "$P/usr/lib/chumby-player/ruffle_desktop"
@@ -41,6 +42,11 @@ install -m 755 chumby-player/chumby-player-run "$P/usr/bin/chumby-player-run"
 install -m 644 chumby-player/chumby-player.service "$P/lib/systemd/system/"
 install -m 644 chumby-player/chumby-widget-channel.service "$P/lib/systemd/system/"
 install -m 644 chumby-player/90-chumby-ignore-cec-pointer.rules "$P/usr/lib/udev/rules.d/"
+# USB music: the automount pair (rule + templated mount unit). The deb
+# also ships /media/chumby-usb itself, so the panel's /mnt/usb symlink
+# always resolves — empty dir = no stick, the state the panel handles.
+install -m 644 chumby-player/99-chumby-usb-music.rules "$P/usr/lib/udev/rules.d/"
+install -m 644 chumby-player/chumby-usb-mount@.service "$P/lib/systemd/system/"
 find "$P" -type d -exec chmod 755 {} +
 dpkg-deb --build --root-owner-group "$P" "$OUT/chumby-player_${VERSION}_arm64.deb"
 

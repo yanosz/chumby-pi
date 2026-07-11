@@ -1,0 +1,14 @@
+[Unit]
+Description=Chumby USB music mount (%I)
+# Bound to the stick: unplugging stops this unit, and the systemd-mount
+# unit below is device-bound too, so it unmounts itself.
+BindsTo=dev-%i.device
+After=dev-%i.device
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# First filesystem wins — the panel browses exactly /media/chumby-usb;
+# extra partitions and second sticks are ignored (scope: /mnt/usb2..4
+# stay honestly absent).
+ExecStart=/bin/sh -c 'mountpoint -q /media/chumby-usb || exec systemd-mount --no-block --collect --options=ro,nosuid,nodev,noexec /dev/%I /media/chumby-usb'

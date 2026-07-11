@@ -29,8 +29,10 @@ Roughly in order. The player-side detail lives in the fork's
    and disabled controls were verified on the desktop only. Deploy a
    **freshly built** player — a stale binary has already faked this failure.
 
-2. **USB / local music files (C11).** Wanted. Needs `_getDirectoryEntry`
-   (5,320) to fill objects; `RootFs::dir_entry` exists, the native stubs.
+2. **USB music: physical-stick pass.** The milestone itself landed
+   2026-07-11 (row below); a real stick in the port must still confirm the
+   udev `ID_BUS=usb` match and unplug-while-mounted — the two paths the
+   loop-device verification could not exercise.
 
 3. **Brightness & night mode (E2, B4).** Blocked on hardware: the current
    TFT's backlight rail is tied to 3.3 V and cannot dim. Needs a panel that
@@ -91,3 +93,4 @@ These still bind. Changing one is a decision, not drift.
 | 2026-07-10 | **The two owed ui-policy rules.** `info-geek` and `info-intro` disable the Info screen's π trigger and INTRO button; verified live (targets acquired, clicks inert). |
 | 2026-07-10 | **I3 finished — real network diagnostics.** Type from the default-route interface, live SSID and signal, every `network_status.sh`/`signal_strength` field audited live (fork PR #15, FR10). |
 | 2026-07-10 | **Backup alarm (FR13) + real device identity.** In-process dead-man beep on `/psp/ifalarm`, missed-alarm boot check; GUID/HW# derived from the SoC serial, `md5sum` computed for real (fork PR #16). |
+| 2026-07-11 | **USB / local music (C11).** Real `_getDirectoryEntry` (5,320) in the player (fork `usb-music`), My Music Files browse/play + alarm-from-USB desktop-verified; appliance automount (udev + `chumby-usb-mount@`, read-only `/media/chumby-usb`, seed-time symlink) deployed as 0.3.0 and exercised on-device with a loop-backed image. `externalmusic.xml` stays faithful. |

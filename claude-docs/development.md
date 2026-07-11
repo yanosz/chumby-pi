@@ -210,9 +210,47 @@ The overlay can be swapped at runtime, reversibly, without a reboot:
 
 **Kiosk**: `chumby-player.service` and `chumby-widget-channel.service`, both
 shipped by the deb. `postinst` enables the player unit and reloads udev.
-Installed version: **0.2.0** (deployed 2026-07-10 via `pkg/deploy-pi.sh`,
-player at fork `chumby` tip `41fb650` — real network diagnostics, backup
-alarm, real device identity; binary sha256 verified on both ends).
+Installed version: **0.3.0** (deployed 2026-07-11 via `pkg/deploy-pi.sh`,
+player at fork branch `usb-music` `b218502` — USB/local music C11). 0.2.0
+(2026-07-10, fork tip `41fb650`) brought real network diagnostics, the
+backup alarm and real device identity; binary sha256 verified on both ends.
+
+**USB music automount** (2026-07-11, deployed with 0.3.0 — no manual device
+surgery; everything below ships in `chumby-player`):
+
+- `/usr/lib/udev/rules.d/99-chumby-usb-music.rules` — a USB block device
+  carrying a filesystem (`ID_BUS=usb`, `ID_FS_USAGE=filesystem`) pulls in
+  `chumby-usb-mount@<kernel-name>.service`.
+- `/lib/systemd/system/chumby-usb-mount@.service` — oneshot, first-wins
+  (`mountpoint -q` guard: extra partitions and second sticks are ignored),
+  runs `systemd-mount --no-block --collect -o ro,nosuid,nodev,noexec` onto
+  `/media/chumby-usb`. Read-only because the panel never writes to the
+  stick (fork requirements FR5). `BindsTo=dev-%i.device` plus `--collect`
+  unmount and garbage-collect on unplug.
+- `/media/chumby-usb` is shipped by the deb, so the mountpoint — and the
+  panel's `/mnt/usb` — always resolves: empty dir = no stick, which the
+  panel answers with its own "No files available" screen.
+- `chumby-player-run` replaces the seeded `fixtures/rootfs/mnt/usb`
+  directory (desktop demo tones) with a symlink to `/media/chumby-usb` at
+  every start (idempotent, survives an upgrade re-seed); `postinst` gained
+  `udevadm trigger --subsystem-match=block --action=add` so a stick already
+  inserted at install time mounts immediately.
+
+Verified on the device 2026-07-11: the symlink conversion at restart; My
+Music Files over an *empty* `/media/chumby-usb` shows "No files available"
+(panel driven over the control FIFO; screenshots with
+`XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-0 grim`); the mount
+unit exercised with a loop-backed vfat image (`/usr/sbin/mkfs.vfat` on a
+file, `losetup -f --show`, `systemctl start chumby-usb-mount@loop1`) —
+the TFT browsed the image's folder and tracks, PLAY ALL had mpv playing
+`/var/lib/chumby/fixtures/rootfs/mnt/usb/tone-a4.mp3` through the symlink,
+and `findmnt` confirmed `ro,nosuid,nodev,noexec`; teardown
+(`systemctl stop chumby-usb-mount@loop1 'media-chumby\x2dusb.mount'`,
+`losetup -d`) returned the panel to the empty state. **Still outstanding:
+the physical-stick pass** — the udev `ID_BUS=usb` match and
+unplug-while-mounted are the two paths a loop device cannot exercise.
+Alarm-from-USB was verified on the desktop (fork development.md §5) and
+rides exactly the native + mpv path proven here; not re-run on device.
 
 **udev**, shipped as `/usr/lib/udev/rules.d/90-chumby-ignore-cec-pointer.rules`:
 
