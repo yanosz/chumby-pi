@@ -242,6 +242,49 @@ through the revived chumby.com proxy, and station 1 (ANTENNE BAYERN)
 played through mpv (`http://stream.antenne.de:80/antenne`, panel volume
 60). Playback stopped and the kiosk restarted to its idle state afterwards.
 
+**chumby.com registration + remote channels** (2026-07-11, roadmap item 5,
+fork branch `registration-phase2`; mechanism in the fork's design.md §12).
+The player passes the "using chumby.com" surface through to the revived
+service under `access_chumby_com` (already 1 here) + a stable identity, so
+the panel's own register wizard and the account's real widget channel work.
+(Do **not** record this box's serial or GUID anywhere tracked — the salt is
+public, so the serial reproduces the GUID and the GUID impersonates the
+device.) Deployed by **binary-only hot-replace** on top of 0.4.0 (no deb, no
+fixture wipe, so volume/alarms survive the deploy):
+
+```sh
+# from the submodule, dist cross-build (§3; use --release while iterating), then:
+scp target/aarch64-unknown-linux-gnu/dist/ruffle_desktop pi@<pi>:/tmp/ruffle_desktop.new
+ssh pi@<pi> 'sudo systemctl stop chumby-player &&
+  sudo install -m755 -o root -g root /tmp/ruffle_desktop.new /usr/lib/chumby-player/ruffle_desktop &&
+  sudo systemctl start chumby-player'   # sha256 verified equal both ends
+```
+
+Verified live on the TFT end-to-end: with the flag on, an unregistered box
+boots into the panel's **register wizard** (authorize passes through →
+`<unauthorized/>` → `register()`, GUID + oval pad shown). Jan tapped the
+pattern and claimed the GUID on chumby.com; the 5 s poll flipped to `main`.
+Then the real account channel loaded — chumbies → the account's profile →
+one widget instance ("12 Hour Flip Clock") — the widget SWF **downloaded,
+cached and rendered on the TFT** (see design §12 for the widget-cache
+download-in-Rust and the scheme-less rootfs path), and the main bar's
+**CHANNEL/DELETE became enabled** (SEND/RATE stay disabled, Phase 3). A
+`systemctl restart chumby-player` re-authorised straight to `main`;
+identity is recomputed each boot, so nothing is persisted for registration.
+Caveats (design §12): the wizard's success OK button wipes a set of `/psp`
+alarm/music prefs (faithful clean-slate reset); widget SWFs cache into the
+persistent rootfs `/tmp/widgetcache`. To take a box offline set
+`access_chumby_com = 0`. A box **without** a hardware serial (not this Pi)
+can still register by setting `device_guid` in `/etc/chumby-player/player.toml`.
+
+**Temporary debug aids used during this work, since reverted to pristine:**
+the player's own logs don't reach journald (it's a cage wayland client), so
+to read them set `RUST_LOG` and redirect — either add `RUST_LOG=…,chumby_host=info`
+to `/etc/default/chumby-player` (the unit's `EnvironmentFile`) and/or append
+`> /tmp/ruffle.log 2>&1` to the `exec` line of `/usr/bin/chumby-player-run`.
+Both were removed after verification; the launcher and env are back to the
+deb's shipped state.
+
 **USB music automount** (2026-07-11, deployed with 0.3.0 — no manual device
 surgery; everything below ships in `chumby-player`):
 
