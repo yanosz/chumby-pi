@@ -66,6 +66,24 @@ export RUST_LOG="${RUST_LOG:-warn}"
 # claude-docs/requirements.md NFR4.
 export LP_NUM_THREADS="${LP_NUM_THREADS:-1}"
 
+# Boot-time intro, as rcS's start_intro: the tour plays before the panel,
+# every boot until its "never show again" button writes /psp/disable_intro
+# (the enable/disable backticks are real in the player). It always quits
+# itself — end of tour and both control-screen buttons fscommand("quit") —
+# so this blocks only while the tour is on screen; a crash must not keep
+# the panel from starting. start_intro's /mnt/usb/intro.swf override is
+# deliberately not reproduced: a factory/debug hook, and auto-running a
+# SWF off whatever stick is inserted is not a behavior to keep.
+INTRO="$STATE/fixtures/rootfs/usr/widgets/intro.swf"
+if [ -f "$INTRO" ] && [ ! -e "$STATE/fixtures/rootfs/psp/disable_intro" ]; then
+    /usr/lib/chumby-player/ruffle_desktop \
+        --load-behavior blocking \
+        --filesystem-access-mode allow \
+        --chumby-fixtures "$STATE/fixtures" \
+        --fullscreen \
+        "$INTRO" || true
+fi
+
 exec /usr/lib/chumby-player/ruffle_desktop \
     --load-behavior blocking \
     --filesystem-access-mode allow \

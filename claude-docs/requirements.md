@@ -70,7 +70,7 @@ as a live control that silently does nothing.
 | Info / About | **delivered** | with real network diagnostics |
 | Licenses | **delivered** | the original chumby's GPL and LGPL texts, verbatim |
 | Geek panel, file browser | **disabled** | redundant next to a Raspberry Pi; the Info screen's π trigger is inert (rule `info-geek`) |
-| Intro widget | deferred, **disabled** | cannot play on our widget path; rule `info-intro` dims the INTRO button and must be dropped when intro lands, see §3 |
+| Intro widget | **delivered** | both entry points: the Info screen's INTRO button (fork's VM-level `playIntro` replacement; rule `info-intro` dropped) and the boot-time tour before the panel (launcher, rcS `start_intro` semantics). On-device pass outstanding, see §3 |
 | Brightness, night mode | **disabled** | blocked on display hardware, see §3 |
 | Network setup wizard, touchscreen calibration | **disabled** | the OS owns these; both Settings icons carry a ui-policy rule |
 | First-time wizard, activation, safe mode, firmware update | skip | chumby.com and chumby firmware machinery |
@@ -167,7 +167,7 @@ from memory or shell history.
 | Item | Blocked on |
 |------|-----------|
 | **Brightness + night mode** | Hardware. The current ILI9486 clone has its backlight LED rail tied straight to 3.3 V — GPIO22 is declared in the overlay but not routed on the board, and driving it does nothing (verified by watching the panel while toggling it). Dimming needs a different display; the candidates and their driver risk are in [design.md](design.md) §8. When it lands, it must also drop the `settings-brightness` rule from the player's UI policy. |
-| **Intro widget** | The panel only loads `intro.swf` through the slave player, which the chosen widget architecture does not run. Needs interpreter-level work in the fork. |
+| **Intro on-device pass** | Wired 2026-07-12, desktop-verified only. The fork plays the INTRO button on the localCache path (its requirements §3 "Boot-time intro"); the launcher plays `intro.swf` standalone before the panel unless `/psp/disable_intro` exists — rcS `start_intro` semantics, and the tour always quits itself. Owed on the Pi with the 0.5.0 debs: tour on the TFT at boot, both flag buttons, next boot honoring the flag, INTRO button in-panel. Rides with the widget-channel pass below. |
 | **Remote channels + registration** | Deliberately the project's last feature. |
 | **Widget-channel on-device pass** | The channel, the preview picture and the disabled controls were verified on the desktop; the single combined on-device confirmation is still outstanding. Deploy a **freshly built** player — a stale binary has already produced one false "it doesn't work". |
 | **Backup-alarm on-device pass** | Implemented in the player (fork's requirements.md FR13, 2026-07-10) and verified on the desktop; still owed on the Pi: that the Klaxon at mpv volume 100 through the 35 % hardware volume is genuinely loud enough to wake someone. If not, escalate to sink/hw volume bumping — a decision recorded in FR13. |

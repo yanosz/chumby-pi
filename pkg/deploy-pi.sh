@@ -24,7 +24,10 @@ pkg/build-debs.sh
 ssh "$PI" 'rm -rf /tmp/chumby-debs && mkdir -p /tmp/chumby-debs'
 scp pkg/out/*.deb "$PI:/tmp/chumby-debs/"
 # --reinstall: redeploying the same version must still replace the files.
-ssh "$PI" 'sudo apt install --reinstall -y /tmp/chumby-debs/*.deb &&
+# --force-confold: a changed shipped conffile (player.toml) must keep the
+# owner's local edits, not hang a non-interactive dpkg prompt (0.5.0 deploy).
+ssh "$PI" 'sudo apt install --reinstall -y -o Dpkg::Options::=--force-confold \
+               /tmp/chumby-debs/*.deb &&
            sudo systemctl restart chumby-player'
 
 echo "deployed to $1:"

@@ -111,6 +111,18 @@ file into the live fixtures root on every start — so an owner edit (e.g.
 `access_chumby_com = 1`) survives deb upgrades *and* the fixture re-seed
 wipe that discards everything else under `/var/lib/chumby/fixtures`.
 
+The launcher also owns the **boot-time intro**, reproducing rcS's
+`start_intro`: before exec'ing the panel it runs the same binary on
+`fixtures/rootfs/usr/widgets/intro.swf`, standalone but against the same
+fixtures root — so the tour's enable/disable buttons really toggle
+`/psp/disable_intro` — and skips it once that flag exists. The tour always
+quits itself (end of tour and both control-screen buttons
+`fscommand("quit")`, which the fork only swallows *inside* the panel), so
+the wait is bounded; a crash falls through to the panel. `start_intro`'s
+`/mnt/usb/intro.swf` override is deliberately not reproduced — auto-running
+a SWF off whatever stick is inserted is a factory/debug hook, not a
+behavior to keep.
+
 **`chumby-player-data`** (all) — the `fixtures/` tree and `controlpanel.swf`.
 Private use only (NFR1).
 

@@ -214,12 +214,41 @@ The overlay can be swapped at runtime, reversibly, without a reboot:
 
 **Kiosk**: `chumby-player.service` and `chumby-widget-channel.service`, both
 shipped by the deb. `postinst` enables the player unit and reloads udev.
-Installed version: **0.4.0** (deployed 2026-07-11 via `pkg/deploy-pi.sh`,
-player at fork branch `config/player-toml` `2e8343fc9`, PR #19 —
-player.toml config FR14 + music source policy FR15). Earlier: 0.3.0
-(2026-07-11, fork `usb-music` `b218502` — USB/local music C11); 0.2.0
-(2026-07-10, fork tip `41fb650`) brought real network diagnostics, the
-backup alarm and real device identity; binary sha256 verified on both ends.
+Installed version: **0.5.0** (deployed 2026-07-12 via `pkg/deploy-pi.sh`,
+player at fork branch `intro-widget` — boot-time intro in the launcher,
+see below). Earlier: 0.4.0 (2026-07-11, fork `config/player-toml`
+`2e8343fc9`, PR #19 — player.toml config FR14 + music source policy FR15);
+0.3.0 (2026-07-11, fork `usb-music` `b218502` — USB/local music C11);
+0.2.0 (2026-07-10, fork tip `41fb650`) brought real network diagnostics,
+the backup alarm and real device identity; binary sha256 verified on both
+ends.
+
+**Boot-time intro deploy** (2026-07-12, appliance 0.5.0). Two snags, both
+now handled:
+
+- `apt install` hit an interactive **conffile prompt** on
+  `/etc/chumby-player/player.toml` — the shipped default changed between
+  0.4.0 and 0.5.0 (PR #20 rewrote the `access_chumby_com` comments and
+  added `device_guid`) and the device copy carries Jan's edits — and dpkg
+  died on EOF over the non-interactive ssh. Recovered with
+  `sudo dpkg --force-confold --configure -a`: local file kept
+  (`access_chumby_com = 1` preserved), the new default landed as
+  `player.toml.dpkg-dist`. `deploy-pi.sh` now passes
+  `-o Dpkg::Options::=--force-confold` so this cannot recur.
+- The device's live fixtures predate `intro.swf`, and the launcher seeds
+  only when `$STATE/fixtures` is absent. A re-seed
+  (`rm -rf /var/lib/chumby/fixtures`) would have discarded alarms, volume
+  and the cached account channel, so instead the one new file was copied
+  into the live tree:
+  `mkdir -p /var/lib/chumby/fixtures/rootfs/usr/widgets && cp -a
+  /usr/share/chumby-player/fixtures/rootfs/usr/widgets/intro.swf` there
+  (as `pi`, over ssh). A fresh install needs no such step.
+
+After `systemctl restart chumby-player` the kiosk came up with the tour:
+`ps` shows `ruffle_desktop … /var/lib/chumby/fixtures/rootfs/usr/widgets/intro.swf`
+— the launcher's pre-panel run, exactly `start_intro`'s behavior. On-device
+checks (tour on the TFT, flag buttons, next-boot gating, in-panel INTRO)
+are Jan's pass.
 
 **Owner config** (2026-07-11, shipped with 0.4.0): the player reads
 `<fixtures>/player.toml` once at start (fork FR14). On the device the real

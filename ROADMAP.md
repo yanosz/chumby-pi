@@ -44,11 +44,15 @@ Roughly in order. The player-side detail lives in the fork's
    `settings-brightness` ui-policy rule. Candidates and driver risk:
    `claude-docs/design.md` §8.
 
-4. **Intro widget.** `playIntro` only reaches `intro.swf` through the slave
-   player, which the `localCache` path does not run. We own the AVM1
-   interpreter, so the option space is wider than "edit the SWF or revive the
-   slave system" — VM-level interception is the intended route. Must drop
-   the `info-intro` ui-policy rule.
+4. **Intro widget.** *Closed 2026-07-12, pending the on-device pass.*
+   VM-level interception, as intended: the fork replaces `playIntro` (and
+   its done-poll) on the prototype, so the INTRO button plays the tour on
+   the `localCache` path; `info-intro` dropped; the `enable_intro` /
+   `disable_intro` backticks are real. The launcher now also runs the tour
+   before the panel, every boot until `/psp/disable_intro` — rcS
+   `start_intro` semantics (appliance 0.5.0). Standalone ending and
+   same-session replay desktop-verified; the on-device pass rides with
+   item 1.
 
 5. **Remote channels + registration.** *Registration and channel/widget
    download are done and verified live* (2026-07-11): DCID reverse-engineered
@@ -110,3 +114,4 @@ These still bind. Changing one is a decision, not drift.
 | 2026-07-11 | **Config file + music sources (items 3 & 4 of the 07-09 plan).** `player.toml` read once at start (fork FR14: volume cap as a scale, `access_chumby_com`, `enable_lyrion`; template ships as `/etc/chumby-player/player.toml`, a conffile the launcher links into the live fixtures). Music scope re-decided against live endpoints (fork FR15): SHOUTcast / blue octy radio / Sleep Sounds are *alive* on the revived chumby.com and opt-in via the switch — SHOUTcast browsed and played audibly on the desktop; iPod/NOAA/CBS hidden (NOAA+CBS confirmed dead on a real chumby); Squeezebox behind `enable_lyrion` (player side done, Lyrion unverified). Fork PR #19, appliance 0.4.0. |
 | 2026-07-11 | **Registration + remote channels (item 5).** DCID reverse-engineered on a real registered box (identity = crypto-processor GUID; DCID `skin` = branding only, no signature); register-the-Pi chosen over cloning. `access_chumby_com` + a stable identity (serial or `device_guid`) opens the panel's own register wizard and the account's real widget channel — authorize/registerchumby/chumbies/profiles/widgets pass through to the revived chumby.com (`update.chumby.com` never), CI/dev structurally excluded (NFR6). Widget SWFs download via a Rust reimplementation of the panel's `curl` cache. Verified end-to-end on the TFT: boot → wizard → tap ovals + claim on chumby.com → main; account widget downloaded, cached, rendered; CHANNEL/DELETE enabled. Fork branch `registration-phase2`, fork design §12. Social surface (add-widget/rating/send+mail) de-scoped — item 5 closed. |
 | 2026-07-11 | **USB / local music (C11), closed same day.** Real `_getDirectoryEntry` (5,320) in the player (fork `usb-music`), My Music Files browse/play + alarm-from-USB desktop-verified; appliance automount (udev + `chumby-usb-mount@`, read-only `/media/chumby-usb`, seed-time symlink) deployed as 0.3.0. Physical-stick pass complete: hotplug automount, audible playback on the TFT, yank-while-playing cleaned up honestly. `externalmusic.xml` stays faithful. |
+| 2026-07-12 | **Intro widget (item 4).** Fork `intro-widget`: `playIntro` + done-poll replaced at VM level (INTRO button live on the localCache path), in-panel `fscommand("quit")` swallowed, real `enable_intro`/`disable_intro` backticks, real `_accelerometer` for the ball page. Standalone ending (both flag buttons, quit exits the process) and same-session replay desktop-verified. Appliance: launcher runs the tour pre-panel every boot until `/psp/disable_intro` (rcS `start_intro`; USB override deliberately dropped), 0.5.0. On-device pass outstanding (rides with item 1). |
