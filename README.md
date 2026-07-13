@@ -49,6 +49,33 @@ setting up the boot-to-panel kiosk — lives in
 **[docs/setup.md](docs/setup.md)**. Follow it to the end and the Pi boots
 straight into the control panel, no desktop in sight.
 
+## The display (SPI TFT)
+
+The reference display is a 3.5″ 480×320 ILI9486 SPI panel with XPT2046
+resistive touch — sold as "Waveshare 3.5inch RPi LCD (B)" and as many
+clones. Two things matter:
+
+- **Skip the vendor's driver instructions.** Overlays like
+  `waveshare35b-v2` (and the wiki's `hdmi_*` block) use the old fbtft
+  framebuffer driver, which Wayland cannot see — the kiosk then fails
+  with *"Found 0 GPUs, cannot create backend"*. The mainline kernel
+  already ships a proper DRM driver for this panel.
+- Append this to `/boot/firmware/config.txt` and reboot:
+
+  ```
+  dtparam=spi=on
+  dtoverlay=piscreen,speed=24000000,rotate=0,drm,swapxy=on,invy=on
+  ```
+
+  `drm` selects the mainline driver; `swapxy` and `invy` align the
+  touchscreen axes with the landscape screen.
+
+The display then shows up as
+`/dev/dri/by-path/platform-3f204000.spi-cs-0-card`, which is what the
+kiosk service expects on a Pi 3. On other Pi models the SPI controller
+address differs: check `ls /dev/dri/by-path` and set `WLR_DRM_DEVICES`
+in `/etc/default/chumby-player`.
+
 ## What's in this repo
 
 | Directory | What's inside |
