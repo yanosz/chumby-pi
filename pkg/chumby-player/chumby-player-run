@@ -119,6 +119,17 @@ if [ ! -L "$TONES" ] && ! ls "$TONES"/*.mp3 >/dev/null 2>&1; then
     ln -s "$STATE/alarmtones" "$TONES"
 fi
 
+# The in-panel INTRO button plays the rootfs /usr/widgets/intro.swf;
+# expose the owner copy there. Deliberately dangling until the owner
+# copies the file — the player treats a dangling link as absent and
+# keeps the button disabled (fork ui-policy info-intro). A real file
+# from a data-deb-seeded tree wins and is left alone.
+INTRO_LINK="$STATE/fixtures/rootfs/usr/widgets/intro.swf"
+if [ -L "$INTRO_LINK" ] || [ ! -e "$INTRO_LINK" ]; then
+    mkdir -p "${INTRO_LINK%/*}"
+    ln -sfn "$STATE/intro.swf" "$INTRO_LINK"
+fi
+
 # Owner config (volume cap, chumby.com access — fork FR14/FR15). The
 # player reads <fixtures>/player.toml once at start; the real file is a
 # dpkg conffile in /etc, so edits survive upgrades and fixture re-seeds.

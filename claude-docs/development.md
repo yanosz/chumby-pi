@@ -330,7 +330,21 @@ This also populated the previously empty widget channel — the suspected
 cause of the post-boot black screen (panel slides away to play an empty
 channel; a `chumby-ctl bend` summons it back).
 
-Installed version: **0.8.2** (deployed 2026-07-13, above). Earlier:
+Version **0.8.3** (built and deployed 2026-07-13, player at fork branch
+`intro-gate` `4254dc0ee`, PR #24) closes the last fresh-install dead-end:
+pressing INTRO with no owner `intro.swf` staged a movie that never loads —
+a black screen until a squeeze (observed by Jan on the TFT). The fork
+dims the Info screen's INTRO button while the rootfs intro is absent
+(`only_without_intro` ui-policy condition); the launcher now links
+`$STATE/intro.swf` into the fixtures rootfs (`rootfs/usr/widgets/`,
+deliberately dangling until the owner copies the file, real seeded files
+left alone) — which also makes an owner-copied intro reachable by the
+*in-panel* INTRO for the first time (previously only the boot tour used
+the owner path). Verified on the device: symlink dangling as intended,
+player active. The dimmed-button visual check is Jan's.
+
+Installed version: **0.8.3** (deployed 2026-07-13, above). Earlier:
+0.8.2 (2026-07-13, above); 
 0.8.1 (2026-07-13, above); 
 0.5.0 (2026-07-12 via `pkg/deploy-pi.sh`,
 player at fork branch `intro-widget` — boot-time intro in the launcher,
