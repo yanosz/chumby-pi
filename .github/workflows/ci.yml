@@ -91,10 +91,11 @@ jobs:
           if-no-files-found: error
 
   apt-repo:
-    # Signed flat apt repo on GitHub Pages (design.md §5). Only the
-    # SWF-free chumby-player deb enters it — the deb is audited for
+    # Signed flat apt repo on GitHub Pages (design.md §5), plus the
+    # asciidoctor-rendered docs site at the root. Only the SWF-free
+    # chumby-player deb enters the repo — the deb is audited for
     # leaked .swf by the install test this job depends on.
-    name: Publish the apt repo to GitHub Pages
+    name: Publish the site (docs + apt repo) to GitHub Pages
     needs: debs
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
@@ -113,16 +114,22 @@ jobs:
           name: chumby-player-deb
           path: site/apt
 
-      # The repo lives under /apt so the site root stays free for a
-      # future rendered site (Jan, 2026-07-13) — moving it later would
-      # break every configured sources line.
+      # The docs site owns the root; the apt repo (and its landing
+      # page) lives under /apt — moving the repo later would break
+      # every configured sources line.
+      - name: Render the docs site
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends asciidoctor
+          asciidoctor -D site docs/index.adoc
+
       - name: Build and sign the flat repo
         env:
           GPG_KEY: ${{ secrets.CHUMBY_APT_GPG_KEY }}
         run: |
           test -n "$GPG_KEY" || { echo "CHUMBY_APT_GPG_KEY secret missing" >&2; exit 1; }
           echo "$GPG_KEY" | gpg --batch --import
-          cp pkg/apt/index.html site/
+          cp pkg/apt/index.html site/apt/
           cp pkg/apt/chumby-archive.gpg site/apt/
           cd site/apt
           apt-ftparchive packages . > Packages

@@ -1,0 +1,16 @@
+// Source of https://yanosz.github.io/chumby-pi/ — rendered to the site
+// root by CI (.github/workflows/ci.yml) on every push to main.
+// The apt repository stays untouched under /apt.
+= Chumby on a Raspberry Pi
+:toc: left
+:icons: font
+
+// Content is written by hand — this file starts as an empty skeleton.
+
+== Installation
+
+// The apt repository and its install instructions live at link:apt/[/apt].
+
+== Hardware
+
+== Usage
