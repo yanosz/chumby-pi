@@ -214,6 +214,19 @@ The overlay can be swapped at runtime, reversibly, without a reboot:
 
 **Kiosk**: `chumby-player.service` and `chumby-widget-channel.service`, both
 shipped by the deb. `postinst` enables the player unit and reloads udev.
+
+Version **0.6.0** (defined 2026-07-13; not yet built or deployed — the deb
+must carry the brightness player, see below) adds `90-chumby-backlight.rules`
+— write access for the player's brightness feature (fork FR16, design §8):
+`chgrp video` + `g+w` on a backlight device's `brightness` file at add time,
+plus a `udevadm trigger --subsystem-match=backlight` in postinst. Inert on
+the current TFT (no backlight device); nothing was executed on the device
+for this change. The `VERSION` default was bumped although the rule is the
+only payload, because the fork's `player.toml.example` (a conffile) gained
+`brightness_ctl` — rebuilding different content under the same version is
+the 0.5.0 conffile trap below. Deploying 0.6.0 should follow the fork's
+brightness PR merge so the player and its config template travel together.
+
 Installed version: **0.5.0** (deployed 2026-07-12 via `pkg/deploy-pi.sh`,
 player at fork branch `intro-widget` — boot-time intro in the launcher,
 see below). Earlier: 0.4.0 (2026-07-11, fork `config/player-toml`

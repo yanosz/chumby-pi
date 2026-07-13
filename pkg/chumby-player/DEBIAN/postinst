@@ -8,6 +8,8 @@ if [ "$1" = "configure" ]; then
     udevadm trigger --subsystem-match=input || true
     # re-run the USB-music rule for a stick that is already inserted
     udevadm trigger --subsystem-match=block --action=add || true
+    # re-run the backlight rule for a display that is already up
+    udevadm trigger --subsystem-match=backlight --action=add || true
     echo "chumby-player: enabled for next boot; start now with:" >&2
     echo "  sudo systemctl start chumby-player" >&2
 fi

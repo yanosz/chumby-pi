@@ -98,7 +98,8 @@ workspace into sbuild serves no goal here.
 
 **`chumby-player`** (arm64) — the cross-built `dist` binary, the launcher
 `chumby-player-run`, `chumby-ctl`, the widget-channel generator and its unit,
-the systemd kiosk unit, and a udev rule. `Depends:` cage, mpv, pipewire-alsa,
+the systemd kiosk unit, and udev rules (CEC-pointer ignore §7, USB-music
+automount, backlight write access §8). `Depends:` cage, mpv, pipewire-alsa,
 python3, `chumby-player-data`, plus the library dependencies read off the
 binary's `NEEDED` entries (`libc6`, `libgcc-s1`, `libfontconfig1`,
 `libssl3t64`, `libasound2t64`, `libudev1` — note trixie's time64 renames).
@@ -197,7 +198,20 @@ what we want, and the CEC device only ever carried remote-control keys.
 
 ## 8. Brightness: what a future display must have
 
-The current panel cannot dim (requirements §3). Requirements for a
+The current panel cannot dim (requirements §3); the display purchase is the
+open half. The player half shipped 2026-07-13 (fork FR16: slider mode onto
+any `/sys/class/backlight` device, or an owner `brightness_ctl` executable
+for the discrete 0/1/2 path), and so did this repo's permission side: the
+backlight sysfs file is root-owned and has no `/dev` node — the usual
+`GROUP=`/`MODE=` udev keys do nothing — so `90-chumby-backlight.rules`
+(the rule brightnessctl ships) `chgrp video`s + `g+w`s the `brightness`
+file when a backlight device appears, and pi is in `video`. Inert on the
+current TFT, which registers no backlight device; when a dimmable display
+lands, the panel's brightness sliders work with no further appliance work.
+A `brightness_ctl` program (e.g. GPIO PWM by hand) would instead be the
+owner's own script named in `/etc/chumby-player/player.toml`.
+
+Requirements for a
 replacement: ~3.5" SPI HAT on the 2×20 header, touch, 480×320-ish, a
 **PWM-dimmable** backlight, and a mainline DRM driver so §5 and §6 carry over
 unchanged.

@@ -1,0 +1,8 @@
+# The player (user pi) sets display brightness by writing
+# /sys/class/backlight/<dev>/brightness (fork FR16), but the file is
+# created root-owned 0644. Backlight devices have no /dev node, so the
+# usual GROUP=/MODE= udev keys do nothing — hand the file to the video
+# group (pi is a member) when the device appears. Same rule brightnessctl
+# ships. Inert on a display without a backlight device, like the current
+# TFT.
+ACTION=="add", SUBSYSTEM=="backlight", RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness", RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness"

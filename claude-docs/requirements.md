@@ -71,7 +71,7 @@ as a live control that silently does nothing.
 | Licenses | **delivered** | the original chumby's GPL and LGPL texts, verbatim |
 | Geek panel, file browser | **disabled** | redundant next to a Raspberry Pi; the Info screen's π trigger is inert (rule `info-geek`) |
 | Intro widget | **delivered** | both entry points: the Info screen's INTRO button (fork's VM-level `playIntro` replacement; rule `info-intro` dropped) and the boot-time tour before the panel (launcher, rcS `start_intro` semantics). On-device pass outstanding, see §3 |
-| Brightness, night mode | **disabled** | blocked on display hardware, see §3 |
+| Brightness, night mode | **player-ready** | fork FR16 shipped 2026-07-13 (sliders onto a kernel backlight, or a `brightness_ctl` executable); on this TFT no backlight exists, so the Settings button stays honestly disabled — see §3 |
 | Network setup wizard, touchscreen calibration | **disabled** | the OS owns these; both Settings icons carry a ui-policy rule |
 | First-time wizard, activation, safe mode, firmware update | skip | chumby.com and chumby firmware machinery |
 | Accept/decline sent widgets, intercom, microphone test | skip | social or pointless here |
@@ -166,7 +166,7 @@ from memory or shell history.
 
 | Item | Blocked on |
 |------|-----------|
-| **Brightness + night mode** | Hardware. The current ILI9486 clone has its backlight LED rail tied straight to 3.3 V — GPIO22 is declared in the overlay but not routed on the board, and driving it does nothing (verified by watching the panel while toggling it). Dimming needs a different display; the candidates and their driver risk are in [design.md](design.md) §8. When it lands, it must also drop the `settings-brightness` rule from the player's UI policy. |
+| **Brightness + night mode** | Hardware only, since 2026-07-13. The player side shipped (fork FR16, desktop-verified) and the deb ships the backlight udev rule (design §8) — both inert on the current ILI9486 clone, whose backlight LED rail is tied straight to 3.3 V (GPIO22 is declared in the overlay but not routed; verified by watching the panel while toggling it). The `settings-brightness` ui-policy rule now lifts by itself when a backlight exists. Remaining: buy a dimmable display (candidates: design §8), then the on-device pass. |
 | **Intro on-device pass** | Wired 2026-07-12, desktop-verified only. The fork plays the INTRO button on the localCache path (its requirements §3 "Boot-time intro"); the launcher plays `intro.swf` standalone before the panel unless `/psp/disable_intro` exists — rcS `start_intro` semantics, and the tour always quits itself. Owed on the Pi with the 0.5.0 debs: tour on the TFT at boot, both flag buttons, next boot honoring the flag, INTRO button in-panel. Rides with the widget-channel pass below. |
 | **Remote channels + registration** | Deliberately the project's last feature. |
 | **Widget-channel on-device pass** | The channel, the preview picture and the disabled controls were verified on the desktop; the single combined on-device confirmation is still outstanding. Deploy a **freshly built** player — a stale binary has already produced one false "it doesn't work". |
