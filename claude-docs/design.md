@@ -163,12 +163,29 @@ data-deb-seeded tree still carries real tones), and `intro.swf`. The
 launcher refuses to start without the SWF and prints exactly this list
 (NFR1).
 
+**`chumby-download-firmware`** (0.8.2, Jan's decision 2026-07-13): the
+no-backup path. A user-run, ask-first python3 helper speaking the
+firmware's own `download_cp` protocol — `GET /xml/controlpanel?…` returns
+the newest build's URL + md5 (today: falconwing 2.8.87b3, verified
+byte-identical to what runs on the Pi) — and, for an empty widgets
+folder, the stock "Unsubscribed Clock" via the download token embedded
+in its chumby.com guide page (`/xml/moviefile?id=<token>`; thumbnail at
+`/xml/<guid>/thumbnails`), then offers to run `chumby-local-widgets`.
+The device id in the query is deliberately zeroed — no identity leaves
+the box (NFR6 untouched), and installs stay non-interactive: the script
+is only ever run by hand (the refusal message and README point to it).
+Files are written 0644 (the 0.8.1 lesson). intro.swf/alarm tones are
+firmware-image-only — the revived server 404s the old update endpoints —
+so they stay backup-only, and the script says so.
+
 **Distribution** (2026-07-13): a **signed flat apt repo on GitHub Pages**
 (`https://yanosz.github.io/chumby-pi/apt`, sources line
 `deb [signed-by=…] …/apt ./` — under `/apt`, not the site root, so the
-root stays free for a future rendered site without ever breaking
-configured sources lines; Pages serves one artifact per repo, so any such
-site must be assembled into the same deploy).
+root never breaks configured sources lines; Pages serves one artifact per
+repo, so the whole site is assembled in the `apt-repo` job). Since
+2026-07-13 the root is the **asciidoctor-rendered docs site**: source
+`docs/index.adoc` (content hand-written by Jan), rendered by the same job;
+`pkg/apt/index.html` (the apt install instructions) moved under `/apt/`.
 The `apt-repo` CI job runs on push to main after the install test:
 `apt-ftparchive` over the built deb, `InRelease`/`Release.gpg` signed with
 the dedicated ed25519 key (fingerprint
@@ -202,7 +219,18 @@ launching the player fullscreen. The decisions inside it:
 - **`Restart=on-failure`**: a clean exit (the panel quit) does not respawn; a
   crash does.
 - **`EnvironmentFile=-/etc/default/chumby-player`** is the override point for
-  every one of the above.
+  every one of the above; since 0.8.1 the deb ships it as an all-comments
+  conffile documenting `WLR_DRM_DEVICES` per Pi model (the SPI0 SoC address
+  in the by-path name is model-specific), `WLR_RENDERER` and
+  `CHUMBY_AUDIO_DEVICE`.
+- **`ExecStartPre=chumby-player-run --check`** (0.8.1): the launcher's
+  missing/unreadable-`controlpanel.swf` refusal, re-run *outside* cage. The
+  first fresh-card install showed why: the launcher runs inside cage, so
+  with no DRM device its copy-instructions never printed, and a sudo-copied
+  root-only SWF passed the old existence check into a blank white screen
+  ("Could not fetch: Permission denied"). The check tests readability and
+  names the exact chown/chmod, and failing before cage puts it in
+  `systemctl status` regardless of display state.
 - Packaged default `RUST_LOG=warn`. Per-call host logging is the right
   default for a debug session and the wrong one for an appliance journal.
 
@@ -211,7 +239,9 @@ launching the player fullscreen. The decisions inside it:
 The TFT is an ILI9486 480×320 SPI clone with XPT2046 resistive touch. The
 stock `piscreen` overlay binds it to the **fbtft** staging driver, which
 gives `/dev/fb0` and nothing else — and fbdev is invisible to KMS/Wayland,
-so cage cannot output to it.
+so cage cannot output to it. (The vendor wiki's `waveshare35b-v2` overlay
+is fbtft-only too — following it yields cage's `Found 0 GPUs`, the 2026-07-13
+fresh-install finding.)
 
 The kernel already ships the mainline DRM tiny driver, and the stock overlay
 has a `drm` parameter that switches to it. So the whole problem is one

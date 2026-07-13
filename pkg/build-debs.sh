@@ -16,7 +16,7 @@ set -eu
 cd "$(dirname "$0")"
 REPO=$(cd .. && pwd)
 
-VERSION="${VERSION:-0.8.0}"
+VERSION="${VERSION:-0.8.3}"
 # dist = release + fat LTO + codegen-units=1 (what upstream ships);
 # measurably lighter on the Pi's CPU-bound rasterization (doc 11).
 BIN="$REPO/ruffle/target/aarch64-unknown-linux-gnu/dist/ruffle_desktop"
@@ -33,7 +33,7 @@ P="$BUILD/chumby-player"
 mkdir -p "$P/DEBIAN" "$P/usr/bin" "$P/usr/lib/chumby-player" \
          "$P/lib/systemd/system" "$P/usr/lib/udev/rules.d" \
          "$P/media/chumby-usb" "$P/etc/chumby-player" \
-         "$P/usr/share/chumby-player"
+         "$P/etc/default" "$P/usr/share/chumby-player"
 sed "s/@VERSION@/$VERSION/" chumby-player/DEBIAN/control > "$P/DEBIAN/control"
 install -m 755 chumby-player/DEBIAN/postinst chumby-player/DEBIAN/prerm "$P/DEBIAN/"
 # Owner config (fork FR14/FR15): shipped as a dpkg conffile so local edits
@@ -42,9 +42,13 @@ install -m 755 chumby-player/DEBIAN/postinst chumby-player/DEBIAN/prerm "$P/DEBI
 install -m 644 chumby-player/DEBIAN/conffiles "$P/DEBIAN/"
 install -m 644 "$REPO/ruffle/fixtures/player.toml.example" \
     "$P/etc/chumby-player/player.toml"
+# Kiosk env overrides (DRM device, renderer, audio device) — all
+# commented out; the unit's built-in defaults suit the reference Pi 3.
+install -m 644 chumby-player/chumby-player.default "$P/etc/default/chumby-player"
 install -m 755 "$BIN" "$P/usr/lib/chumby-player/ruffle_desktop"
 install -m 755 "$REPO/ruffle/chumby-ctl" "$P/usr/bin/chumby-ctl"
 install -m 755 chumby-player/chumby-local-widgets "$P/usr/bin/chumby-local-widgets"
+install -m 755 chumby-player/chumby-download-firmware "$P/usr/bin/chumby-download-firmware"
 install -m 755 chumby-player/chumby-player-run "$P/usr/bin/chumby-player-run"
 install -m 644 chumby-player/chumby-player.service "$P/lib/systemd/system/"
 install -m 644 chumby-player/90-chumby-ignore-cec-pointer.rules "$P/usr/lib/udev/rules.d/"

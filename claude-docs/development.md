@@ -279,9 +279,76 @@ admin on yanosz/chumby-pi) has; the first deploy failed on exactly
 that, and a gh-pages-branch workaround was briefly on main (aec65dd,
 reverted in 0416e2f) before Jan flipped the setting.
 
-Installed version: **0.5.0** (deployed 2026-07-12 via `pkg/deploy-pi.sh`,
+**Fresh-card install exercise → 0.8.1** (2026-07-13). Jan reinstalled
+the Pi 3B+ from a vanilla Raspberry Pi OS card and installed
+`chumby-player` 0.8.0 from the apt repo — the first real end-to-end
+install. Three findings, all reproduced and fixed:
+
+- **The vendor display overlay cannot work.** The Waveshare wiki's
+  `dtoverlay=waveshare35b-v2` (plus its `hdmi_*` block) is an fbtft
+  driver: it creates only `/dev/fb1`, never a DRM device, and cage needs
+  KMS — hence `Found 0 GPUs, cannot create backend`. The working
+  config.txt lines are exactly the two recorded above (piscreen with
+  `,drm`); Jan restored them from the old card's backup and the by-path
+  device appeared (`[drm] Initialized ili9486`, connector `connected`,
+  mode 480x320). The `Failed to parse EDID` error that remains at every
+  cage start is harmless — the SPI panel has no EDID.
+- **A sudo-copied `controlpanel.swf` is unreadable by the service.**
+  `sudo cp` kept `-rwx------ root:root`; the launcher's old existence
+  check (`[ -f ]`) passed, the player started and showed a **blank white
+  screen** — journal: `Async error: Could not fetch: "Permission denied
+  (os error 13)"`. Device fixed with `sudo chown pi:pi
+  /var/lib/chumby/controlpanel.swf && sudo chmod 644 …`; panel rendered
+  (~101 % CPU, the known NFR4 signature — it idles near 4 % when stuck).
+- **The launcher's refusal was invisible** on the broken overlay: it
+  runs *inside* cage, so when cage dies first the copy-instructions
+  never print.
+
+Version **0.8.1** (built and deployed 2026-07-13 via `pkg/deploy-pi.sh`,
+player unchanged at fork `8772232a0`) addresses ii/iii: the launcher's
+`check_swf` tests readability (with a chown/chmod hint naming the exact
+file), an unreadable owner `intro.swf` warns and is skipped, and the same
+check runs as `ExecStartPre=/usr/bin/chumby-player-run --check` — so a
+missing/unreadable SWF fails the unit with the instructions in
+`systemctl status chumby-player` even when the compositor cannot start
+at all. The deb also ships `/etc/default/chumby-player` (conffile, all
+comments) documenting the `WLR_DRM_DEVICES` by-path name per Pi model
+(`3f204000.spi` is Pi 3 SPI0; Pi 4 is `fe204000.spi`), `WLR_RENDERER`
+and `CHUMBY_AUDIO_DEVICE`. Verified on the device: chmod 000 + restart →
+ExecStartPre exits 1 and the journal carries the hint; chmod 644 +
+restart → panel up. (CI's install test still matches — it greps for
+`controlpanel.swf not found`.)
+
+Version **0.8.2** (built and deployed 2026-07-13, player still
+`8772232a0`) adds `chumby-download-firmware` (design §5, NFR1
+amendment). Run on the device as `pi`: control panel skipped (already
+present — and md5-identical to what the script would fetch), the
+Unsubscribed Clock SWF + thumbnail downloaded into
+`/var/lib/chumby/widgets` (0644, owner `pi`), `chumby-local-widgets`
+generated `/psp/profile.xml` (instance 1000), player restarted clean.
+This also populated the previously empty widget channel — the suspected
+cause of the post-boot black screen (panel slides away to play an empty
+channel; a `chumby-ctl bend` summons it back).
+
+Version **0.8.3** (built and deployed 2026-07-13, player at fork branch
+`intro-gate` `4254dc0ee`, PR #24) closes the last fresh-install dead-end:
+pressing INTRO with no owner `intro.swf` staged a movie that never loads —
+a black screen until a squeeze (observed by Jan on the TFT). The fork
+dims the Info screen's INTRO button while the rootfs intro is absent
+(`only_without_intro` ui-policy condition); the launcher now links
+`$STATE/intro.swf` into the fixtures rootfs (`rootfs/usr/widgets/`,
+deliberately dangling until the owner copies the file, real seeded files
+left alone) — which also makes an owner-copied intro reachable by the
+*in-panel* INTRO for the first time (previously only the boot tour used
+the owner path). Verified on the device: symlink dangling as intended,
+player active. The dimmed-button visual check is Jan's.
+
+Installed version: **0.8.3** (deployed 2026-07-13, above). Earlier:
+0.8.2 (2026-07-13, above); 
+0.8.1 (2026-07-13, above); 
+0.5.0 (2026-07-12 via `pkg/deploy-pi.sh`,
 player at fork branch `intro-widget` — boot-time intro in the launcher,
-see below). Earlier: 0.4.0 (2026-07-11, fork `config/player-toml`
+see below); 0.4.0 (2026-07-11, fork `config/player-toml`
 `2e8343fc9`, PR #19 — player.toml config FR14 + music source policy FR15);
 0.3.0 (2026-07-11, fork `usb-music` `b218502` — USB/local music C11);
 0.2.0 (2026-07-10, fork tip `41fb650`) brought real network diagnostics,

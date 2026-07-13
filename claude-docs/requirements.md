@@ -125,6 +125,14 @@ SWF from the private share only to *run* the movie test, never to package
 it. The documentation says where the files come from without embedding a
 link.
 
+Amendment (Jan, 2026-07-13): `chumby-download-firmware` may fetch the
+control panel and the stock clock widget *from chumby.com itself* — a
+user-invoked, ask-first script (design §5). It embeds only the firmware's
+own protocol endpoint and a widget GUID, never a direct file URL; the
+files still never enter a package, and nothing runs without the owner
+confirming. intro.swf and the alarm tones are not served by chumby.com
+and stay backup-only.
+
 The GPL and LGPL texts shipped in the virtual rootfs are freely
 distributable and *are* committed.
 

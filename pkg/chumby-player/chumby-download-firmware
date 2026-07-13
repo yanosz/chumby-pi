@@ -1,0 +1,142 @@
+#!/usr/bin/env python3
+"""chumby-download-firmware — fetch the files the package cannot ship.
+
+controlpanel.swf and the widgets are copyrighted Chumby Industries
+firmware, so the Debian package does not contain them. The revived
+chumby.com still serves them; this helper shows exactly what it would
+download and asks before touching the network. Nothing is sent except
+the requests shown (the device id in the control-panel query is zeroed —
+no identity leaves the box), and the player itself stays offline
+afterwards.
+
+intro.swf and the alarm tones only ever shipped inside firmware images
+and cannot be downloaded — copy those from a chumby or its backup.
+"""
+
+import hashlib
+import os
+import re
+import subprocess
+import sys
+import urllib.request
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+STATE = Path(os.environ.get("CHUMBY_STATE", "/var/lib/chumby"))
+WIDGETS = STATE / "widgets"
+
+# The panel-download protocol of the original firmware's download_cp
+# script. Identity params are deliberately zero/static: the server
+# ignores them and answers with the newest build for the platform.
+CP_QUERY = ("https://www.chumby.com/xml/controlpanel"
+            "?id=00000000-0000-0000-0000-000000000000"
+            "&hw=3.8&sw=1.7.2&fw=1.7.2&lang=en-us")
+
+# The chumby.com widget guide embeds a download token for each widget;
+# the "Unsubscribed Clock" is the stock dashboard clock.
+CLOCK_NAME = "Unsubscribed Clock"
+CLOCK_GUID = "F1899D99-EDF7-3F38-A161-E6F3C89499E5"
+GUIDE_URL = "https://chumby.com/guide/{guid}/widget"
+THUMB_URL = "https://chumby.com/xml/{guid}/thumbnails"
+
+
+def fetch(url: str, timeout: int = 120) -> bytes:
+    with urllib.request.urlopen(url, timeout=timeout) as resp:
+        return resp.read()
+
+
+def confirm(prompt: str) -> bool:
+    try:
+        answer = input(f"{prompt} [Y/n] ").strip().lower()
+    except EOFError:
+        return False
+    return answer in ("", "y", "yes")
+
+
+def save(path: Path, data: bytes) -> None:
+    # 0644 no matter the umask: the player runs as user pi and a
+    # root-only file yields a blank screen (the 0.8.1 lesson).
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".new")
+    tmp.write_bytes(data)
+    tmp.chmod(0o644)
+    tmp.replace(path)
+    print(f"  wrote {path} ({len(data)} bytes)")
+
+
+def download_controlpanel() -> None:
+    target = STATE / "controlpanel.swf"
+    if target.is_file():
+        print(f"controlpanel.swf: already at {target}, skipping.")
+        return
+
+    meta = ET.fromstring(fetch(CP_QUERY, timeout=30))
+    url = meta.findtext("url", "")
+    md5 = meta.findtext("md5", "")
+    build = meta.get("build", "?")
+    if not url or not md5:
+        sys.exit("chumby.com answered without a download URL — server changed?")
+
+    print(f"controlpanel.swf, build {build}:")
+    print(f"  {url}")
+    if not confirm("Download it?"):
+        print("  skipped.")
+        return
+    data = fetch(url)
+    if hashlib.md5(data).hexdigest() != md5:
+        sys.exit(f"md5 mismatch (expected {md5}) — not keeping the file.")
+    save(target, data)
+
+
+def download_clock() -> bool:
+    if any(WIDGETS.glob("*.swf")):
+        print(f"widgets: {WIDGETS} is not empty, skipping.")
+        return False
+
+    guide = GUIDE_URL.format(guid=CLOCK_GUID)
+    print(f"{CLOCK_NAME} (the stock dashboard clock widget):")
+    print(f"  {guide}")
+    if not confirm("Download it?"):
+        print("  skipped.")
+        return False
+
+    token = re.search(r"/xml/moviefile\?id=[^\"']+",
+                      fetch(guide, timeout=30).decode(errors="replace"))
+    if not token:
+        sys.exit("no download token on the widget's guide page — server changed?")
+    save(WIDGETS / f"{CLOCK_NAME}.swf",
+         fetch("https://chumby.com" + token.group()))
+    save(WIDGETS / f"{CLOCK_NAME}.jpg",
+         fetch(THUMB_URL.format(guid=CLOCK_GUID), timeout=30))
+    return True
+
+
+def main() -> None:
+    print(__doc__)
+    print(f"Files go to {STATE}.")
+    if not os.access(STATE.parent, os.W_OK) and not STATE.is_dir():
+        sys.exit(f"{STATE} does not exist and is not creatable — "
+                 "install chumby-player first (or run with sudo once).")
+
+    download_controlpanel()
+    print()
+    got_widgets = download_clock()
+
+    if got_widgets:
+        print()
+        if confirm("Generate the widget channel from it (chumby-local-widgets)?"):
+            subprocess.run(["chumby-local-widgets"], check=False)
+
+    print()
+    print("Not downloadable: intro.swf and the alarm tones — copy them from")
+    print(f"your chumby or its backup into {STATE} if you have one.")
+    print("Start (or restart) the panel:  sudo systemctl restart chumby-player")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit("\nAborted.")
+    except urllib.error.URLError as e:
+        sys.exit(f"download failed: {e}")

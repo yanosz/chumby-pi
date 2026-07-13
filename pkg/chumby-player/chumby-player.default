@@ -1,0 +1,22 @@
+# /etc/default/chumby-player — environment overrides for
+# chumby-player.service. Everything is optional; the built-in defaults
+# suit a Pi 3 with the SPI TFT on the piscreen DRM overlay
+# (config.txt: dtoverlay=piscreen,speed=24000000,rotate=0,drm,swapxy=on,invy=on
+# — the vendor fbtft overlays like waveshare35b-v2 create no DRM device
+# and the kiosk cannot start on them).
+
+# The DRM device cage drives, by stable by-path name (the cardN numbers
+# shuffle between boots). 3f204000.spi is SPI0 on a Pi 3; on a Pi 4 it
+# is fe204000.spi. List what your board has: ls -l /dev/dri/by-path
+#WLR_DRM_DEVICES=/dev/dri/by-path/platform-3f204000.spi-cs-0-card
+
+# Software rendering — right for an SPI TFT; a GPU-driven display
+# (HDMI/DSI) could drop this.
+#WLR_RENDERER=pixman
+
+# Send music and alarms to a specific output instead of the PipeWire
+# default sink. Names as mpv prints them: mpv --audio-device=help
+#CHUMBY_AUDIO_DEVICE=alsa/plughw:CARD=Headphones
+
+# Player log filter (output lands in journalctl -u chumby-player).
+#RUST_LOG=warn,chumby_host=info,avm_trace=info

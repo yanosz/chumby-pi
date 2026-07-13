@@ -33,6 +33,60 @@ STATE="${CHUMBY_STATE:-/var/lib/chumby}"
 CTL="${CHUMBY_CTL:-/tmp/chumby-ctl}"
 RUFFLE="${CHUMBY_RUFFLE:-/usr/lib/chumby-player/ruffle_desktop}"
 
+# controlpanel.swf: owner copy first; the /usr/share path still serves
+# boxes that installed the retired data deb. Checks readability, not
+# just existence — a sudo cp leaves a root-only file the pi user can
+# stat but not open, and the player then shows a blank white screen.
+check_swf() {
+    SWF="${CHUMBY_SWF:-}"
+    if [ -z "$SWF" ]; then
+        for c in "$STATE/controlpanel.swf" "$SHARE/swf/controlpanel.swf"; do
+            if [ -e "$c" ]; then SWF="$c"; break; fi
+        done
+    fi
+    if [ -z "$SWF" ] || [ ! -e "$SWF" ]; then
+        cat >&2 <<EOF
+chumby-player: controlpanel.swf not found. It is copyrighted chumby
+firmware and not distributed with this package. Copy it from your
+chumby or its backup (on the device: /usr/widgets/controlpanel.swf) to:
+    $STATE/controlpanel.swf
+Optional, same sources: widget SWFs into $STATE/widgets (then run
+chumby-local-widgets), /usr/chumby/alarmtones/*.mp3 into
+$STATE/alarmtones, /usr/widgets/intro.swf to $STATE/intro.swf.
+No backup at hand? chumby-download-firmware fetches the control panel
+and a clock widget from chumby.com (intro and tones stay backup-only).
+EOF
+        return 1
+    fi
+    if [ ! -r "$SWF" ]; then
+        cat >&2 <<EOF
+chumby-player: $SWF exists but is not readable by user $(id -un).
+(sudo cp keeps the source's root-only permissions.) Fix with:
+    sudo chown pi:pi $SWF && sudo chmod 644 $SWF
+EOF
+        return 1
+    fi
+}
+
+# The intro is optional, so an unreadable copy only warns.
+warn_unreadable_intro() {
+    if [ -e "$1" ] && [ ! -r "$1" ]; then
+        echo "chumby-player: $1 is not readable by user $(id -un)" \
+             "(sudo chmod 644 it) — skipping the intro." >&2
+        return 1
+    fi
+}
+
+# --check: same verdict as a real start, but printable before cage
+# runs — the service uses it as ExecStartPre so a missing/unreadable
+# SWF shows up in "systemctl status chumby-player" even when the
+# compositor itself cannot start (no DRM device, wrong overlay).
+if [ "${1:-}" = "--check" ]; then
+    check_swf || exit 1
+    warn_unreadable_intro "$STATE/intro.swf" || true
+    exit 0
+fi
+
 # First run: seed the writable fixture tree. The panel writes into
 # fixtures/rootfs (alarms, streams, volume — all /psp settings), so it
 # cannot run from /usr/share. Remove "$STATE/fixtures" to re-seed after
@@ -65,6 +119,17 @@ if [ ! -L "$TONES" ] && ! ls "$TONES"/*.mp3 >/dev/null 2>&1; then
     ln -s "$STATE/alarmtones" "$TONES"
 fi
 
+# The in-panel INTRO button plays the rootfs /usr/widgets/intro.swf;
+# expose the owner copy there. Deliberately dangling until the owner
+# copies the file — the player treats a dangling link as absent and
+# keeps the button disabled (fork ui-policy info-intro). A real file
+# from a data-deb-seeded tree wins and is left alone.
+INTRO_LINK="$STATE/fixtures/rootfs/usr/widgets/intro.swf"
+if [ -L "$INTRO_LINK" ] || [ ! -e "$INTRO_LINK" ]; then
+    mkdir -p "${INTRO_LINK%/*}"
+    ln -sfn "$STATE/intro.swf" "$INTRO_LINK"
+fi
+
 # Owner config (volume cap, chumby.com access — fork FR14/FR15). The
 # player reads <fixtures>/player.toml once at start; the real file is a
 # dpkg conffile in /etc, so edits survive upgrades and fixture re-seeds.
@@ -85,26 +150,7 @@ export RUST_LOG="${RUST_LOG:-warn}"
 # claude-docs/requirements.md NFR4.
 export LP_NUM_THREADS="${LP_NUM_THREADS:-1}"
 
-# controlpanel.swf: owner copy first; the /usr/share path still serves
-# boxes that installed the retired data deb.
-SWF="${CHUMBY_SWF:-}"
-if [ -z "$SWF" ]; then
-    for c in "$STATE/controlpanel.swf" "$SHARE/swf/controlpanel.swf"; do
-        if [ -f "$c" ]; then SWF="$c"; break; fi
-    done
-fi
-if [ -z "$SWF" ] || [ ! -f "$SWF" ]; then
-    cat >&2 <<EOF
-controlpanel.swf not found. It is copyrighted chumby firmware and not
-distributed with this package. Copy it from your chumby or its backup
-(on the device: /usr/widgets/controlpanel.swf) to:
-    $STATE/controlpanel.swf
-Optional, same sources: widget SWFs into $STATE/widgets (then run
-chumby-local-widgets), /usr/chumby/alarmtones/*.mp3 into
-$STATE/alarmtones, /usr/widgets/intro.swf to $STATE/intro.swf.
-EOF
-    exit 1
-fi
+check_swf || exit 1
 
 # Boot-time intro, as rcS's start_intro: the tour plays before the panel,
 # every boot until its "never show again" button writes /psp/disable_intro
@@ -117,8 +163,9 @@ fi
 # Owner copy at $STATE/intro.swf; the fixtures path still serves trees
 # seeded by the retired data deb.
 INTRO="$STATE/intro.swf"
+warn_unreadable_intro "$INTRO" || INTRO=""
 [ -f "$INTRO" ] || INTRO="$STATE/fixtures/rootfs/usr/widgets/intro.swf"
-if [ -f "$INTRO" ] && [ ! -e "$STATE/fixtures/rootfs/psp/disable_intro" ]; then
+if [ -f "$INTRO" ] && [ -r "$INTRO" ] && [ ! -e "$STATE/fixtures/rootfs/psp/disable_intro" ]; then
     "$RUFFLE" \
         --load-behavior blocking \
         --filesystem-access-mode allow \
