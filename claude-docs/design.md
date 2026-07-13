@@ -84,17 +84,24 @@ local-profile merge — `mergeLocalProfile()` reads the first existing of
 whatever channel loaded (the wiki's "mixing local widgets into a channel"
 trick; verified offline on our stack 2026-07-13).
 
-At every start the launcher runs `chumby-local-widgets` over
-`/var/lib/chumby/widgets` and writes the overlay to the virtual
-`/tmp/profile.xml`. Dropping a `.swf` (plus an optional same-stem
-`.jpg`/`.png` thumbnail) into that folder and restarting is the whole
-"install a widget" story — offline, and equally under the remote account
-channel, since the merge applies to whatever loaded. An empty folder
-removes the overlay, so a hand-written `/psp/profile.xml` stays usable as
-the escape hatch (it is next in the panel's search order). Writing under
-the virtual `/tmp` keeps "a plain launch never rewrites state" intact —
-that subtree is volatile by its own semantics (fork requirements, "/tmp
-volatility").
+`chumby-local-widgets` is a **user-run helper**, deliberately not wired
+into the launcher — "a plain launch never rewrites state" needs no
+exemption at all this way (the launcher only ensures the folder exists).
+It scans `/var/lib/chumby/widgets`, lists what it found, explains how to
+salvage a downloaded widget from the cache (nameless GUID-named movies,
+manifest carries only id/version/size/md5 — verified against the chumby
+backup), and writes the persistent `/psp/profile.xml`, asking `Y/n` before
+overwriting an existing one. So the "install a widget" story is: drop a
+`.swf` (plus optional same-stem `.jpg`/`.png` thumbnail) into the folder,
+run the helper, restart — offline, and equally under the remote account
+channel, since the merge applies to whatever loaded. With no widgets found
+it leaves an existing profile untouched; deleting the file is the
+documented way to clear the local set.
+
+Search-order note: `/tmp/profile.xml` and `/mnt/usb/profile.xml` precede
+`/psp` in the panel's list and nothing on our side writes them — so a USB
+stick carrying a hand-written `profile.xml` *replaces* the local set while
+inserted.
 
 Accepted limits: the shipped clocks live in the static base, so the widgets
 folder cannot remove them (edit the seeded fixture if it ever matters); and

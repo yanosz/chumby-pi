@@ -233,11 +233,12 @@ brightness PR merge so the player and its config template travel together.
 Version **0.7.0** (defined 2026-07-13; not yet built or deployed) replaces
 the widget-channel machinery (design §4): `chumby-widget-channel.service`
 and the sidecar generator are gone — the fork's channel fixture is static
-now — and the launcher instead runs the new `chumby-local-widgets` over
-`/var/lib/chumby/widgets` at every start, writing the local-profile overlay
-the panel merges natively. Verified offline on the desktop
-(`access_chumby_com = 0`, zero passthrough lines; merged widget loaded and
-executed, including a percent-encoded path). Needs the fork gitlink bumped
+now — replaced by the user-run `chumby-local-widgets` helper: it scans
+`/var/lib/chumby/widgets` and writes `/psp/profile.xml` after a `Y/n`
+overwrite prompt; the launcher only creates the folder. Verified offline on
+the desktop (`access_chumby_com = 0`, zero passthrough lines; merged widget
+loaded and executed, including a percent-encoded path; the cache-salvage
+help checked against the chumby backup). Needs the fork gitlink bumped
 past the fork's housekeeping merge (generator + sidecars deleted there);
 nothing executed on the device yet.
 

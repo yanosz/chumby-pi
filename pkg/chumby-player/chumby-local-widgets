@@ -1,23 +1,38 @@
 #!/usr/bin/env python3
-"""chumby-local-widgets — emit the local-profile overlay from a folder.
+"""chumby-local-widgets — put your own widgets into the channel.
 
-    chumby-local-widgets WIDGETS_DIR PROFILE_OUT
-
-Every *.swf in WIDGETS_DIR becomes a <widget_instance> in PROFILE_OUT
-(name = filename stem; a sibling .jpg/.jpeg/.png of the same stem becomes
-the dashboard thumbnail). The control panel merges that file natively
-into whatever channel it has loaded (mergeLocalProfile — fork design §3),
-so widgets are added by dropping files, no repackaging. An empty folder
-removes PROFILE_OUT, which keeps a hand-written /psp/profile.xml usable.
+Scans a widgets folder and writes the local profile.xml the control
+panel merges into its channel on the next start (fork design §3).
 """
 
+import argparse
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+STATE = Path("/var/lib/chumby")
+DEFAULT_WIDGETS = STATE / "widgets"
+DEFAULT_PROFILE = STATE / "fixtures/rootfs/psp/profile.xml"
+
 THUMB_SUFFIXES = (".jpg", ".jpeg", ".png")
 # Above the static channel's instance ids, which start at 1.
 ID_BASE = 1000
+
+HOW_TO = """\
+How to add a widget:
+  Put its .swf into the widgets folder — the filename becomes the widget
+  name. A .jpg/.png with the same name becomes the dashboard preview.
+  Then re-run this script and restart the player.
+
+Keeping a widget the player downloaded from chumby.com:
+  The download cache is {cache}.
+  It stores each downloaded widget movie under its opaque widget id (a
+  GUID on a real chumby), and its widgetcache.xml records only
+  id/version/size/md5 — no names, no preview images. Play the widget to
+  figure out which file is which, then copy it here under a real name:
+      cp {cache}/<id> {widgets}/'My Widget.swf'
+  There is no cached preview image; add your own .jpg/.png if you want one.
+"""
 
 
 def instance(idx: int, swf: Path) -> ET.Element:
@@ -32,27 +47,70 @@ def instance(idx: int, swf: Path) -> ET.Element:
                   access="private", virtualable="false")
     ET.SubElement(widget, "movie", href=swf.resolve().as_uri(),
                   contenttype="application/x-shockwave-flash")
-    for suffix in THUMB_SUFFIXES:
-        thumb = swf.with_suffix(suffix)
-        if thumb.is_file():
-            ET.SubElement(widget, "thumbnail", href=thumb.resolve().as_uri(),
-                          contenttype=f"image/{suffix.lstrip('.')}")
-            break
+    thumb = find_thumb(swf)
+    if thumb:
+        ET.SubElement(widget, "thumbnail", href=thumb.resolve().as_uri(),
+                      contenttype=f"image/{thumb.suffix.lstrip('.')}")
     ET.SubElement(inst, "access", access="private")
     ET.SubElement(inst, "mode", mode="timeout", time="86400")
     ET.SubElement(inst, "widget_parameters")
     return inst
 
 
-def main() -> None:
-    if len(sys.argv) != 3:
-        raise SystemExit(f"usage: {Path(sys.argv[0]).name} WIDGETS_DIR PROFILE_OUT")
-    widgets_dir, out = Path(sys.argv[1]), Path(sys.argv[2])
+def find_thumb(swf: Path) -> Path | None:
+    for suffix in THUMB_SUFFIXES:
+        thumb = swf.with_suffix(suffix)
+        if thumb.is_file():
+            return thumb
+    return None
 
-    swfs = sorted(p for p in widgets_dir.glob("*.swf") if p.is_file())
+
+def confirm(prompt: str) -> bool:
+    try:
+        answer = input(f"{prompt} [Y/n] ").strip().lower()
+    except EOFError:
+        return False
+    return answer in ("", "y", "yes")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        epilog=HOW_TO.format(cache=STATE / "fixtures/rootfs/tmp/widgetcache",
+                             widgets=DEFAULT_WIDGETS),
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("widgets_dir", nargs="?", type=Path,
+                        default=DEFAULT_WIDGETS,
+                        help=f"folder holding your .swf widgets (default: {DEFAULT_WIDGETS})")
+    parser.add_argument("profile", nargs="?", type=Path,
+                        default=DEFAULT_PROFILE,
+                        help=f"profile.xml to write (default: {DEFAULT_PROFILE})")
+    args = parser.parse_args()
+
+    print(f"Widgets folder:  {args.widgets_dir}")
+    print(f"Local profile:   {args.profile}")
+    print()
+
+    swfs = sorted((p for p in args.widgets_dir.glob("*.swf") if p.is_file()),
+                  key=lambda p: p.name.lower())
     if not swfs:
-        out.unlink(missing_ok=True)
+        print(f"No .swf widgets found in {args.widgets_dir}.")
+        if args.profile.is_file():
+            print(f"{args.profile} left untouched — delete it to clear the local widgets.")
+        print()
+        print(HOW_TO.format(cache=STATE / "fixtures/rootfs/tmp/widgetcache",
+                            widgets=args.widgets_dir))
         return
+
+    print(f"Found {len(swfs)} widget(s):")
+    for idx, swf in enumerate(swfs):
+        thumb = find_thumb(swf)
+        preview = f"preview {thumb.name}" if thumb else "no preview image"
+        print(f"  {ID_BASE + idx}  {swf.stem}  ({preview})")
+    print()
+
+    if args.profile.is_file() and not confirm(f"{args.profile} exists — overwrite?"):
+        raise SystemExit("Aborted, nothing written.")
 
     profile = ET.Element("profile", id="1")
     instances = ET.SubElement(profile, "widget_instances")
@@ -60,10 +118,15 @@ def main() -> None:
         instances.append(instance(idx, swf))
     ET.indent(profile)
 
-    tmp = out.with_name(out.name + ".new")
+    tmp = args.profile.with_name(args.profile.name + ".new")
     ET.ElementTree(profile).write(tmp, encoding="UTF-8", xml_declaration=True)
-    tmp.replace(out)
+    tmp.replace(args.profile)
+    print(f"Wrote {args.profile}.")
+    print("Restart the player to load it:  sudo systemctl restart chumby-player")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit("\nAborted, nothing written.")

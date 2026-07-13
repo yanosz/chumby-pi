@@ -5,8 +5,8 @@
 # standalone inside any Wayland session for debugging.
 #
 # Owner widgets: drop a .swf (and optional same-stem .jpg/.png
-# thumbnail) into /var/lib/chumby/widgets and restart — it joins the
-# channel next to the shipped widgets (chumby-local-widgets below).
+# thumbnail) into /var/lib/chumby/widgets, then run chumby-local-widgets
+# and restart — it joins the channel next to the shipped widgets.
 #
 # Overrides (set in /etc/default/chumby-player for the service):
 #   CHUMBY_STATE         state dir      (default /var/lib/chumby)
