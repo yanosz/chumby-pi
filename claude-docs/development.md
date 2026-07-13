@@ -262,6 +262,17 @@ verified: staged deb tree + files copied from the chumby backup
 merges and plays. On Jan's existing Pi nothing needs copying: the
 installed data deb keeps serving all four paths until removed.
 
+**Apt repo** (2026-07-13, same branch): `apt-repo` CI job publishes the
+deb as a signed flat repo on GitHub Pages (design §5). Signing key
+generated on the dev box (`gpg --quick-gen-key … ed25519 sign never`),
+public half committed (`pkg/apt/chumby-archive.gpg`), private half handed
+to Jan for the `CHUMBY_APT_GPG_KEY` secret — never in git. Dress-rehearsed
+locally: `apt-ftparchive` + signing, `gpgv` good on both signatures, and a
+real `apt-get update` + `apt-cache policy` against the `file://` repo
+(arch forced to arm64) offered 0.8.0. Jan-side setup: set the secret,
+ensure Pages source is "GitHub Actions" (the job tries to enable it
+itself).
+
 Installed version: **0.5.0** (deployed 2026-07-12 via `pkg/deploy-pi.sh`,
 player at fork branch `intro-widget` — boot-time intro in the launcher,
 see below). Earlier: 0.4.0 (2026-07-11, fork `config/player-toml`

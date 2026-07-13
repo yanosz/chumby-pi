@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>chumby-pi apt repository</title>
+<style>
+  body { font-family: sans-serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+  pre { background: #f4f4f4; padding: .8rem; overflow-x: auto; }
+  @media (prefers-color-scheme: dark) { body { background: #111; color: #ddd; } pre { background: #222; } }
+</style>
+</head>
+<body>
+<h1>chumby-pi apt repository</h1>
+<p>Signed flat apt repository for <a href="https://github.com/yanosz/chumby-pi">chumby-pi</a> —
+the Chumby Classic control panel on a Raspberry Pi (arm64, Debian trixie /
+Raspberry Pi OS).</p>
+
+<h2>Install</h2>
+<pre>curl -fsSL https://yanosz.github.io/chumby-pi/chumby-archive.gpg \
+  | sudo tee /usr/share/keyrings/chumby-archive.gpg &gt;/dev/null
+echo 'deb [signed-by=/usr/share/keyrings/chumby-archive.gpg] https://yanosz.github.io/chumby-pi ./' \
+  | sudo tee /etc/apt/sources.list.d/chumby.list
+sudo apt update
+sudo apt install chumby-player</pre>
+
+<p>The package contains no Chumby firmware. On first start the player tells
+you which files to copy from your chumby (or its backup) into
+<code>/var/lib/chumby</code> — <code>controlpanel.swf</code> is required;
+widgets, alarm tones and the intro are optional.</p>
+
+<p>Signing key fingerprint:
+<code>1197 17A0 5AFB 53A8 AE6F 240C 4C8E 58B4 6807 1237</code></p>
+</body>
+</html>

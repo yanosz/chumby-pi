@@ -163,6 +163,18 @@ data-deb-seeded tree still carries real tones), and `intro.swf`. The
 launcher refuses to start without the SWF and prints exactly this list
 (NFR1).
 
+**Distribution** (2026-07-13): a **signed flat apt repo on GitHub Pages**
+(`https://yanosz.github.io/chumby-pi`, sources line `deb [signed-by=…] … ./`).
+The `apt-repo` CI job runs on push to main after the install test:
+`apt-ftparchive` over the built deb, `InRelease`/`Release.gpg` signed with
+the dedicated ed25519 key (fingerprint
+`119717A05AFB53A8AE6F240C4C8E58B468071237`; public half committed as
+`pkg/apt/chumby-archive.gpg`, private half only in the
+`CHUMBY_APT_GPG_KEY` Actions secret), plus `pkg/apt/index.html` with the
+user instructions. Latest version only — each deploy replaces the site.
+A flat repo because there is one package for one architecture; publishable
+at all because the deb carries no chumby firmware.
+
 The kiosk unit runs **cage**, a single-application Wayland compositor,
 launching the player fullscreen. The decisions inside it:
 
