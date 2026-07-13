@@ -111,16 +111,20 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: chumby-player-deb
-          path: repo
+          path: site/apt
 
+      # The repo lives under /apt so the site root stays free for a
+      # future rendered site (Jan, 2026-07-13) — moving it later would
+      # break every configured sources line.
       - name: Build and sign the flat repo
         env:
           GPG_KEY: ${{ secrets.CHUMBY_APT_GPG_KEY }}
         run: |
           test -n "$GPG_KEY" || { echo "CHUMBY_APT_GPG_KEY secret missing" >&2; exit 1; }
           echo "$GPG_KEY" | gpg --batch --import
-          cp pkg/apt/chumby-archive.gpg pkg/apt/index.html repo/
-          cd repo
+          cp pkg/apt/index.html site/
+          cp pkg/apt/chumby-archive.gpg site/apt/
+          cd site/apt
           apt-ftparchive packages . > Packages
           gzip -9k Packages
           apt-ftparchive \
@@ -140,7 +144,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: repo
+          path: site
 
       - id: deploy
         uses: actions/deploy-pages@v4

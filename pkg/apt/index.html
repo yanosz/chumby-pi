@@ -17,9 +17,9 @@ the Chumby Classic control panel on a Raspberry Pi (arm64, Debian trixie /
 Raspberry Pi OS).</p>
 
 <h2>Install</h2>
-<pre>curl -fsSL https://yanosz.github.io/chumby-pi/chumby-archive.gpg \
+<pre>curl -fsSL https://yanosz.github.io/chumby-pi/apt/chumby-archive.gpg \
   | sudo tee /usr/share/keyrings/chumby-archive.gpg &gt;/dev/null
-echo 'deb [signed-by=/usr/share/keyrings/chumby-archive.gpg] https://yanosz.github.io/chumby-pi ./' \
+echo 'deb [signed-by=/usr/share/keyrings/chumby-archive.gpg] https://yanosz.github.io/chumby-pi/apt ./' \
   | sudo tee /etc/apt/sources.list.d/chumby.list
 sudo apt update
 sudo apt install chumby-player</pre>

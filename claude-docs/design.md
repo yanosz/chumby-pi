@@ -164,7 +164,11 @@ launcher refuses to start without the SWF and prints exactly this list
 (NFR1).
 
 **Distribution** (2026-07-13): a **signed flat apt repo on GitHub Pages**
-(`https://yanosz.github.io/chumby-pi`, sources line `deb [signed-by=…] … ./`).
+(`https://yanosz.github.io/chumby-pi/apt`, sources line
+`deb [signed-by=…] …/apt ./` — under `/apt`, not the site root, so the
+root stays free for a future rendered site without ever breaking
+configured sources lines; Pages serves one artifact per repo, so any such
+site must be assembled into the same deploy).
 The `apt-repo` CI job runs on push to main after the install test:
 `apt-ftparchive` over the built deb, `InRelease`/`Release.gpg` signed with
 the dedicated ed25519 key (fingerprint
