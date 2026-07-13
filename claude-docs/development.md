@@ -353,7 +353,12 @@ execs cage — any Pi model, no SPI panel → cage picks HDMI, an
 `/etc/default/chumby-player` value wins over detection. Verified with a
 stubbed `/dev/dri/by-path` + fake cage (Pi-4-style name detected; HDMI
 fallback; override untouched); the on-device proof is the journal's
-"SPI TFT detected" line on Jan's fresh install.
+"SPI TFT detected" line on Jan's fresh install. Also in 0.8.4, from that
+test's first finding ("the user is not instructed to do anything" after
+`apt install`): postinst prints first-run guidance **derived from live
+state** — the config.txt overlay lines when no SPI DRM device exists,
+the chumby-download-firmware / copy-from-backup pointer when no
+controlpanel.swf does; quiet on a machine where both are in place.
 
 Installed version: **0.8.3** (deployed 2026-07-13, above; 0.8.4 pending
 Jan's apt install). Earlier:

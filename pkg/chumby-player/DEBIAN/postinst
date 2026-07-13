@@ -10,6 +10,42 @@ if [ "$1" = "configure" ]; then
     udevadm trigger --subsystem-match=block --action=add || true
     # re-run the backlight rule for a display that is already up
     udevadm trigger --subsystem-match=backlight --action=add || true
+    # First-run guidance, derived from live state — the apt transcript is
+    # the one place a fresh installer surely reads. Quiet on upgrades
+    # where display and firmware are already in place.
+    have_swf=no
+    if [ -e /var/lib/chumby/controlpanel.swf ] \
+        || [ -e /usr/share/chumby-player/swf/controlpanel.swf ]; then
+        have_swf=yes
+    fi
+    have_tft=no
+    for card in /dev/dri/by-path/platform-*.spi-cs-*-card; do
+        if [ -e "$card" ]; then have_tft=yes; break; fi
+    done
+
+    if [ "$have_tft" = no ] || [ "$have_swf" = no ]; then
+        echo "" >&2
+        echo "chumby-player: to get to a running panel:" >&2
+    fi
+    if [ "$have_tft" = no ]; then
+        cat >&2 <<'EOF'
+  * No SPI TFT display detected. For a piscreen-class 3.5" panel, append
+    to /boot/firmware/config.txt and reboot:
+        dtparam=spi=on
+        dtoverlay=piscreen,speed=24000000,rotate=0,drm,swapxy=on,invy=on
+    Vendor fbtft overlays (e.g. waveshare35b-v2) will NOT work — the
+    kiosk needs a DRM device. Without any panel it runs on HDMI.
+EOF
+    fi
+    if [ "$have_swf" = no ]; then
+        cat >&2 <<'EOF'
+  * controlpanel.swf is copyrighted chumby firmware and not included.
+    Run  chumby-download-firmware  to fetch it (and a clock widget)
+    from chumby.com, or copy the files from your chumby or its backup
+    into /var/lib/chumby.
+EOF
+    fi
+    echo "" >&2
     echo "chumby-player: enabled for next boot; start now with:" >&2
     echo "  sudo systemctl start chumby-player" >&2
 fi
