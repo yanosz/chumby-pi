@@ -230,11 +230,15 @@ only payload, because the fork's `player.toml.example` (a conffile) gained
 the 0.5.0 conffile trap below. Deploying 0.6.0 should follow the fork's
 brightness PR merge so the player and its config template travel together.
 
-Version **0.7.0** (defined 2026-07-13; not yet built or deployed) drops
-`chumby-widget-channel.service` and adds the launcher's `--scan-channel`
-flag — see design §4 for why the panel-native `/psp/profile.xml` merge
-made the boot-time regeneration redundant. Packaging-only; no fork code
-change (the verification ran against the already-merged player) and
+Version **0.7.0** (defined 2026-07-13; not yet built or deployed) replaces
+the widget-channel machinery (design §4): `chumby-widget-channel.service`
+and the sidecar generator are gone — the fork's channel fixture is static
+now — and the launcher instead runs the new `chumby-local-widgets` over
+`/var/lib/chumby/widgets` at every start, writing the local-profile overlay
+the panel merges natively. Verified offline on the desktop
+(`access_chumby_com = 0`, zero passthrough lines; merged widget loaded and
+executed, including a percent-encoded path). Needs the fork gitlink bumped
+past the fork's housekeeping merge (generator + sidecars deleted there);
 nothing executed on the device yet.
 
 Installed version: **0.5.0** (deployed 2026-07-12 via `pkg/deploy-pi.sh`,

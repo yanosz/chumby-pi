@@ -76,29 +76,36 @@ which are compiled into the player.
 
 ## 4. Booting the widget channel
 
-The player generates its single widget channel from the widgets it ships
-(`chumby-widget-channel`, in the submodule — design there). This repo owns
-only when that runs on the device.
+The shipped channel is a static fixture in the submodule (fork design §3);
+nothing generates it on the device. Owner widgets ride the panel's own
+local-profile merge — `mergeLocalProfile()` reads the first existing of
+`/tmp/profile.xml`, `/mnt/usb/profile.xml`, `/mnt/storage/profile.xml`,
+`/psp/profile.xml` and concatenates its `<widget_instance>` entries onto
+whatever channel loaded (the wiki's "mixing local widgets into a channel"
+trick; verified offline on our stack 2026-07-13).
 
-There is deliberately no boot-time regeneration (the
-`chumby-widget-channel.service` oneshot was dropped in 0.7.0). The data
-package ships a profile generated at build time from the packaged sidecars,
-the first-run seed copies it into the state directory, and a plain launch
-never rewrites state — the launcher only *checks* that a non-empty profile
-exists and refuses with a hint otherwise. Regeneration is opt-in:
-`chumby-player-run --scan-channel` runs the generator (`--force`) against
-the live tree, for the rare case of sidecars added or removed by hand.
+At every start the launcher runs `chumby-local-widgets` over
+`/var/lib/chumby/widgets` and writes the overlay to the virtual
+`/tmp/profile.xml`. Dropping a `.swf` (plus an optional same-stem
+`.jpg`/`.png` thumbnail) into that folder and restarting is the whole
+"install a widget" story — offline, and equally under the remote account
+channel, since the merge applies to whatever loaded. An empty folder
+removes the overlay, so a hand-written `/psp/profile.xml` stays usable as
+the escape hatch (it is next in the panel's search order). Writing under
+the virtual `/tmp` keeps "a plain launch never rewrites state" intact —
+that subtree is volatile by its own semantics (fork requirements, "/tmp
+volatility").
 
-The service had existed to pick up exactly those hand-dropped sidecars at
-boot; it became redundant when the panel's own local-profile merge was
-verified on our stack (2026-07-13, fork design §3): `mergeLocalProfile()`
-reads the first of `/tmp/profile.xml`, `/mnt/usb/profile.xml`,
-`/mnt/storage/profile.xml`, `/psp/profile.xml` via `_getFile` and
-concatenates its `<widget_instance>` entries onto the loaded channel — so
-"add a widget without repackaging" is a file drop into the fixtures' `/psp`,
-no regeneration involved. (This is the wiki's "mixing local widgets into a
-channel" trick; it *adds to* a channel and cannot replace the base profile,
-which is why the generator itself stays.)
+Accepted limits: the shipped clocks live in the static base, so the widgets
+folder cannot remove them (edit the seeded fixture if it ever matters); and
+the remote widget cache (`/tmp/widgetcache/<id>`) is not scanned — its
+files are nameless numeric ids, so freezing a downloaded widget means
+copying it into the folder under a real name.
+
+Until 0.7.0 the profile was generated from per-widget sidecar XML — at
+build time, and again at every boot by a `chumby-widget-channel.service`
+oneshot. The verified merge made that machinery redundant and it was
+deleted, fork side included.
 
 ## 5. The two packages, and the kiosk
 
@@ -107,7 +114,7 @@ They are not policy-compliant Debian source packages; vendoring a Rust
 workspace into sbuild serves no goal here.
 
 **`chumby-player`** (arm64) — the cross-built `dist` binary, the launcher
-`chumby-player-run`, `chumby-ctl`, the widget-channel generator,
+`chumby-player-run`, `chumby-ctl`, `chumby-local-widgets`,
 the systemd kiosk unit, and udev rules (CEC-pointer ignore §7, USB-music
 automount, backlight write access §8). `Depends:` cage, mpv, pipewire-alsa,
 python3, `chumby-player-data`, plus the library dependencies read off the

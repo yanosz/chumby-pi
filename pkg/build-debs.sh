@@ -43,7 +43,7 @@ install -m 644 "$REPO/ruffle/fixtures/player.toml.example" \
     "$P/etc/chumby-player/player.toml"
 install -m 755 "$BIN" "$P/usr/lib/chumby-player/ruffle_desktop"
 install -m 755 "$REPO/ruffle/chumby-ctl" "$P/usr/bin/chumby-ctl"
-install -m 755 "$REPO/ruffle/chumby-widget-channel" "$P/usr/bin/chumby-widget-channel"
+install -m 755 chumby-player/chumby-local-widgets "$P/usr/bin/chumby-local-widgets"
 install -m 755 chumby-player/chumby-player-run "$P/usr/bin/chumby-player-run"
 install -m 644 chumby-player/chumby-player.service "$P/lib/systemd/system/"
 install -m 644 chumby-player/90-chumby-ignore-cec-pointer.rules "$P/usr/lib/udev/rules.d/"
@@ -65,8 +65,6 @@ sed "s/@VERSION@/$VERSION/" chumby-player-data/DEBIAN/control > "$D/DEBIAN/contr
 cp -a "$REPO/ruffle/fixtures" "$D/usr/share/chumby-player/fixtures"
 # Never ship the build box's generated dev identity (fork FR10).
 rm -f "$D/usr/share/chumby-player/fixtures/rootfs/psp/guid"
-# Ship a profile that matches the packaged widget sidecars.
-"$REPO/ruffle/chumby-widget-channel" --fixtures "$D/usr/share/chumby-player/fixtures" --force --quiet
 install -m 644 "$SWF" "$D/usr/share/chumby-player/swf/controlpanel.swf"
 find "$D" -type d -exec chmod 755 {} +
 dpkg-deb --build --root-owner-group "$D" "$OUT/chumby-player-data_${VERSION}_all.deb"

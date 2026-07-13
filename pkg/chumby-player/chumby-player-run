@@ -4,13 +4,9 @@
 # Normally exec'd by cage from chumby-player.service; also works
 # standalone inside any Wayland session for debugging.
 #
-# Usage: chumby-player-run [--scan-channel]
-#   --scan-channel  rebuild the widget channel from the installed
-#                   sidecars (fixtures/widgets/*.widget.xml) before
-#                   launching. To add a widget without touching the
-#                   sidecars, drop a profile.xml into the fixtures'
-#                   /psp — the panel merges its <widget_instance>
-#                   entries into the channel natively.
+# Owner widgets: drop a .swf (and optional same-stem .jpg/.png
+# thumbnail) into /var/lib/chumby/widgets and restart — it joins the
+# channel next to the shipped widgets (chumby-local-widgets below).
 #
 # Overrides (set in /etc/default/chumby-player for the service):
 #   CHUMBY_STATE         state dir      (default /var/lib/chumby)
@@ -20,11 +16,6 @@
 #                        warn,chumby_host=info,avm_trace=info to debug)
 
 set -eu
-
-SCAN=0
-case "${1:-}" in
-    --scan-channel) SCAN=1 ;;
-esac
 
 SHARE=/usr/share/chumby-player
 STATE="${CHUMBY_STATE:-/var/lib/chumby}"
@@ -59,18 +50,13 @@ ln -sf /etc/chumby-player/player.toml "$STATE/fixtures/player.toml"
 
 [ -p "$CTL" ] || mkfifo -m 600 "$CTL"
 
-# The panel fetches its widget channel from this profile. The data
-# package ships it pre-generated from its widgets; regeneration is
-# opt-in (--scan-channel) so a plain launch never rewrites state.
-PROFILE="$STATE/fixtures/http/xml.chumby.com/xml/profiles"
-if [ "$SCAN" = 1 ]; then
-    chumby-widget-channel --fixtures "$STATE/fixtures" --force
-fi
-if [ ! -s "$PROFILE" ]; then
-    echo "widget channel profile missing/empty at $PROFILE" >&2
-    echo "run: chumby-player-run --scan-channel" >&2
-    exit 1
-fi
+# The shipped channel is a static fixture; owner widgets ride the panel's
+# native local-profile merge. Regenerate that overlay from the widgets
+# folder on every start — it lands in the virtual /tmp (volatile by that
+# tree's own semantics, so this is not persistent state), and an empty
+# folder removes it, which keeps a hand-written /psp/profile.xml usable.
+mkdir -p "$STATE/widgets"
+chumby-local-widgets "$STATE/widgets" "$STATE/fixtures/rootfs/tmp/profile.xml"
 
 export RUST_LOG="${RUST_LOG:-warn}"
 

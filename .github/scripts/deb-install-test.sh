@@ -16,6 +16,7 @@ apt-get install -y /debs/chumby-player_*.deb /debs/chumby-player-data_*.deb
 # Binaries present and the player binary runs (links against the
 # declared libraries).
 test -x /usr/bin/chumby-ctl
+test -x /usr/bin/chumby-local-widgets
 test -x /usr/bin/chumby-player-run
 /usr/lib/chumby-player/ruffle_desktop --version
 

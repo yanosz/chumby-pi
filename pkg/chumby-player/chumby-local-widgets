@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+"""chumby-local-widgets — emit the local-profile overlay from a folder.
+
+    chumby-local-widgets WIDGETS_DIR PROFILE_OUT
+
+Every *.swf in WIDGETS_DIR becomes a <widget_instance> in PROFILE_OUT
+(name = filename stem; a sibling .jpg/.jpeg/.png of the same stem becomes
+the dashboard thumbnail). The control panel merges that file natively
+into whatever channel it has loaded (mergeLocalProfile — fork design §3),
+so widgets are added by dropping files, no repackaging. An empty folder
+removes PROFILE_OUT, which keeps a hand-written /psp/profile.xml usable.
+"""
+
+import sys
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+THUMB_SUFFIXES = (".jpg", ".jpeg", ".png")
+# Above the static channel's instance ids, which start at 1.
+ID_BASE = 1000
+
+
+def instance(idx: int, swf: Path) -> ET.Element:
+    inst = ET.Element("widget_instance", id=str(ID_BASE + idx))
+    ET.SubElement(inst, "name").text = swf.stem
+    widget = ET.SubElement(inst, "widget", id=str(ID_BASE + idx))
+    ET.SubElement(widget, "name").text = swf.stem
+    ET.SubElement(widget, "description").text = f"Local widget ({swf.name})"
+    ET.SubElement(widget, "version").text = "1.0"
+    ET.SubElement(widget, "mode", mode="timeout", time="86400")
+    ET.SubElement(widget, "access", sendable="false", deleteable="false",
+                  access="private", virtualable="false")
+    ET.SubElement(widget, "movie", href=swf.resolve().as_uri(),
+                  contenttype="application/x-shockwave-flash")
+    for suffix in THUMB_SUFFIXES:
+        thumb = swf.with_suffix(suffix)
+        if thumb.is_file():
+            ET.SubElement(widget, "thumbnail", href=thumb.resolve().as_uri(),
+                          contenttype=f"image/{suffix.lstrip('.')}")
+            break
+    ET.SubElement(inst, "access", access="private")
+    ET.SubElement(inst, "mode", mode="timeout", time="86400")
+    ET.SubElement(inst, "widget_parameters")
+    return inst
+
+
+def main() -> None:
+    if len(sys.argv) != 3:
+        raise SystemExit(f"usage: {Path(sys.argv[0]).name} WIDGETS_DIR PROFILE_OUT")
+    widgets_dir, out = Path(sys.argv[1]), Path(sys.argv[2])
+
+    swfs = sorted(p for p in widgets_dir.glob("*.swf") if p.is_file())
+    if not swfs:
+        out.unlink(missing_ok=True)
+        return
+
+    profile = ET.Element("profile", id="1")
+    instances = ET.SubElement(profile, "widget_instances")
+    for idx, swf in enumerate(swfs):
+        instances.append(instance(idx, swf))
+    ET.indent(profile)
+
+    tmp = out.with_name(out.name + ".new")
+    ET.ElementTree(profile).write(tmp, encoding="UTF-8", xml_declaration=True)
+    tmp.replace(out)
+
+
+if __name__ == "__main__":
+    main()
