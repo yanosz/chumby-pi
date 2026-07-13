@@ -214,7 +214,9 @@ launching the player fullscreen. The decisions inside it:
   because card numbering drifts across boots, a glob because the SoC address
   in it is Pi-model-specific, pinned at all so the vc4/HDMI card never wins
   while a panel is fitted — then execs cage. No SPI panel → unset, cage
-  drives whatever exists (HDMI kiosk works out of the box). A
+  drives whatever exists — HDMI and firmware-auto-detected DSI panels work
+  with zero configuration, touch included (libinput); only SPI panels need
+  the owner's config.txt overlay, because SPI has no discovery. A
   `WLR_DRM_DEVICES` from `/etc/default/chumby-player` wins over detection.
 - **`StateDirectory=chumby`** gives `/var/lib/chumby` owned by `pi`. The
   launcher seeds `fixtures/` there from `/usr/share` on first run, because

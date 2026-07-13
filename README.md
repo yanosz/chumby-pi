@@ -73,9 +73,11 @@ clones. Two things matter:
   `drm` selects the mainline driver; `swapxy` and `invy` align the
   touchscreen axes with the landscape screen.
 
-That's all: the kiosk finds the SPI panel by itself, on any Pi model
-(and falls back to HDMI if there is none). To pin a specific display,
-set `WLR_DRM_DEVICES` in `/etc/default/chumby-player`.
+That's all: the kiosk finds the SPI panel by itself, on any Pi model.
+**HDMI and DSI displays** (like the official 7″ touchscreen) **need no
+configuration at all** — the overlay lines above are only for SPI
+panels, which the Pi cannot detect on its own. To pin a specific
+display, set `WLR_DRM_DEVICES` in `/etc/default/chumby-player`.
 
 ## What's in this repo
 

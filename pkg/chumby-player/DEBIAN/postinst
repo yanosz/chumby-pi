@@ -28,14 +28,30 @@ if [ "$1" = "configure" ]; then
         echo "chumby-player: to get to a running panel:" >&2
     fi
     if [ "$have_tft" = no ]; then
-        cat >&2 <<'EOF'
-  * No SPI TFT display detected. For a piscreen-class 3.5" panel, append
-    to /boot/firmware/config.txt and reboot:
+        # HDMI and DSI displays need nothing: the firmware detects them
+        # and the kiosk uses them as found. Only an SPI panel needs the
+        # owner to declare it — so say which situation this machine is in.
+        if ls /dev/dri/card* >/dev/null 2>&1; then
+            cat >&2 <<'EOF'
+  * No SPI TFT found — the kiosk will use the display you have (HDMI
+    and DSI need no configuration). Fitting a piscreen-class 3.5" SPI
+    panel instead? Append to /boot/firmware/config.txt and reboot:
         dtparam=spi=on
         dtoverlay=piscreen,speed=24000000,rotate=0,drm,swapxy=on,invy=on
     Vendor fbtft overlays (e.g. waveshare35b-v2) will NOT work — the
-    kiosk needs a DRM device. Without any panel it runs on HDMI.
+    kiosk needs a DRM device.
 EOF
+        else
+            cat >&2 <<'EOF'
+  * No display (DRM) device present. HDMI and DSI displays need no
+    configuration; for a piscreen-class 3.5" SPI panel, append to
+    /boot/firmware/config.txt and reboot:
+        dtparam=spi=on
+        dtoverlay=piscreen,speed=24000000,rotate=0,drm,swapxy=on,invy=on
+    Vendor fbtft overlays (e.g. waveshare35b-v2) will NOT work — the
+    kiosk needs a DRM device.
+EOF
+        fi
     fi
     if [ "$have_swf" = no ]; then
         cat >&2 <<'EOF'
