@@ -269,9 +269,15 @@ public half committed (`pkg/apt/chumby-archive.gpg`), private half handed
 to Jan for the `CHUMBY_APT_GPG_KEY` secret — never in git. Dress-rehearsed
 locally: `apt-ftparchive` + signing, `gpgv` good on both signatures, and a
 real `apt-get update` + `apt-cache policy` against the `file://` repo
-(arch forced to arm64) offered 0.8.0. Jan-side setup: set the secret,
-ensure Pages source is "GitHub Actions" (the job tries to enable it
-itself).
+(arch forced to arm64) offered 0.8.0. Jan-side setup (both done
+2026-07-13): set the secret, and — as repo admin — set Pages
+"Build and deployment → Source" to **GitHub Actions**. Creating the
+Pages *site* needs administration:write, which neither the workflow
+token (configure-pages enablement fails: "Resource not accessible by
+integration") nor the dev box's gh login (jluehr-4711, push but no
+admin on yanosz/chumby-pi) has; the first deploy failed on exactly
+that, and a gh-pages-branch workaround was briefly on main (aec65dd,
+reverted in 0416e2f) before Jan flipped the setting.
 
 Installed version: **0.5.0** (deployed 2026-07-12 via `pkg/deploy-pi.sh`,
 player at fork branch `intro-widget` — boot-time intro in the launcher,
