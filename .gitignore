@@ -18,3 +18,4 @@
 *.wav
 
 /resources/zurks-offline-firmware-classic/
+__pycache__/
