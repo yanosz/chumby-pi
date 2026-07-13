@@ -10,7 +10,8 @@ no identity leaves the box), and the player itself stays offline
 afterwards.
 
 intro.swf and the alarm tones only ever shipped inside firmware images
-and cannot be downloaded — copy those from a chumby or its backup.
+and cannot be downloaded; the exact paths to copy them from a chumby
+(or its backup) are printed at the end.
 """
 
 import hashlib
@@ -128,8 +129,14 @@ def main() -> None:
             subprocess.run(["chumby-local-widgets"], check=False)
 
     print()
-    print("Not downloadable: intro.swf and the alarm tones — copy them from")
-    print(f"your chumby or its backup into {STATE} if you have one.")
+    print("Not downloadable — if you have a chumby (or a backup of one),")
+    print("copy these; left side is the path on the chumby:")
+    print(f"  /usr/widgets/intro.swf        ->  {STATE}/intro.swf")
+    print(f"  /usr/chumby/alarmtones/*.mp3  ->  {STATE}/alarmtones/")
+    print("        (keep the filenames — the panel hardcodes them)")
+    print(f"  /usr/widgets/*.swf and *.jpg  ->  {STATE}/widgets/")
+    print("        (more widgets; then re-run chumby-local-widgets)")
+    print()
     print("Start (or restart) the panel:  sudo systemctl restart chumby-player")
 
 

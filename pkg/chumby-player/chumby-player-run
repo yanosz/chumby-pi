@@ -87,6 +87,28 @@ if [ "${1:-}" = "--check" ]; then
     exit 0
 fi
 
+# --kiosk: resolve the display, then run this script inside cage. An SPI
+# TFT is pinned by its stable by-path name — cardN numbers shuffle
+# between boots, and the vc4/HDMI card must not win while a panel is
+# fitted. The glob works on any Pi model (the SoC address in the name
+# varies); no SPI panel means cage picks whatever display exists (HDMI).
+# /etc/default/chumby-player may set WLR_DRM_DEVICES to override.
+if [ "${1:-}" = "--kiosk" ]; then
+    if [ -z "${WLR_DRM_DEVICES:-}" ]; then
+        for card in /dev/dri/by-path/platform-*.spi-cs-*-card; do
+            if [ -e "$card" ]; then
+                WLR_DRM_DEVICES="$card"
+                export WLR_DRM_DEVICES
+                echo "chumby-player: SPI TFT detected: $card" >&2
+                break
+            fi
+        done
+        [ -n "${WLR_DRM_DEVICES:-}" ] || \
+            echo "chumby-player: no SPI DRM device — cage chooses the display" >&2
+    fi
+    exec /usr/bin/cage -- "$0"
+fi
+
 # First run: seed the writable fixture tree. The panel writes into
 # fixtures/rootfs (alarms, streams, volume — all /psp settings), so it
 # cannot run from /usr/share. Remove "$STATE/fixtures" to re-seed after
@@ -135,12 +157,24 @@ fi
 # dpkg conffile in /etc, so edits survive upgrades and fixture re-seeds.
 ln -sf /etc/chumby-player/player.toml "$STATE/fixtures/player.toml"
 
-[ -p "$CTL" ] || mkfifo -m 600 "$CTL"
-
 # Owner widgets ride the panel's native local-profile merge; the
 # user-run chumby-local-widgets helper writes /psp/profile.xml from this
 # folder. Here only make sure the folder exists to be found.
 mkdir -p "$STATE/widgets"
+
+# --seed: state prepared (everything above) without starting anything —
+# for chumby-local-widgets / chumby-download-firmware on a box whose
+# service has not run yet (the 2nd vanilla-card install crashed on the
+# missing tree). A root-run seed hands the tree to the service user:
+# the panel must write its settings into it (User=pi in the unit).
+if [ "${1:-}" = "--seed" ]; then
+    if [ "$(id -u)" = 0 ] && getent passwd pi >/dev/null 2>&1; then
+        chown -R pi:pi "$STATE"
+    fi
+    exit 0
+fi
+
+[ -p "$CTL" ] || mkfifo -m 600 "$CTL"
 
 export RUST_LOG="${RUST_LOG:-warn}"
 
