@@ -212,8 +212,11 @@ screen-x was device-y, screen-y was inverted device-x.
 The overlay can be swapped at runtime, reversibly, without a reboot:
 `sudo dtoverlay -r piscreen && sudo dtoverlay piscreen speed=24000000 rotate=0 drm`.
 
-**Kiosk**: `chumby-player.service` and `chumby-widget-channel.service`, both
-shipped by the deb. `postinst` enables the player unit and reloads udev.
+**Kiosk**: `chumby-player.service`, shipped by the deb; `postinst` enables
+it and reloads udev. (`chumby-widget-channel.service` also shipped through
+0.6.0; dropped in 0.7.0 — design §4. On the first upgrade the stale oneshot
+stays loaded-but-gone until the next reboot or a `systemctl daemon-reload`;
+harmless, `RemainAfterExit` with nothing left to run.)
 
 Version **0.6.0** (defined 2026-07-13; not yet built or deployed — the deb
 must carry the brightness player, see below) adds `90-chumby-backlight.rules`
@@ -226,6 +229,13 @@ only payload, because the fork's `player.toml.example` (a conffile) gained
 `brightness_ctl` — rebuilding different content under the same version is
 the 0.5.0 conffile trap below. Deploying 0.6.0 should follow the fork's
 brightness PR merge so the player and its config template travel together.
+
+Version **0.7.0** (defined 2026-07-13; not yet built or deployed) drops
+`chumby-widget-channel.service` and adds the launcher's `--scan-channel`
+flag — see design §4 for why the panel-native `/psp/profile.xml` merge
+made the boot-time regeneration redundant. Packaging-only; no fork code
+change (the verification ran against the already-merged player) and
+nothing executed on the device yet.
 
 Installed version: **0.5.0** (deployed 2026-07-12 via `pkg/deploy-pi.sh`,
 player at fork branch `intro-widget` — boot-time intro in the launcher,

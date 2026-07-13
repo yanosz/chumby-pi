@@ -80,15 +80,25 @@ The player generates its single widget channel from the widgets it ships
 (`chumby-widget-channel`, in the submodule — design there). This repo owns
 only when that runs on the device.
 
-A `chumby-widget-channel.service` oneshot runs `Before=chumby-player.service`,
-seeding the state directory if absent and then refreshing the profile. The
-player unit `Wants=` it rather than `Requires=` it, so a generator failure
-still lets the panel start and hit its own guard. The generator is
-deliberately **not** folded into the launcher — a debug launch must work
-without regenerating first — so the launcher only *checks* that a non-empty
-profile exists and refuses with a hint otherwise. `build-debs.sh` regenerates
-the profile in the staged data tree, so the shipped channel always matches
-the packaged widgets.
+There is deliberately no boot-time regeneration (the
+`chumby-widget-channel.service` oneshot was dropped in 0.7.0). The data
+package ships a profile generated at build time from the packaged sidecars,
+the first-run seed copies it into the state directory, and a plain launch
+never rewrites state — the launcher only *checks* that a non-empty profile
+exists and refuses with a hint otherwise. Regeneration is opt-in:
+`chumby-player-run --scan-channel` runs the generator (`--force`) against
+the live tree, for the rare case of sidecars added or removed by hand.
+
+The service had existed to pick up exactly those hand-dropped sidecars at
+boot; it became redundant when the panel's own local-profile merge was
+verified on our stack (2026-07-13, fork design §3): `mergeLocalProfile()`
+reads the first of `/tmp/profile.xml`, `/mnt/usb/profile.xml`,
+`/mnt/storage/profile.xml`, `/psp/profile.xml` via `_getFile` and
+concatenates its `<widget_instance>` entries onto the loaded channel — so
+"add a widget without repackaging" is a file drop into the fixtures' `/psp`,
+no regeneration involved. (This is the wiki's "mixing local widgets into a
+channel" trick; it *adds to* a channel and cannot replace the base profile,
+which is why the generator itself stays.)
 
 ## 5. The two packages, and the kiosk
 
@@ -97,7 +107,7 @@ They are not policy-compliant Debian source packages; vendoring a Rust
 workspace into sbuild serves no goal here.
 
 **`chumby-player`** (arm64) — the cross-built `dist` binary, the launcher
-`chumby-player-run`, `chumby-ctl`, the widget-channel generator and its unit,
+`chumby-player-run`, `chumby-ctl`, the widget-channel generator,
 the systemd kiosk unit, and udev rules (CEC-pointer ignore §7, USB-music
 automount, backlight write access §8). `Depends:` cage, mpv, pipewire-alsa,
 python3, `chumby-player-data`, plus the library dependencies read off the

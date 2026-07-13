@@ -14,7 +14,7 @@ set -eu
 cd "$(dirname "$0")"
 REPO=$(cd .. && pwd)
 
-VERSION="${VERSION:-0.6.0}"
+VERSION="${VERSION:-0.7.0}"
 # dist = release + fat LTO + codegen-units=1 (what upstream ships);
 # measurably lighter on the Pi's CPU-bound rasterization (doc 11).
 BIN="$REPO/ruffle/target/aarch64-unknown-linux-gnu/dist/ruffle_desktop"
@@ -46,7 +46,6 @@ install -m 755 "$REPO/ruffle/chumby-ctl" "$P/usr/bin/chumby-ctl"
 install -m 755 "$REPO/ruffle/chumby-widget-channel" "$P/usr/bin/chumby-widget-channel"
 install -m 755 chumby-player/chumby-player-run "$P/usr/bin/chumby-player-run"
 install -m 644 chumby-player/chumby-player.service "$P/lib/systemd/system/"
-install -m 644 chumby-player/chumby-widget-channel.service "$P/lib/systemd/system/"
 install -m 644 chumby-player/90-chumby-ignore-cec-pointer.rules "$P/usr/lib/udev/rules.d/"
 # Backlight write access for the player (fork FR16); inert until a
 # display with a kernel backlight is installed.
