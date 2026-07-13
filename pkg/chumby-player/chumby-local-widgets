@@ -6,11 +6,13 @@ panel merges into its channel on the next start (fork design §3).
 """
 
 import argparse
+import os
+import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-STATE = Path("/var/lib/chumby")
+STATE = Path(os.environ.get("CHUMBY_STATE", "/var/lib/chumby"))
 DEFAULT_WIDGETS = STATE / "widgets"
 DEFAULT_PROFILE = STATE / "fixtures/rootfs/psp/profile.xml"
 
@@ -90,6 +92,16 @@ def main() -> None:
     print(f"Widgets folder:  {args.widgets_dir}")
     print(f"Local profile:   {args.profile}")
     print()
+
+    # On a box whose service has never run, the fixtures tree the profile
+    # lives in does not exist yet — seed it the launcher's way rather
+    # than crash (or mkdir a fragment that would block the real seeding).
+    if args.profile == DEFAULT_PROFILE and not args.profile.parent.is_dir():
+        print("Fixtures not seeded yet — preparing them (chumby-player-run --seed).")
+        subprocess.run(["chumby-player-run", "--seed"], check=False)
+    if not args.profile.parent.is_dir():
+        sys.exit(f"{args.profile.parent} does not exist — start the player "
+                 "once (sudo systemctl start chumby-player) and re-run.")
 
     swfs = sorted((p for p in args.widgets_dir.glob("*.swf") if p.is_file()),
                   key=lambda p: p.name.lower())

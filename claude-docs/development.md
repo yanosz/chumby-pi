@@ -358,7 +358,22 @@ test's first finding ("the user is not instructed to do anything" after
 `apt install`): postinst prints first-run guidance **derived from live
 state** — the config.txt overlay lines when no SPI DRM device exists,
 the chumby-download-firmware / copy-from-backup pointer when no
-controlpanel.swf does; quiet on a machine where both are in place.
+controlpanel.swf does; quiet on a machine where both are in place. The
+display hint distinguishes SPI (needs the overlay) from HDMI/DSI (need
+nothing — firmware-detected KMS outputs, touch via libinput).
+
+Two more second-vanilla-test findings, same version: (a)
+`chumby-local-widgets` crashed (`FileNotFoundError` on profile.xml.new)
+when run before the service ever started — the fixtures tree only
+existed after the launcher's first-run seed. Now the launcher has a
+`--seed` mode (state prep only, no player, no FIFO — a root-created
+/tmp FIFO would lock the pi player out; a root-run seed chowns the tree
+to pi), `chumby-local-widgets` invokes it when the default profile's
+tree is missing, honors `CHUMBY_STATE` like the other tools, and errors
+politely instead of tracebacking. (b) postinst now creates
+`/var/lib/chumby` owned by pi at install time, so the helpers work
+right after `apt install` without sudo (Jan ran them as root, which
+worked only because the downloader chmods 0644).
 
 Installed version: **0.8.3** (deployed 2026-07-13, above; 0.8.4 pending
 Jan's apt install). Earlier:

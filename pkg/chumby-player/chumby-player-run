@@ -157,12 +157,24 @@ fi
 # dpkg conffile in /etc, so edits survive upgrades and fixture re-seeds.
 ln -sf /etc/chumby-player/player.toml "$STATE/fixtures/player.toml"
 
-[ -p "$CTL" ] || mkfifo -m 600 "$CTL"
-
 # Owner widgets ride the panel's native local-profile merge; the
 # user-run chumby-local-widgets helper writes /psp/profile.xml from this
 # folder. Here only make sure the folder exists to be found.
 mkdir -p "$STATE/widgets"
+
+# --seed: state prepared (everything above) without starting anything —
+# for chumby-local-widgets / chumby-download-firmware on a box whose
+# service has not run yet (the 2nd vanilla-card install crashed on the
+# missing tree). A root-run seed hands the tree to the service user:
+# the panel must write its settings into it (User=pi in the unit).
+if [ "${1:-}" = "--seed" ]; then
+    if [ "$(id -u)" = 0 ] && getent passwd pi >/dev/null 2>&1; then
+        chown -R pi:pi "$STATE"
+    fi
+    exit 0
+fi
+
+[ -p "$CTL" ] || mkfifo -m 600 "$CTL"
 
 export RUST_LOG="${RUST_LOG:-warn}"
 

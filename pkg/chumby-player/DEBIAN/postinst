@@ -2,6 +2,13 @@
 set -e
 
 if [ "$1" = "configure" ]; then
+    # The state dir, owned by the service user before the service ever
+    # runs — so chumby-download-firmware / chumby-local-widgets work
+    # right after install, no sudo needed (StateDirectory= re-asserts
+    # this ownership at every service start).
+    if getent passwd pi >/dev/null 2>&1; then
+        install -d -o pi -g pi /var/lib/chumby
+    fi
     systemctl daemon-reload || true
     systemctl enable chumby-player.service || true
     udevadm control --reload-rules || true
