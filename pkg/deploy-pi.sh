@@ -31,5 +31,5 @@ ssh "$PI" 'sudo apt install --reinstall -y -o Dpkg::Options::=--force-confold \
            sudo systemctl restart chumby-player'
 
 echo "deployed to $1:"
-ssh "$PI" 'dpkg-query -W chumby-player chumby-player-data &&
+ssh "$PI" 'dpkg-query -W chumby-player &&
            systemctl is-active chumby-player'

@@ -76,19 +76,45 @@ which are compiled into the player.
 
 ## 4. Booting the widget channel
 
-The player generates its single widget channel from the widgets it ships
-(`chumby-widget-channel`, in the submodule — design there). This repo owns
-only when that runs on the device.
+The shipped channel is a static fixture in the submodule (fork design §3);
+nothing generates it on the device. Owner widgets ride the panel's own
+local-profile merge — `mergeLocalProfile()` reads the first existing of
+`/tmp/profile.xml`, `/mnt/usb/profile.xml`, `/mnt/storage/profile.xml`,
+`/psp/profile.xml` and concatenates its `<widget_instance>` entries onto
+whatever channel loaded (the wiki's "mixing local widgets into a channel"
+trick; verified offline on our stack 2026-07-13).
 
-A `chumby-widget-channel.service` oneshot runs `Before=chumby-player.service`,
-seeding the state directory if absent and then refreshing the profile. The
-player unit `Wants=` it rather than `Requires=` it, so a generator failure
-still lets the panel start and hit its own guard. The generator is
-deliberately **not** folded into the launcher — a debug launch must work
-without regenerating first — so the launcher only *checks* that a non-empty
-profile exists and refuses with a hint otherwise. `build-debs.sh` regenerates
-the profile in the staged data tree, so the shipped channel always matches
-the packaged widgets.
+`chumby-local-widgets` is a **user-run helper**, deliberately not wired
+into the launcher — "a plain launch never rewrites state" needs no
+exemption at all this way (the launcher only ensures the folder exists).
+It scans `/var/lib/chumby/widgets`, lists what it found, explains how to
+salvage a downloaded widget from the cache (nameless GUID-named movies,
+manifest carries only id/version/size/md5 — verified against the chumby
+backup), and writes the persistent `/psp/profile.xml`, asking `Y/n` before
+overwriting an existing one. So the "install a widget" story is: drop a
+`.swf` (plus optional same-stem `.jpg`/`.png` thumbnail) into the folder,
+run the helper, restart — offline, and equally under the remote account
+channel, since the merge applies to whatever loaded. With no widgets found
+it leaves an existing profile untouched; deleting the file is the
+documented way to clear the local set.
+
+Search-order note: `/tmp/profile.xml` and `/mnt/usb/profile.xml` precede
+`/psp` in the panel's list and nothing on our side writes them — so a USB
+stick carrying a hand-written `profile.xml` *replaces* the local set while
+inserted.
+
+Accepted limit: the remote widget cache (`/tmp/widgetcache/<id>`) is not
+scanned — its files are nameless GUID-named movies, so freezing a
+downloaded widget means copying it into the folder under a real name.
+(Since 0.8.0 the base channel is empty and there are no shipped clocks:
+every widget, the stock clocks included, is an owner file in the widgets
+folder — the backup carries `builtinclock.swf`; `unsubscribedclock` was a
+chumby.com download, not firmware.)
+
+Until 0.7.0 the profile was generated from per-widget sidecar XML — at
+build time, and again at every boot by a `chumby-widget-channel.service`
+oneshot. The verified merge made that machinery redundant and it was
+deleted, fork side included.
 
 ## 5. The two packages, and the kiosk
 
@@ -97,10 +123,10 @@ They are not policy-compliant Debian source packages; vendoring a Rust
 workspace into sbuild serves no goal here.
 
 **`chumby-player`** (arm64) — the cross-built `dist` binary, the launcher
-`chumby-player-run`, `chumby-ctl`, the widget-channel generator and its unit,
+`chumby-player-run`, `chumby-ctl`, `chumby-local-widgets`,
 the systemd kiosk unit, and udev rules (CEC-pointer ignore §7, USB-music
 automount, backlight write access §8). `Depends:` cage, mpv, pipewire-alsa,
-python3, `chumby-player-data`, plus the library dependencies read off the
+python3, plus the library dependencies read off the
 binary's `NEEDED` entries (`libc6`, `libgcc-s1`, `libfontconfig1`,
 `libssl3t64`, `libasound2t64`, `libudev1` — note trixie's time64 renames).
 `postinst` enables the unit but does not start it; installing means "player
@@ -124,8 +150,30 @@ the wait is bounded; a crash falls through to the panel. `start_intro`'s
 a SWF off whatever stick is inserted is a factory/debug hook, not a
 behavior to keep.
 
-**`chumby-player-data`** (all) — the `fixtures/` tree and `controlpanel.swf`.
-Private use only (NFR1).
+**`chumby-player-data` is retired (0.8.0).** The git-clean fixtures tree
+moved into `chumby-player` itself (staged by `cp -a` plus a prune of every
+`git ls-files -o` path, so gitignored binaries and local junk can never
+leak into the deb — the install test also greps the deb for `.swf`). The
+copyrighted files are owner-copied into `/var/lib/chumby` instead:
+`controlpanel.swf` (required; also `CHUMBY_SWF` or, transitionally, the
+old data-deb path under `/usr/share`), `widgets/` (then run
+`chumby-local-widgets`), `alarmtones/` (stock filenames — the panel
+hardcodes them, and the launcher symlinks the fixture path here unless a
+data-deb-seeded tree still carries real tones), and `intro.swf`. The
+launcher refuses to start without the SWF and prints exactly this list
+(NFR1).
+
+**Distribution** (2026-07-13): a **signed flat apt repo on GitHub Pages**
+(`https://yanosz.github.io/chumby-pi`, sources line `deb [signed-by=…] … ./`).
+The `apt-repo` CI job runs on push to main after the install test:
+`apt-ftparchive` over the built deb, `InRelease`/`Release.gpg` signed with
+the dedicated ed25519 key (fingerprint
+`119717A05AFB53A8AE6F240C4C8E58B468071237`; public half committed as
+`pkg/apt/chumby-archive.gpg`, private half only in the
+`CHUMBY_APT_GPG_KEY` Actions secret), plus `pkg/apt/index.html` with the
+user instructions. Latest version only — each deploy replaces the site.
+A flat repo because there is one package for one architecture; publishable
+at all because the deb carries no chumby firmware.
 
 The kiosk unit runs **cage**, a single-application Wayland compositor,
 launching the player fullscreen. The decisions inside it:
@@ -144,8 +192,9 @@ launching the player fullscreen. The decisions inside it:
 - **`StateDirectory=chumby`** gives `/var/lib/chumby` owned by `pi`. The
   launcher seeds `fixtures/` there from `/usr/share` on first run, because
   the panel writes into the rootfs (§3). The consequence is that after a
-  `chumby-player-data` upgrade you must `rm -rf /var/lib/chumby/fixtures` to
-  pick up new fixture content — discarding panel-made settings. Accepted.
+  `chumby-player` upgrade with fixture changes you must
+  `rm -rf /var/lib/chumby/fixtures` to pick them up — discarding panel-made
+  settings but not the owner files, which live beside the tree. Accepted.
 - **`Restart=on-failure`**: a clean exit (the panel quit) does not respawn; a
   crash does.
 - **`EnvironmentFile=-/etc/default/chumby-player`** is the override point for
