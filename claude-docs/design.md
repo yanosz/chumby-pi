@@ -103,11 +103,13 @@ Search-order note: `/tmp/profile.xml` and `/mnt/usb/profile.xml` precede
 stick carrying a hand-written `profile.xml` *replaces* the local set while
 inserted.
 
-Accepted limits: the shipped clocks live in the static base, so the widgets
-folder cannot remove them (edit the seeded fixture if it ever matters); and
-the remote widget cache (`/tmp/widgetcache/<id>`) is not scanned — its
-files are nameless numeric ids, so freezing a downloaded widget means
-copying it into the folder under a real name.
+Accepted limit: the remote widget cache (`/tmp/widgetcache/<id>`) is not
+scanned — its files are nameless GUID-named movies, so freezing a
+downloaded widget means copying it into the folder under a real name.
+(Since 0.8.0 the base channel is empty and there are no shipped clocks:
+every widget, the stock clocks included, is an owner file in the widgets
+folder — the backup carries `builtinclock.swf`; `unsubscribedclock` was a
+chumby.com download, not firmware.)
 
 Until 0.7.0 the profile was generated from per-widget sidecar XML — at
 build time, and again at every boot by a `chumby-widget-channel.service`
@@ -124,7 +126,7 @@ workspace into sbuild serves no goal here.
 `chumby-player-run`, `chumby-ctl`, `chumby-local-widgets`,
 the systemd kiosk unit, and udev rules (CEC-pointer ignore §7, USB-music
 automount, backlight write access §8). `Depends:` cage, mpv, pipewire-alsa,
-python3, `chumby-player-data`, plus the library dependencies read off the
+python3, plus the library dependencies read off the
 binary's `NEEDED` entries (`libc6`, `libgcc-s1`, `libfontconfig1`,
 `libssl3t64`, `libasound2t64`, `libudev1` — note trixie's time64 renames).
 `postinst` enables the unit but does not start it; installing means "player
@@ -148,8 +150,18 @@ the wait is bounded; a crash falls through to the panel. `start_intro`'s
 a SWF off whatever stick is inserted is a factory/debug hook, not a
 behavior to keep.
 
-**`chumby-player-data`** (all) — the `fixtures/` tree and `controlpanel.swf`.
-Private use only (NFR1).
+**`chumby-player-data` is retired (0.8.0).** The git-clean fixtures tree
+moved into `chumby-player` itself (staged by `cp -a` plus a prune of every
+`git ls-files -o` path, so gitignored binaries and local junk can never
+leak into the deb — the install test also greps the deb for `.swf`). The
+copyrighted files are owner-copied into `/var/lib/chumby` instead:
+`controlpanel.swf` (required; also `CHUMBY_SWF` or, transitionally, the
+old data-deb path under `/usr/share`), `widgets/` (then run
+`chumby-local-widgets`), `alarmtones/` (stock filenames — the panel
+hardcodes them, and the launcher symlinks the fixture path here unless a
+data-deb-seeded tree still carries real tones), and `intro.swf`. The
+launcher refuses to start without the SWF and prints exactly this list
+(NFR1).
 
 The kiosk unit runs **cage**, a single-application Wayland compositor,
 launching the player fullscreen. The decisions inside it:
@@ -168,8 +180,9 @@ launching the player fullscreen. The decisions inside it:
 - **`StateDirectory=chumby`** gives `/var/lib/chumby` owned by `pi`. The
   launcher seeds `fixtures/` there from `/usr/share` on first run, because
   the panel writes into the rootfs (§3). The consequence is that after a
-  `chumby-player-data` upgrade you must `rm -rf /var/lib/chumby/fixtures` to
-  pick up new fixture content — discarding panel-made settings. Accepted.
+  `chumby-player` upgrade with fixture changes you must
+  `rm -rf /var/lib/chumby/fixtures` to pick them up — discarding panel-made
+  settings but not the owner files, which live beside the tree. Accepted.
 - **`Restart=on-failure`**: a clean exit (the panel quit) does not respawn; a
   crash does.
 - **`EnvironmentFile=-/etc/default/chumby-player`** is the override point for

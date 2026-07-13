@@ -1,20 +1,17 @@
 name: CI
 
-# BC3 acceptance for chumby-pi: the two debs build on arm64 and are
-# installable — with every dependency declared — on the Raspberry Pi OS
-# base (arm64 debian:trixie container), and the installed binaries run
-# (including starting the movie from the packaged SWF + fixtures).
+# Acceptance for chumby-pi: the deb builds on arm64 with zero .swf
+# inputs, installs — with every dependency declared — on the Raspberry
+# Pi OS base (arm64 debian:trixie container), and the launcher behaves:
+# refuses helpfully without controlpanel.swf, starts the movie from an
+# owner-copied one.
 #
-# On a pull request the job builds the player and stops there: everything
-# past that point needs controlpanel.swf, which the data deb embeds. The
-# full deb build + install/run test therefore runs on push to `main` (i.e.
-# after the squash-merge) and on manual dispatch.
-#
-# controlpanel.swf is copyrighted chumby firmware, fetched from a
-# private Nextcloud share via RCLONE_CONFIG_RSHARE_* Actions secrets.
-# It ends up inside chumby-player-data_*.deb, which therefore must
-# NEVER be uploaded as an artifact or release — only the SWF-free
-# chumby-player deb is uploaded.
+# controlpanel.swf is copyrighted chumby firmware and never enters any
+# package or artifact. The movie-start part of the install test needs
+# it, so it is skipped by default: only on push to main (and manual
+# dispatch) is the SWF fetched from a private Nextcloud share
+# (RCLONE_CONFIG_RSHARE_* Actions secrets) and mounted into the test
+# container read-only.
 
 on:
   push:
@@ -75,20 +72,18 @@ jobs:
           rclone copy rshare:testdata/controlpanel.swf ruffle/swf-assets/
           test -f ruffle/swf-assets/controlpanel.swf
 
-      - name: Build the debs
-        if: github.event_name != 'pull_request'
+      - name: Build the deb (no .swf involved)
         run: pkg/build-debs.sh
 
-      - name: Install and run the debs in an arm64 trixie container
-        if: github.event_name != 'pull_request'
+      - name: Install and run the deb in an arm64 trixie container
         run: |
           docker run --rm \
             -v "$PWD/pkg/out:/debs:ro" \
+            -v "$PWD/ruffle/swf-assets:/swf:ro" \
             -v "$PWD/.github/scripts/deb-install-test.sh:/deb-install-test.sh:ro" \
             debian:trixie /bin/sh /deb-install-test.sh
 
-      - name: Upload chumby-player deb (the data deb stays in CI)
-        if: github.event_name != 'pull_request'
+      - name: Upload chumby-player deb
         uses: actions/upload-artifact@v4
         with:
           name: chumby-player-deb

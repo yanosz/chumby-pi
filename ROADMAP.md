@@ -95,9 +95,11 @@ These still bind. Changing one is a decision, not drift.
   read-only or not at all.
 - **Screens are opt-in.** Before implementing one, ask whether it is in
   scope. The scope table is `claude-docs/requirements.md` §1 FR5.
-- **Copyrighted material never enters git or a public artifact** —
+- **Copyrighted material never enters git or any artifact** —
   `controlpanel.swf`, widget SWFs, thumbnails, alarm tones, the decompile.
-  The `chumby-player-data` deb must never be published.
+  Since 0.8.0 (2026-07-13) there is no private deb at all: the former
+  `chumby-player-data` was retired and owners copy those files from their
+  chumby (or its backup) into `/var/lib/chumby`.
 
 ## Done
 

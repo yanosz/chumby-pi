@@ -116,11 +116,14 @@ upgrade — that is accepted, not desired.
 
 `controlpanel.swf`, the widget SWFs, the widget thumbnails and the chumby
 alarm tones are chumby firmware. They are gitignored, they are never
-committed, never cached in CI, never attached to a release. The
-`chumby-player-data` package contains them and is therefore **private-use
-only** — it must never be published in an apt repository or a GitHub
-release. Users obtain the SWF themselves; the documentation says so without
-embedding a link.
+committed, never cached in CI, never attached to a release — and since
+0.8.0 (2026-07-13) they never enter *any* package: the former
+`chumby-player-data` deb was retired, so there is no private artifact left
+to guard. Owners copy the files from their own chumby or its backup into
+`/var/lib/chumby` (the launcher prints the exact paths); CI fetches the
+SWF from the private share only to *run* the movie test, never to package
+it. The documentation says where the files come from without embedding a
+link.
 
 The GPL and LGPL texts shipped in the virtual rootfs are freely
 distributable and *are* committed.

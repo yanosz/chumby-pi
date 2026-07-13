@@ -242,6 +242,26 @@ help checked against the chumby backup). Needs the fork gitlink bumped
 past the fork's housekeeping merge (generator + sidecars deleted there);
 nothing executed on the device yet.
 
+Version **0.8.0** (defined 2026-07-13; not yet built or deployed) —
+housekeeping task 2, the SWF-free distributable. `chumby-player-data` is
+**retired**: the git-clean fixtures tree ships in `chumby-player` (staged
+with a `git ls-files -o` prune so no gitignored binary can leak), the
+fork's base channel is empty, and every copyrighted file is owner-copied
+into `/var/lib/chumby` — `controlpanel.swf` (launcher refuses to start
+without it, printing the copy instructions; `CHUMBY_SWF` and the old
+data-deb `/usr/share` path still win for existing installs), `widgets/`,
+`alarmtones/` (fixture path becomes a symlink into the state dir unless a
+data-deb-seeded tree still has tones), `intro.swf`. CI now builds and
+install-tests the deb on every PR with zero SWF involvement, asserts the
+no-SWF refusal and greps the deb for leaked `.swf`; the movie-start test
+is skipped by default and runs only where the SWF is fetched (main /
+dispatch), driving the real launcher under Xvfb. Desktop end-to-end
+verified: staged deb tree + files copied from the chumby backup
+(`/usr/widgets/controlpanel.swf`, `builtinclock.swf`,
+`/usr/chumby/alarmtones/*.mp3`) → panel boots offline, backup clock
+merges and plays. On Jan's existing Pi nothing needs copying: the
+installed data deb keeps serving all four paths until removed.
+
 Installed version: **0.5.0** (deployed 2026-07-12 via `pkg/deploy-pi.sh`,
 player at fork branch `intro-widget` — boot-time intro in the launcher,
 see below). Earlier: 0.4.0 (2026-07-11, fork `config/player-toml`

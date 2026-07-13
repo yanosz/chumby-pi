@@ -4,27 +4,39 @@
 # Normally exec'd by cage from chumby-player.service; also works
 # standalone inside any Wayland session for debugging.
 #
-# Owner widgets: drop a .swf (and optional same-stem .jpg/.png
-# thumbnail) into /var/lib/chumby/widgets, then run chumby-local-widgets
-# and restart — it joins the channel next to the shipped widgets.
+# The copyrighted chumby firmware files are never packaged; the owner
+# copies them from a chumby or its backup into /var/lib/chumby:
+#   controlpanel.swf  from /usr/widgets/controlpanel.swf     required
+#   widgets/*.swf     from /usr/widgets/ (+ .jpg previews),  optional —
+#                     then run chumby-local-widgets
+#   alarmtones/*.mp3  from /usr/chumby/alarmtones/           optional
+#                     (stock filenames — the panel hardcodes them)
+#   intro.swf         from /usr/widgets/intro.swf            optional
 #
-# Overrides (set in /etc/default/chumby-player for the service):
+# Overrides (set in /etc/default/chumby-player for the service; the
+# last two exist so a dev box can drive this script against a staged
+# tree and its own player build):
 #   CHUMBY_STATE         state dir      (default /var/lib/chumby)
+#   CHUMBY_SWF           control panel SWF (default: see above)
 #   CHUMBY_CTL           control FIFO   (default /tmp/chumby-ctl)
 #   CHUMBY_AUDIO_DEVICE  mpv audio device (default: PipeWire default sink)
 #   RUST_LOG             log filter     (default warn; use
 #                        warn,chumby_host=info,avm_trace=info to debug)
+#   CHUMBY_SHARE         installed data (default /usr/share/chumby-player)
+#   CHUMBY_RUFFLE        player binary  (default
+#                        /usr/lib/chumby-player/ruffle_desktop)
 
 set -eu
 
-SHARE=/usr/share/chumby-player
+SHARE="${CHUMBY_SHARE:-/usr/share/chumby-player}"
 STATE="${CHUMBY_STATE:-/var/lib/chumby}"
 CTL="${CHUMBY_CTL:-/tmp/chumby-ctl}"
+RUFFLE="${CHUMBY_RUFFLE:-/usr/lib/chumby-player/ruffle_desktop}"
 
 # First run: seed the writable fixture tree. The panel writes into
 # fixtures/rootfs (alarms, streams, volume — all /psp settings), so it
 # cannot run from /usr/share. Remove "$STATE/fixtures" to re-seed after
-# a chumby-player-data upgrade.
+# a chumby-player upgrade (this discards those panel-made settings).
 if [ ! -d "$STATE/fixtures" ]; then
     mkdir -p "$STATE"
     cp -a "$SHARE/fixtures" "$STATE/fixtures.seed"
@@ -41,6 +53,16 @@ if [ ! -L "$USB_LINK" ]; then
     rm -rf "$USB_LINK"
     mkdir -p "${USB_LINK%/*}"
     ln -s /media/chumby-usb "$USB_LINK"
+fi
+
+# Alarm tones are owner-supplied. Point the fixture path at the owner
+# folder — unless a tree seeded by the retired data deb already carries
+# real tones, which keeps working until its owner deletes them.
+TONES="$STATE/fixtures/rootfs/usr/chumby/alarmtones"
+if [ ! -L "$TONES" ] && ! ls "$TONES"/*.mp3 >/dev/null 2>&1; then
+    rm -rf "$TONES"
+    mkdir -p "${TONES%/*}" "$STATE/alarmtones"
+    ln -s "$STATE/alarmtones" "$TONES"
 fi
 
 # Owner config (volume cap, chumby.com access — fork FR14/FR15). The
@@ -63,6 +85,27 @@ export RUST_LOG="${RUST_LOG:-warn}"
 # claude-docs/requirements.md NFR4.
 export LP_NUM_THREADS="${LP_NUM_THREADS:-1}"
 
+# controlpanel.swf: owner copy first; the /usr/share path still serves
+# boxes that installed the retired data deb.
+SWF="${CHUMBY_SWF:-}"
+if [ -z "$SWF" ]; then
+    for c in "$STATE/controlpanel.swf" "$SHARE/swf/controlpanel.swf"; do
+        if [ -f "$c" ]; then SWF="$c"; break; fi
+    done
+fi
+if [ -z "$SWF" ] || [ ! -f "$SWF" ]; then
+    cat >&2 <<EOF
+controlpanel.swf not found. It is copyrighted chumby firmware and not
+distributed with this package. Copy it from your chumby or its backup
+(on the device: /usr/widgets/controlpanel.swf) to:
+    $STATE/controlpanel.swf
+Optional, same sources: widget SWFs into $STATE/widgets (then run
+chumby-local-widgets), /usr/chumby/alarmtones/*.mp3 into
+$STATE/alarmtones, /usr/widgets/intro.swf to $STATE/intro.swf.
+EOF
+    exit 1
+fi
+
 # Boot-time intro, as rcS's start_intro: the tour plays before the panel,
 # every boot until its "never show again" button writes /psp/disable_intro
 # (the enable/disable backticks are real in the player). It always quits
@@ -71,9 +114,12 @@ export LP_NUM_THREADS="${LP_NUM_THREADS:-1}"
 # the panel from starting. start_intro's /mnt/usb/intro.swf override is
 # deliberately not reproduced: a factory/debug hook, and auto-running a
 # SWF off whatever stick is inserted is not a behavior to keep.
-INTRO="$STATE/fixtures/rootfs/usr/widgets/intro.swf"
+# Owner copy at $STATE/intro.swf; the fixtures path still serves trees
+# seeded by the retired data deb.
+INTRO="$STATE/intro.swf"
+[ -f "$INTRO" ] || INTRO="$STATE/fixtures/rootfs/usr/widgets/intro.swf"
 if [ -f "$INTRO" ] && [ ! -e "$STATE/fixtures/rootfs/psp/disable_intro" ]; then
-    /usr/lib/chumby-player/ruffle_desktop \
+    "$RUFFLE" \
         --load-behavior blocking \
         --filesystem-access-mode allow \
         --chumby-fixtures "$STATE/fixtures" \
@@ -81,11 +127,11 @@ if [ -f "$INTRO" ] && [ ! -e "$STATE/fixtures/rootfs/psp/disable_intro" ]; then
         "$INTRO" || true
 fi
 
-exec /usr/lib/chumby-player/ruffle_desktop \
+exec "$RUFFLE" \
     --load-behavior blocking \
     --filesystem-access-mode allow \
     --chumby-fixtures "$STATE/fixtures" \
     --chumby-control "$CTL" \
     --fullscreen \
     -PlocalCache=1 \
-    "$SHARE/swf/controlpanel.swf"
+    "$SWF"
