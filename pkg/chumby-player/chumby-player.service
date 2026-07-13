@@ -33,6 +33,9 @@ Environment=WLR_BACKENDS=drm,libinput
 Environment=WLR_DRM_DEVICES=/dev/dri/by-path/platform-3f204000.spi-cs-0-card
 Environment=WLR_RENDERER=pixman
 EnvironmentFile=-/etc/default/chumby-player
+# Fails with the copy-these-files instructions in `systemctl status`
+# even when cage cannot start at all (no DRM device, wrong overlay).
+ExecStartPre=/usr/bin/chumby-player-run --check
 ExecStart=/usr/bin/cage -- /usr/bin/chumby-player-run
 Restart=on-failure
 RestartSec=3

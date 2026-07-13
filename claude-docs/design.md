@@ -204,7 +204,18 @@ launching the player fullscreen. The decisions inside it:
 - **`Restart=on-failure`**: a clean exit (the panel quit) does not respawn; a
   crash does.
 - **`EnvironmentFile=-/etc/default/chumby-player`** is the override point for
-  every one of the above.
+  every one of the above; since 0.8.1 the deb ships it as an all-comments
+  conffile documenting `WLR_DRM_DEVICES` per Pi model (the SPI0 SoC address
+  in the by-path name is model-specific), `WLR_RENDERER` and
+  `CHUMBY_AUDIO_DEVICE`.
+- **`ExecStartPre=chumby-player-run --check`** (0.8.1): the launcher's
+  missing/unreadable-`controlpanel.swf` refusal, re-run *outside* cage. The
+  first fresh-card install showed why: the launcher runs inside cage, so
+  with no DRM device its copy-instructions never printed, and a sudo-copied
+  root-only SWF passed the old existence check into a blank white screen
+  ("Could not fetch: Permission denied"). The check tests readability and
+  names the exact chown/chmod, and failing before cage puts it in
+  `systemctl status` regardless of display state.
 - Packaged default `RUST_LOG=warn`. Per-call host logging is the right
   default for a debug session and the wrong one for an appliance journal.
 
@@ -213,7 +224,9 @@ launching the player fullscreen. The decisions inside it:
 The TFT is an ILI9486 480×320 SPI clone with XPT2046 resistive touch. The
 stock `piscreen` overlay binds it to the **fbtft** staging driver, which
 gives `/dev/fb0` and nothing else — and fbdev is invisible to KMS/Wayland,
-so cage cannot output to it.
+so cage cannot output to it. (The vendor wiki's `waveshare35b-v2` overlay
+is fbtft-only too — following it yields cage's `Found 0 GPUs`, the 2026-07-13
+fresh-install finding.)
 
 The kernel already ships the mainline DRM tiny driver, and the stock overlay
 has a `drm` parameter that switches to it. So the whole problem is one
