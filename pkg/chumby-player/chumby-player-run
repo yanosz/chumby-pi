@@ -50,13 +50,10 @@ ln -sf /etc/chumby-player/player.toml "$STATE/fixtures/player.toml"
 
 [ -p "$CTL" ] || mkfifo -m 600 "$CTL"
 
-# The shipped channel is a static fixture; owner widgets ride the panel's
-# native local-profile merge. Regenerate that overlay from the widgets
-# folder on every start — it lands in the virtual /tmp (volatile by that
-# tree's own semantics, so this is not persistent state), and an empty
-# folder removes it, which keeps a hand-written /psp/profile.xml usable.
+# Owner widgets ride the panel's native local-profile merge; the
+# user-run chumby-local-widgets helper writes /psp/profile.xml from this
+# folder. Here only make sure the folder exists to be found.
 mkdir -p "$STATE/widgets"
-chumby-local-widgets "$STATE/widgets" "$STATE/fixtures/rootfs/tmp/profile.xml"
 
 export RUST_LOG="${RUST_LOG:-warn}"
 
