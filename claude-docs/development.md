@@ -269,13 +269,9 @@ public half committed (`pkg/apt/chumby-archive.gpg`), private half handed
 to Jan for the `CHUMBY_APT_GPG_KEY` secret — never in git. Dress-rehearsed
 locally: `apt-ftparchive` + signing, `gpgv` good on both signatures, and a
 real `apt-get update` + `apt-cache policy` against the `file://` repo
-(arch forced to arm64) offered 0.8.0. Jan-side setup: set the secret
-(done 2026-07-13). First deploy attempt failed — the actions-based Pages
-deploy needs a pre-created Pages site and neither the workflow token nor
-the dev box's gh login (jluehr-4711, no admin on yanosz/chumby-pi) could
-create one — so the job now force-pushes a `gh-pages` branch instead,
-which auto-enables branch-served Pages on a public repo (fixed directly
-on main, Jan's call).
+(arch forced to arm64) offered 0.8.0. Jan-side setup: set the secret,
+ensure Pages source is "GitHub Actions" (the job tries to enable it
+itself).
 
 Installed version: **0.5.0** (deployed 2026-07-12 via `pkg/deploy-pi.sh`,
 player at fork branch `intro-widget` — boot-time intro in the launcher,

@@ -94,17 +94,17 @@ jobs:
     # Signed flat apt repo on GitHub Pages (design.md §5). Only the
     # SWF-free chumby-player deb enters it — the deb is audited for
     # leaked .swf by the install test this job depends on.
-    # Deployed by force-pushing the gh-pages branch: creating that branch
-    # auto-enables branch-served Pages on a public repo, whereas the
-    # actions-based deploy needs a Pages site pre-created by an admin
-    # (the default token may not — "Resource not accessible by
-    # integration", 2026-07-13).
     name: Publish the apt repo to GitHub Pages
     needs: debs
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     permissions:
-      contents: write
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -132,19 +132,15 @@ jobs:
             release . > Release
           gpg --batch --yes --clearsign -o InRelease Release
           gpg --batch --yes -abs -o Release.gpg Release
-          touch .nojekyll
           ls -l
 
-      - name: Push to the gh-pages branch
-        run: |
-          cd repo
-          git init -q -b gh-pages
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -q -m "apt repo from ${GITHUB_SHA}"
-          git push -q --force \
-            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
-            gh-pages
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: repo
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
