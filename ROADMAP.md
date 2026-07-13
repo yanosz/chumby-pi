@@ -37,12 +37,15 @@ Roughly in order. The player-side detail lives in the fork's
    on-device pass. (Restored 2026-07-11 — the roadmap sync `fa8087f` had
    silently dropped it.)
 
-3. **Brightness & night mode (E2, B4).** Blocked on hardware: the current
-   TFT's backlight rail is tied to 3.3 V and cannot dim. Needs a panel that
-   can, then map the panel's `/proc/sys/sense1/brightness` writes (0–65535)
-   and `_setLCDMute` (5,20) onto a real backlight. Must drop the
-   `settings-brightness` ui-policy rule. Candidates and driver risk:
-   `claude-docs/design.md` §8.
+3. **Brightness & night mode (E2, B4).** *Software done 2026-07-13, hardware
+   open.* The fork maps the panel's `/proc/sys/sense1/brightness` writes
+   onto any kernel backlight (sliders) and offers a `brightness_ctl`
+   executable mode driving `_setLCDMute`'s discrete 0/1/2 (fork FR16); the
+   `settings-brightness` rule lifts by itself when a backend exists, and
+   the deb ships the backlight udev rule. Blocked on hardware: the current
+   TFT's backlight rail is tied to 3.3 V and cannot dim. Remaining: buy a
+   dimmable panel (candidates and driver risk: `claude-docs/design.md` §8),
+   then the on-device pass.
 
 4. **Intro widget.** *Closed 2026-07-12, pending the on-device pass.*
    VM-level interception, as intended: the fork replaces `playIntro` (and
