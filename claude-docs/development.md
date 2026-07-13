@@ -343,7 +343,20 @@ left alone) — which also makes an owner-copied intro reachable by the
 the owner path). Verified on the device: symlink dangling as intended,
 player active. The dimmed-button visual check is Jan's.
 
-Installed version: **0.8.3** (deployed 2026-07-13, above). Earlier:
+Version **0.8.4** (defined 2026-07-13 late; **not deployed by us** — the
+Pi's host key changed a second time, i.e. Jan reflashed for his next
+vanilla-card test, and that test must install from the apt repo
+untouched): zero display config. The unit no longer hardcodes
+`WLR_DRM_DEVICES`; `chumby-player-run --kiosk` (the new ExecStart)
+exports the first `/dev/dri/by-path/platform-*.spi-cs-*-card` match and
+execs cage — any Pi model, no SPI panel → cage picks HDMI, an
+`/etc/default/chumby-player` value wins over detection. Verified with a
+stubbed `/dev/dri/by-path` + fake cage (Pi-4-style name detected; HDMI
+fallback; override untouched); the on-device proof is the journal's
+"SPI TFT detected" line on Jan's fresh install.
+
+Installed version: **0.8.3** (deployed 2026-07-13, above; 0.8.4 pending
+Jan's apt install). Earlier:
 0.8.2 (2026-07-13, above); 
 0.8.1 (2026-07-13, above); 
 0.5.0 (2026-07-12 via `pkg/deploy-pi.sh`,

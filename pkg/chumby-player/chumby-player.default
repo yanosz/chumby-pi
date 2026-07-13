@@ -5,9 +5,10 @@
 # — the vendor fbtft overlays like waveshare35b-v2 create no DRM device
 # and the kiosk cannot start on them).
 
-# The DRM device cage drives, by stable by-path name (the cardN numbers
-# shuffle between boots). 3f204000.spi is SPI0 on a Pi 3; on a Pi 4 it
-# is fe204000.spi. List what your board has: ls -l /dev/dri/by-path
+# The DRM device cage drives. Normally auto-detected: the launcher picks
+# the first SPI panel (/dev/dri/by-path/platform-*.spi-cs-*-card, any Pi
+# model) and otherwise lets cage choose (HDMI). Set this only to pin a
+# specific device: ls -l /dev/dri/by-path
 #WLR_DRM_DEVICES=/dev/dri/by-path/platform-3f204000.spi-cs-0-card
 
 # Software rendering — right for an SPI TFT; a GPU-driven display

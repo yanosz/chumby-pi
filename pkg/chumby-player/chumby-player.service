@@ -4,11 +4,11 @@
 # XDG_RUNTIME_DIR), which is what lets cage open the DRM device as a
 # plain user and lets audio reach pi's PipeWire without any bridging.
 #
-# WLR_DRM_DEVICES: the ili9486 TFT via its stable by-path name — the
-# cardN numbering is NOT stable (TFT was card1 on 2026-07-06, card0
-# after the next reboot). 3f204000.spi is the BCM2837 SPI0 controller;
-# a different Pi model would change that address. Override point:
-# /etc/default/chumby-player.
+# The display is not named here: the launcher's --kiosk mode finds the
+# SPI TFT by its stable by-path name on any Pi model and exports
+# WLR_DRM_DEVICES before exec'ing cage (cardN numbering is NOT stable —
+# the TFT was card1 on 2026-07-06, card0 after the next reboot).
+# Override point: /etc/default/chumby-player.
 
 [Unit]
 Description=Chumby control panel kiosk (cage + ruffle)
@@ -30,13 +30,12 @@ UtmpIdentifier=tty1
 UtmpMode=user
 StateDirectory=chumby
 Environment=WLR_BACKENDS=drm,libinput
-Environment=WLR_DRM_DEVICES=/dev/dri/by-path/platform-3f204000.spi-cs-0-card
 Environment=WLR_RENDERER=pixman
 EnvironmentFile=-/etc/default/chumby-player
 # Fails with the copy-these-files instructions in `systemctl status`
 # even when cage cannot start at all (no DRM device, wrong overlay).
 ExecStartPre=/usr/bin/chumby-player-run --check
-ExecStart=/usr/bin/cage -- /usr/bin/chumby-player-run
+ExecStart=/usr/bin/chumby-player-run --kiosk
 Restart=on-failure
 RestartSec=3
 

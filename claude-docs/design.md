@@ -206,10 +206,16 @@ launching the player fullscreen. The decisions inside it:
   PipeWire runtime-dir bridge. With a logind seat, cage opens the display as
   plain `pi` and audio lands in pi's own PipeWire. No root, no bridge.
   `Conflicts=getty@tty1.service` frees the VT.
-- **`WLR_BACKENDS=drm,libinput`, `WLR_RENDERER=pixman`,
-  `WLR_DRM_DEVICES=/dev/dri/by-path/…`** — the TFT is a tiny DRM card with no
-  GPU, so pixman rather than a GL renderer, and a `by-path` name because card
-  numbering drifts across boots (NFR3).
+- **`WLR_BACKENDS=drm,libinput`, `WLR_RENDERER=pixman`** — the TFT is a tiny
+  DRM card with no GPU, so pixman rather than a GL renderer.
+- **The display is auto-detected, not configured** (0.8.4, NFR3): the unit
+  starts `chumby-player-run --kiosk`, which exports `WLR_DRM_DEVICES` as the
+  first `/dev/dri/by-path/platform-*.spi-cs-*-card` match — a by-path name
+  because card numbering drifts across boots, a glob because the SoC address
+  in it is Pi-model-specific, pinned at all so the vc4/HDMI card never wins
+  while a panel is fitted — then execs cage. No SPI panel → unset, cage
+  drives whatever exists (HDMI kiosk works out of the box). A
+  `WLR_DRM_DEVICES` from `/etc/default/chumby-player` wins over detection.
 - **`StateDirectory=chumby`** gives `/var/lib/chumby` owned by `pi`. The
   launcher seeds `fixtures/` there from `/usr/share` on first run, because
   the panel writes into the rootfs (§3). The consequence is that after a

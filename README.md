@@ -73,11 +73,9 @@ clones. Two things matter:
   `drm` selects the mainline driver; `swapxy` and `invy` align the
   touchscreen axes with the landscape screen.
 
-The display then shows up as
-`/dev/dri/by-path/platform-3f204000.spi-cs-0-card`, which is what the
-kiosk service expects on a Pi 3. On other Pi models the SPI controller
-address differs: check `ls /dev/dri/by-path` and set `WLR_DRM_DEVICES`
-in `/etc/default/chumby-player`.
+That's all: the kiosk finds the SPI panel by itself, on any Pi model
+(and falls back to HDMI if there is none). To pin a specific display,
+set `WLR_DRM_DEVICES` in `/etc/default/chumby-player`.
 
 ## What's in this repo
 
