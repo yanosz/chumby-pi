@@ -53,6 +53,8 @@ chumby or its backup (on the device: /usr/widgets/controlpanel.swf) to:
 Optional, same sources: widget SWFs into $STATE/widgets (then run
 chumby-local-widgets), /usr/chumby/alarmtones/*.mp3 into
 $STATE/alarmtones, /usr/widgets/intro.swf to $STATE/intro.swf.
+No backup at hand? chumby-download-firmware fetches the control panel
+and a clock widget from chumby.com (intro and tones stay backup-only).
 EOF
         return 1
     fi

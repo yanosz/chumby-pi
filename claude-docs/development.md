@@ -319,7 +319,19 @@ ExecStartPre exits 1 and the journal carries the hint; chmod 644 +
 restart → panel up. (CI's install test still matches — it greps for
 `controlpanel.swf not found`.)
 
-Installed version: **0.8.1** (deployed 2026-07-13, above). Earlier:
+Version **0.8.2** (built and deployed 2026-07-13, player still
+`8772232a0`) adds `chumby-download-firmware` (design §5, NFR1
+amendment). Run on the device as `pi`: control panel skipped (already
+present — and md5-identical to what the script would fetch), the
+Unsubscribed Clock SWF + thumbnail downloaded into
+`/var/lib/chumby/widgets` (0644, owner `pi`), `chumby-local-widgets`
+generated `/psp/profile.xml` (instance 1000), player restarted clean.
+This also populated the previously empty widget channel — the suspected
+cause of the post-boot black screen (panel slides away to play an empty
+channel; a `chumby-ctl bend` summons it back).
+
+Installed version: **0.8.2** (deployed 2026-07-13, above). Earlier:
+0.8.1 (2026-07-13, above); 
 0.5.0 (2026-07-12 via `pkg/deploy-pi.sh`,
 player at fork branch `intro-widget` — boot-time intro in the launcher,
 see below); 0.4.0 (2026-07-11, fork `config/player-toml`

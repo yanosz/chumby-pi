@@ -163,6 +163,21 @@ data-deb-seeded tree still carries real tones), and `intro.swf`. The
 launcher refuses to start without the SWF and prints exactly this list
 (NFR1).
 
+**`chumby-download-firmware`** (0.8.2, Jan's decision 2026-07-13): the
+no-backup path. A user-run, ask-first python3 helper speaking the
+firmware's own `download_cp` protocol — `GET /xml/controlpanel?…` returns
+the newest build's URL + md5 (today: falconwing 2.8.87b3, verified
+byte-identical to what runs on the Pi) — and, for an empty widgets
+folder, the stock "Unsubscribed Clock" via the download token embedded
+in its chumby.com guide page (`/xml/moviefile?id=<token>`; thumbnail at
+`/xml/<guid>/thumbnails`), then offers to run `chumby-local-widgets`.
+The device id in the query is deliberately zeroed — no identity leaves
+the box (NFR6 untouched), and installs stay non-interactive: the script
+is only ever run by hand (the refusal message and README point to it).
+Files are written 0644 (the 0.8.1 lesson). intro.swf/alarm tones are
+firmware-image-only — the revived server 404s the old update endpoints —
+so they stay backup-only, and the script says so.
+
 **Distribution** (2026-07-13): a **signed flat apt repo on GitHub Pages**
 (`https://yanosz.github.io/chumby-pi/apt`, sources line
 `deb [signed-by=…] …/apt ./` — under `/apt`, not the site root, so the

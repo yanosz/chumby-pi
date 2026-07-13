@@ -23,8 +23,11 @@ around between reboots.
   and sound devices work too — see [docs/hardware.md](docs/hardware.md).
 - The **Chumby firmware files** — `controlpanel.swf`, the widgets, and
   the alarm tones. These are copyrighted and **not included here**: pull
-  them from your own Chumby's backup, or ask the maintainer. Which file
-  goes where is in [docs/setup.md](docs/setup.md).
+  them from your own Chumby's backup, or let `chumby-download-firmware`
+  (part of the package) fetch the control panel and a clock widget from
+  the still-running chumby.com — it asks first and shows what it
+  downloads. The intro and alarm tones exist only in firmware backups.
+  Which file goes where is in [docs/setup.md](docs/setup.md).
 
 ## Try it on your computer first
 
