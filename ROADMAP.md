@@ -70,22 +70,20 @@ Roughly in order. The player-side detail lives in the fork's
    **out of scope** (Jan, 2026-07-11) — `main-send`/`main-rate` stay
    disabled and those endpoints are never passed through. Item 5 is closed.
 
-6. **Fork git housekeeping — the last 2026-07-13 housekeeping task, Jan's
-   next session.** Goal: make merging upstream as easy as reasonably
-   possible, then test how well an upstream merge actually goes. Plan
-   agreed 2026-07-13: keep the current history as branch `chumby-old`;
-   rebuild the fork as one or two commits on a **pinned** current
-   upstream master — the two-commit variant puts pure additions
-   (`core/src/chumby/`, fixtures, docs, harness scripts) first and the
-   small edits to upstream files (the fork design §8 patch surface)
-   second, so rebase conflicts concentrate in the second commit.
-   Regenerate `Cargo.lock`, never merge it. Move `chumby-ctl` to
-   chumby-pi/pkg — the only non-player piece left in the fork. An
-   upstream move is a real merge ("the movie runs", not "it compiles"):
-   full desktop verify, then the on-device pass, which also still owes
-   items 1, 2 and 4 above and the undeployed 0.7.0/0.8.0 debs. The
-   branch-rename chain reaction (GitHub default branch, CI, the
-   chumby-pi gitlink) is accepted.
+6. **Fork git housekeeping.** *Rebuild done 2026-07-14; two steps remain.*
+   The fork is branch `chumby-rebuild`: **two commits on pinned upstream
+   master `8328af42d`** (2026-07-14) — pure additions first, the design §8
+   patch surface second, so rebase conflicts concentrate in the second
+   commit. The old history (18 commits on `7f62f5dbf`) is parked as
+   `chumby-old`; `Cargo.lock` regenerated (upstream's + the three core
+   deps); `chumby-ctl` moved to chumby-pi `pkg/chumby-player/`. The
+   upstream move itself went cleanly — every patch applied without
+   conflict, hooks alive in all §8 files, 40/40 chumby unit tests,
+   movie-start check green, screens walked on the desktop (the one
+   casualty was `verify-screens.sh` missing `windowraise`, fixed).
+   Remaining: **Jan force-pushes** `chumby-rebuild` onto `chumby`
+   (his call, explicitly not the agent's), and the on-device pass with
+   the next deploy (rides with items 2 and 4).
 
 7. **End-user docs pass.** `docs/setup.md` rewritten 2026-07-14 around the
    real install story (apt repo, display overlay vs HDMI/DSI,

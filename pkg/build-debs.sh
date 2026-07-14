@@ -46,7 +46,7 @@ install -m 644 "$REPO/ruffle/fixtures/player.toml.example" \
 # commented out; the unit's built-in defaults suit the reference Pi 3.
 install -m 644 chumby-player/chumby-player.default "$P/etc/default/chumby-player"
 install -m 755 "$BIN" "$P/usr/lib/chumby-player/ruffle_desktop"
-install -m 755 "$REPO/ruffle/chumby-ctl" "$P/usr/bin/chumby-ctl"
+install -m 755 chumby-player/chumby-ctl "$P/usr/bin/chumby-ctl"
 install -m 755 chumby-player/chumby-local-widgets "$P/usr/bin/chumby-local-widgets"
 install -m 755 chumby-player/chumby-download-firmware "$P/usr/bin/chumby-download-firmware"
 install -m 755 chumby-player/chumby-player-run "$P/usr/bin/chumby-player-run"

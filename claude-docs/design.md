@@ -11,7 +11,7 @@ Building, deploying and the record of what was done to the device:
 ```
 ruffle/                  submodule → chumby-ruffle. The player AND its
                          environment: fixtures/, swf-assets/, the desktop
-                         launcher, chumby-ctl, chumby-widget-channel.
+                         launcher and the run/verify harness.
 pkg/                     Debian packaging + build-debs.sh
 docs/                    end-user documentation
 claude-docs/             this engineering record
