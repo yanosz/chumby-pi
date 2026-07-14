@@ -25,20 +25,21 @@ are in `CLAUDE.md`, in each repo. They are not repeated here.
 Roughly in order. The player-side detail lives in the fork's
 `claude-docs/requirements.md` §3; the appliance-side in this repo's §3.
 
-1. **Widget channel: the deferred on-device pass.** Channel, preview picture
-   and disabled controls were verified on the desktop only. Deploy a
-   **freshly built** player — a stale binary has already faked this failure.
+1. ~~**Widget channel: the deferred on-device pass.**~~ **Done 2026-07-14**
+   (Jan closed it): the vanilla-card installs exercised it live — freshly
+   built apt player, downloaded clock widget playing on the TFT
+   (screenshot-verified), controls exercised during testing.
 
-2. **Backup alarm: the on-device loudness check.** The feature itself
-   shipped 2026-07-10 (see Done); what remains is confirming on the Pi that
+2. **Backup alarm: the on-device loudness check.** *Postponed until new
+   hardware arrives (Jan, 2026-07-14).* The feature itself shipped
+   2026-07-10 (see Done); what remains is confirming on the Pi that
    the Klaxon at mpv volume 100 through the 35 % hardware volume genuinely
    wakes someone. If not: escalate to sink/hw volume bumping (decision
-   recorded in the fork's requirements.md FR13). Rides along with item 1's
-   on-device pass. (Restored 2026-07-11 — the roadmap sync `fa8087f` had
-   silently dropped it.)
+   recorded in the fork's requirements.md FR13).
 
-3. **Brightness & night mode (E2, B4).** *Software done 2026-07-13, hardware
-   open.* The fork maps the panel's `/proc/sys/sense1/brightness` writes
+3. **Brightness & night mode (E2, B4).** *Software done 2026-07-13;
+   postponed until new hardware arrives (Jan, 2026-07-14).* The fork maps
+   the panel's `/proc/sys/sense1/brightness` writes
    onto any kernel backlight (sliders) and offers a `brightness_ctl`
    executable mode driving `_setLCDMute`'s discrete 0/1/2 (fork FR16); the
    `settings-brightness` rule lifts by itself when a backend exists, and
@@ -47,15 +48,12 @@ Roughly in order. The player-side detail lives in the fork's
    dimmable panel (candidates and driver risk: `claude-docs/design.md` §8),
    then the on-device pass.
 
-4. **Intro widget.** *Closed 2026-07-12, pending the on-device pass.*
-   VM-level interception, as intended: the fork replaces `playIntro` (and
-   its done-poll) on the prototype, so the INTRO button plays the tour on
-   the `localCache` path; `info-intro` dropped; the `enable_intro` /
-   `disable_intro` backticks are real. The launcher now also runs the tour
-   before the panel, every boot until `/psp/disable_intro` — rcS
-   `start_intro` semantics (appliance 0.5.0). Standalone ending and
-   same-session replay desktop-verified; the on-device pass rides with
-   item 1.
+4. **Intro widget: the on-device tour pass.** *Feature closed 2026-07-12;
+   the remaining pass postponed until new hardware arrives (Jan,
+   2026-07-14).* Since 0.8.x the INTRO button is gated on an owner-copied
+   `intro.swf` (not downloadable — backup only), so the pass needs that
+   file on the device: tour on the TFT, flag buttons, next-boot gating,
+   in-panel INTRO.
 
 5. **Remote channels + registration.** *Registration and channel/widget
    download are done and verified live* (2026-07-11): DCID reverse-engineered
@@ -89,16 +87,14 @@ Roughly in order. The player-side detail lives in the fork's
    branch-rename chain reaction (GitHub default branch, CI, the
    chumby-pi gitlink) is accepted.
 
-7. **End-user docs pass.** Deferred from the 2026-07-13 housekeeping by
-   agreement: `docs/setup.md` still describes the retired data deb and
-   the build-it-yourself flow. Rewrite around the real install story —
-   apt repo (`https://yanosz.github.io/chumby-pi/apt`), owner-copied
-   firmware files per the launcher's message or `chumby-download-firmware`
-   (0.8.2), `chumby-local-widgets` — and keep NFR1's rule (as amended for
-   the downloader): say where the files come from, embed no link. Raw
-   material since the 07-13 evening session: the asciidoctor site skeleton
-   at the Pages root (`docs/index.adoc`, Jan writes the content) and the
-   README's display section.
+7. **End-user docs pass.** `docs/setup.md` rewritten 2026-07-14 around the
+   real install story (apt repo, display overlay vs HDMI/DSI,
+   `chumby-download-firmware`, backup copy table, `chumby-local-widgets`,
+   the two config files; NFR1 kept — no direct links to copyrighted
+   files). Remaining: the **asciidoctor site content** at the Pages root
+   (`docs/index.adoc`, Jan writes it — skeleton and the README display
+   section are the raw material), and a look at whether `docs/hardware.md`
+   still matches 0.8.x.
 
 ## Standing decisions
 
@@ -147,6 +143,7 @@ These still bind. Changing one is a decision, not drift.
 | 2026-07-11 | **Config file + music sources (items 3 & 4 of the 07-09 plan).** `player.toml` read once at start (fork FR14: volume cap as a scale, `access_chumby_com`, `enable_lyrion`; template ships as `/etc/chumby-player/player.toml`, a conffile the launcher links into the live fixtures). Music scope re-decided against live endpoints (fork FR15): SHOUTcast / blue octy radio / Sleep Sounds are *alive* on the revived chumby.com and opt-in via the switch — SHOUTcast browsed and played audibly on the desktop; iPod/NOAA/CBS hidden (NOAA+CBS confirmed dead on a real chumby); Squeezebox behind `enable_lyrion` (player side done, Lyrion unverified). Fork PR #19, appliance 0.4.0. |
 | 2026-07-11 | **Registration + remote channels (item 5).** DCID reverse-engineered on a real registered box (identity = crypto-processor GUID; DCID `skin` = branding only, no signature); register-the-Pi chosen over cloning. `access_chumby_com` + a stable identity (serial or `device_guid`) opens the panel's own register wizard and the account's real widget channel — authorize/registerchumby/chumbies/profiles/widgets pass through to the revived chumby.com (`update.chumby.com` never), CI/dev structurally excluded (NFR6). Widget SWFs download via a Rust reimplementation of the panel's `curl` cache. Verified end-to-end on the TFT: boot → wizard → tap ovals + claim on chumby.com → main; account widget downloaded, cached, rendered; CHANNEL/DELETE enabled. Fork branch `registration-phase2`, fork design §12. Social surface (add-widget/rating/send+mail) de-scoped — item 5 closed. |
 | 2026-07-11 | **USB / local music (C11), closed same day.** Real `_getDirectoryEntry` (5,320) in the player (fork `usb-music`), My Music Files browse/play + alarm-from-USB desktop-verified; appliance automount (udev + `chumby-usb-mount@`, read-only `/media/chumby-usb`, seed-time symlink) deployed as 0.3.0. Physical-stick pass complete: hotplug automount, audible playback on the TFT, yank-while-playing cleaned up honestly. `externalmusic.xml` stays faithful. |
+| 2026-07-14 | **Fresh-install hardening round 2, 0.8.4–0.8.6 + item 1 closed.** Display auto-detection (`--kiosk` glob, any Pi model; HDMI/DSI fallback) and live-state postinst guidance; helpers work before the first service start (`--seed`); exact copy-path table in the downloader; boot-to-panel fixed for the Lite image (`multi-user.target` — the unit had never started at boot); `merge_local_remote_widgets` (default 0) keeps local widgets out of curated chumby.com channels, live-verified both ways on the registered box. Full rm-rf → downloader → clock recovery verified remotely (screenshot). Item 1 (widget-channel on-device pass) closed by Jan on this evidence; `docs/setup.md` rewritten around the apt install story. |
 | 2026-07-13 | **Fresh-install session (evening), 0.8.1–0.8.3.** Jan's first vanilla-card install from the apt repo surfaced and fixed: the missing/unreadable-SWF refusal now runs as `ExecStartPre` outside cage (visible in `systemctl status` even with a broken display; readability checked, chown/chmod hint); `/etc/default/chumby-player` shipped (DRM device per Pi model, audio device); `chumby-download-firmware` — user-run ask-first downloader for the control panel (2.8.87b3, md5-verified) and the Unsubscribed Clock via chumby.com (NFR1 amended; intro/alarm tones are firmware-only, not downloadable); INTRO button gated on intro.swf presence (fork `only_without_intro`, PR #24) after it black-screened without the file; launcher links the owner intro into the rootfs so the in-panel INTRO works at all. Also: asciidoctor docs-site skeleton at the Pages root. All deployed + verified on the vanilla Pi (clock widget renders — item 1's channel machinery seen live on-device). |
 | 2026-07-13 | **Housekeeping (tasks 3 + 2 + apt repo), 0.8.0.** Channel machinery replaced by the panel-native `mergeLocalProfile` (empty static base fixture; `chumby-local-widgets` user helper writes `/psp/profile.xml` from `/var/lib/chumby/widgets`); `chumby-player-data` **retired** — the public deb ships the git-clean fixtures, owners copy `controlpanel.swf`/widgets/alarm tones/intro from their chumby backup into `/var/lib/chumby` (launcher refuses with instructions); signed flat **apt repo** on GitHub Pages under `/apt`, published by CI on every push to main (root kept free for a future site). All desktop-verified offline incl. an end-to-end fresh-install run from the real backup; on-device pass still owed (item 1). Task 1 of the housekeeping plan = open item 6. |
 | 2026-07-12 | **Intro widget (item 4).** Fork `intro-widget`: `playIntro` + done-poll replaced at VM level (INTRO button live on the localCache path), in-panel `fscommand("quit")` swallowed, real `enable_intro`/`disable_intro` backticks, real `_accelerometer` for the ball page. Standalone ending (both flag buttons, quit exits the process) and same-session replay desktop-verified. Appliance: launcher runs the tour pre-panel every boot until `/psp/disable_intro` (rcS `start_intro`; USB override deliberately dropped), 0.5.0. On-device pass outstanding (rides with item 1). |

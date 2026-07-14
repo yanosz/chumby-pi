@@ -2,7 +2,7 @@
 
 This walkthrough reproduces the reference device. If your display,
 sound card, or Pi model differs, read [hardware.md](hardware.md)
-alongside — every hardware-specific value below has an override point.
+alongside — every hardware-specific value has an override point.
 
 Reference hardware:
 
@@ -10,109 +10,89 @@ Reference hardware:
   verified floor — the panel runs software-rendered at about one core)
 - 3.5″ 480×320 SPI TFT with ILI9486 controller and XPT2046/ADS7846
   resistive touch (sold as "piscreen", Waveshare 3.5″ (B), and many
-  clones). It needs a mainline DRM overlay — see [hardware.md](hardware.md)
+  clones)
 - USB audio adapter (the Pi's headphone jack works too)
-- Raspberry Pi OS **arm64** Lite (Debian 13 "trixie" base), SSH access
+- Raspberry Pi OS **arm64 Lite** (Debian 13 "trixie" base), SSH access
 
-## 1. Get the sources
+No build environment is needed — everything installs from a package
+repository.
 
-```sh
-git clone --recursive https://github.com/yanosz/chumby-pi.git
-cd chumby-pi
-```
+## 1. Configure the display
 
-(`--recursive` pulls the `ruffle/` submodule — the actual player.)
+**HDMI and DSI displays need nothing** — skip to step 2.
 
-## 2. Get the SWF assets
-
-The copyrighted chumby firmware files are not in the repo. From your
-own chumby backup (or from the maintainer), place:
-
-| File(s) | Where | Needed for |
-|---------|-------|------------|
-| `controlpanel.swf` (2.8.87b3 verified) | `ruffle/swf-assets/controlpanel.swf` | everything |
-| widget SWFs referenced by the fixture channel (`unsubscribedclock.swf`, `builtinclock.swf`) | `ruffle/fixtures/widgets/` | the clock widget on the home screen |
-| alarm tones (`*.mp3`) | `ruffle/fixtures/rootfs/usr/chumby/alarmtones/` | alarm sounds (alarms themselves work without them) |
-
-(The player carries its own fixtures, so these all live in the `ruffle/`
-submodule.)
-
-All three locations are gitignored; nothing you drop there can end up
-in a commit.
-
-## 3. Cross-build the player (on a Debian/Ubuntu dev box)
-
-Building on the Pi itself is not practical (RAM); build on a PC and
-ship debs. One-time toolchain setup:
-
-```sh
-rustup target add aarch64-unknown-linux-gnu
-sudo dpkg --add-architecture arm64
-sudo apt-get update
-sudo apt-get install gcc-aarch64-linux-gnu \
-    libasound2-dev:arm64 libudev-dev:arm64 \
-    libssl-dev:arm64 libwayland-dev:arm64 libfontconfig-dev:arm64
-```
-
-The repo-root `.cargo/config.toml` already routes the aarch64 linker
-and pkg-config paths. Then:
-
-```sh
-cd ruffle
-cargo build --profile dist -p ruffle_desktop \
-    --target aarch64-unknown-linux-gnu
-cd ..
-```
-
-The chumby code is always built in this fork — no feature flag needed
-(before 2026-07 this required `--features chumby`). The `dist` profile
-(fat LTO) takes several minutes, dominated by the link step, but
-measurably lowers CPU on the Pi.
-
-## 4. Build the debs
-
-```sh
-pkg/build-debs.sh
-```
-
-Produces in `pkg/out/`:
-
-- **`chumby-player_*_arm64.deb`** — the player binary, launcher,
-  `chumby-ctl` helper, and the kiosk systemd unit.
-  Runtime dependencies: `cage`, `mpv`, `pipewire-alsa`.
-- **`chumby-player-data_*_all.deb`** — the fixtures tree plus your
-  `controlpanel.swf`. **This deb contains copyrighted material — for
-  your private use only, never publish it.**
-
-## 5. Configure the display (on the Pi)
-
-Add to `/boot/firmware/config.txt` (and comment out any old fbtft
-line for the same panel):
+An SPI TFT cannot be auto-detected, so it must be declared once. Append
+to `/boot/firmware/config.txt` and reboot:
 
 ```
+dtparam=spi=on
 dtoverlay=piscreen,speed=24000000,rotate=0,drm,swapxy=on,invy=on
 ```
 
-- `drm` selects the DRM tiny driver (required — the player renders
-  through a Wayland compositor, not the legacy framebuffer).
-- `rotate=0` is landscape in DRM terms (DRM's base orientation is
-  landscape; fbtft's `rotate=90` ≙ DRM `rotate=0`).
-- `swapxy=on,invy=on` is the touch calibration for this panel at this
-  rotation — verify and adjust per [hardware.md](hardware.md).
+- **Skip the display vendor's driver instructions.** Overlays like
+  `waveshare35b-v2` use the legacy fbtft framebuffer driver, which the
+  kiosk cannot use — it needs a DRM device, and the mainline kernel's
+  driver (the `drm` option above) provides one for this panel.
+- `rotate=0` is landscape in DRM terms; `swapxy=on,invy=on` aligns the
+  touch axes at this rotation ([hardware.md](hardware.md) if yours
+  differs).
 
-Reboot; you should see the kernel boot console on the TFT
-(`ili9486` DRM driver). The screen going black afterwards is normal —
-the kiosk owns it from here.
+After the reboot the kernel boot console appears on the TFT. The kiosk
+finds the panel by itself on any Pi model — there is nothing to
+configure on the software side.
 
-## 6. Install and run
+## 2. Install the package
+
+The signed apt repository is served from this project's GitHub Pages:
 
 ```sh
-# from the dev box
-scp pkg/out/*.deb pi@<pi>:
+curl -fsSL https://yanosz.github.io/chumby-pi/apt/chumby-archive.gpg \
+  | sudo tee /usr/share/keyrings/chumby-archive.gpg >/dev/null
+echo 'deb [signed-by=/usr/share/keyrings/chumby-archive.gpg] https://yanosz.github.io/chumby-pi/apt ./' \
+  | sudo tee /etc/apt/sources.list.d/chumby.list
+sudo apt update
+sudo apt install chumby-player
+```
 
-# on the Pi
-sudo apt install ./chumby-player_*_arm64.deb ./chumby-player-data_*_all.deb
-sudo systemctl start chumby-player     # installing enabled it for next boot
+The install transcript ends with next-step guidance derived from your
+machine's actual state — it tells you if a display overlay or the
+firmware files are still missing.
+
+## 3. Get the firmware files
+
+The package contains everything **except** the copyrighted chumby
+firmware files. Two ways to get them:
+
+**Download (no chumby needed):**
+
+```sh
+chumby-download-firmware
+```
+
+It explains what it fetches and from where (chumby.com still serves
+the control panel and the stock clock widget), asks before touching
+the network, verifies checksums, and offers to generate the widget
+channel. That alone yields a working clock-on-boot chumby.
+
+**Copy from your own chumby or its backup** — required for the intro
+and the alarm tones, which are not downloadable; left side is the path
+on the chumby:
+
+| On the chumby | On the Pi | Needed for |
+|---|---|---|
+| `/usr/widgets/controlpanel.swf` | `/var/lib/chumby/controlpanel.swf` | everything (skip if downloaded) |
+| `/usr/widgets/*.swf` + `*.jpg` | `/var/lib/chumby/widgets/` | more widgets — then run `chumby-local-widgets` |
+| `/usr/chumby/alarmtones/*.mp3` | `/var/lib/chumby/alarmtones/` | alarm sounds; **keep the filenames** (the panel hardcodes them) |
+| `/usr/widgets/intro.swf` | `/var/lib/chumby/intro.swf` | the guided-tour INTRO (its button stays dimmed without it) |
+
+Files must be readable by the `pi` user — if you copied with `sudo`,
+`sudo chmod 644` them (the player says exactly this in
+`systemctl status chumby-player` if it can't read something).
+
+## 4. Start it
+
+```sh
+sudo systemctl start chumby-player    # installing enabled it for next boot
 ```
 
 The panel appears on the TFT and from now on comes up on every boot.
@@ -122,33 +102,50 @@ The panel appears on the TFT and from now on comes up on every boot.
 - **Touch** = the chumby's touchscreen. A **stationary long-press
   (≥1 s)** is the squeeze of the chumby's top button: it summons (and
   dismisses) the control panel bar, and snoozes a ringing alarm.
-- `chumby-ctl bend` does the same from a shell; `chumby-ctl click X Y`
-  and `chumby-ctl drag X1 Y1 X2 Y2` inject pointer input (useful over
-  SSH).
-- `sudo systemctl stop chumby-player` — exit player mode until next
-  boot; `sudo systemctl disable --now chumby-player` — leave player
-  mode; logs: `journalctl -u chumby-player`.
+  `chumby-ctl bend` does the same from a shell.
+- `sudo systemctl stop chumby-player` — leave player mode until next
+  boot; `sudo systemctl disable --now chumby-player` — leave it for
+  good; logs: `journalctl -u chumby-player`.
 - Panel state (alarms, streams, volume — everything set in the UI)
-  persists in `/var/lib/chumby/fixtures`. It survives package
-  upgrades; after upgrading `chumby-player-data`, delete it to re-seed
-  from the new fixtures (this discards panel-made settings).
-- Overrides (display device, audio device, log level, …) go in
-  `/etc/default/chumby-player` — see [hardware.md](hardware.md).
+  persists in `/var/lib/chumby/fixtures` and survives upgrades.
 
-## 7. Desktop run (no Pi needed)
+### Your own widgets
 
-For trying it out or hacking on fixtures, any Linux desktop works:
+Drop widget `.swf` files (plus an optional same-named `.jpg` preview)
+into `/var/lib/chumby/widgets`, run `chumby-local-widgets`, restart
+the player.
+
+## 5. Configuration
+
+Two files, both surviving upgrades:
+
+- **`/etc/chumby-player/player.toml`** — owner policy: volume cap,
+  `access_chumby_com` (opt-in: internet-radio directories, device
+  registration and your account's widget channels from the still-alive
+  chumby.com), `merge_local_remote_widgets` (whether local widgets ride
+  along inside those account channels), `enable_lyrion`,
+  `brightness_ctl`. Each key is documented in the file.
+- **`/etc/default/chumby-player`** — environment overrides: pin a
+  specific display (`WLR_DRM_DEVICES`), route audio to a specific
+  output (`CHUMBY_AUDIO_DEVICE`), log verbosity (`RUST_LOG`). Also
+  documented in place.
+
+Sound needs no setup: it follows the system default output (a USB
+adapter if present).
+
+## 6. Desktop run (no Pi needed)
+
+For trying it out or hacking on the player, any Linux desktop works —
+that path needs a source build; see the
+[chumby-ruffle](https://github.com/yanosz/chumby-ruffle) repository:
 
 ```sh
-cd ruffle
-cargo build -p ruffle_desktop
+git clone --recursive https://github.com/yanosz/chumby-pi.git
+cd chumby-pi/ruffle && cargo build -p ruffle_desktop
+# drop controlpanel.swf into swf-assets/ (see step 3 for sources)
 ./run-controlpanel.sh
 ```
 
-This opens the panel in a window, reads `ruffle/swf-assets/controlpanel.swf`
-(override with `CHUMBY_SWF=<path>`), uses the submodule's `fixtures/`
-directly, tees a full host-traffic log to `/tmp/chumby-run.log`, and
-creates `/tmp/chumby-ctl` — so `echo bend > /tmp/chumby-ctl` (or
-typing `bend` + Enter in the launch terminal, or pressing Home with
-the window focused) plays the squeeze. `ruffle/fixtures/README.md`
-explains how every mocked answer can be changed.
+The panel opens in a window; a mouse long-press plays the squeeze, and
+`/tmp/chumby-run.log` records every request the panel makes of its
+fake chumby.
