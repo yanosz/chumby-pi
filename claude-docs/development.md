@@ -619,6 +619,20 @@ path (the same llvmpipe rasterizer sits underneath); a client-side
 `set_cursor_visible` hook (the cursor is server-drawn); `wlrctl`'s virtual
 pointer under headless cage (never reaches the client).
 
+Version **0.9.0** (2026-07-14, desktop-verified; **no device deploy yet** —
+rides with the next one, items 2/4): `chumby-download-firmware` rewritten
+around the 1.7.3 `update.zip` (design §5) — verified end-to-end on the dev
+box three ways: full run (update.zip → intro/openings/tones extracted, all
+md5-identical to the backup; download_cp → 2.8.87b3), the declined-cp
+fallback (blob's 2.8.75, byte-identical to the image), and an idempotent
+re-run (every step skips). Launcher gained the boot opening animation
+(design §5): `opening.swf` under `timeout 20` exited 124 as expected,
+`alt_opening.swf` self-quit rc 0 after ~13 s, both rendering on `:11` with
+the fork player. Deb: `Depends: 7zip | p7zip-full` added, version default
+0.9.0. Companion fork PR #26 (empty channel → built-in clock, FR17) is what
+lets the widgetless fresh install boot to a clock; gitlink bump follows its
+squash-merge.
+
 ## 7. Traps
 
 The traps of working on the player itself — the stale `target/`, missed

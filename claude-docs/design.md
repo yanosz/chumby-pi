@@ -163,20 +163,40 @@ data-deb-seeded tree still carries real tones), and `intro.swf`. The
 launcher refuses to start without the SWF and prints exactly this list
 (NFR1).
 
-**`chumby-download-firmware`** (0.8.2, Jan's decision 2026-07-13): the
-no-backup path. A user-run, ask-first python3 helper speaking the
-firmware's own `download_cp` protocol — `GET /xml/controlpanel?…` returns
-the newest build's URL + md5 (today: falconwing 2.8.87b3, verified
-byte-identical to what runs on the Pi) — and, for an empty widgets
-folder, the stock "Unsubscribed Clock" via the download token embedded
-in its chumby.com guide page (`/xml/moviefile?id=<token>`; thumbnail at
-`/xml/<guid>/thumbnails`), then offers to run `chumby-local-widgets`.
-The device id in the query is deliberately zeroed — no identity leaves
-the box (NFR6 untouched), and installs stay non-interactive: the script
-is only ever run by hand (the refusal message and README point to it).
-Files are written 0644 (the 0.8.1 lesson). intro.swf/alarm tones are
-firmware-image-only — the revived server 404s the old update endpoints —
-so they stay backup-only, and the script says so.
+**`chumby-download-firmware`** (0.8.2, Jan's decision 2026-07-13;
+rewritten 0.9.0, 2026-07-14): the no-backup path. A user-run, ask-first
+python3 helper with two sources. First the classic **1.7.3 firmware
+image** — `update.zip` (~30 MB) on files.chumby.com, md5-pinned in the
+script; `update2/rfs1.bin.zip` inside it holds the CRAMFS rootfs, which
+7-Zip unpacks unprivileged (deb depends on `7zip | p7zip-full`; only
+`usr/widgets` + `usr/chumby/alarmtones` are extracted — elsewhere the
+image's busybox symlinks make 7-Zip exit nonzero). That yields
+intro.swf, opening.swf, alt_opening.swf and the seven alarm tones,
+byte-identical to Jan's backup. Second, the firmware's own
+`download_cp` protocol — `GET /xml/controlpanel?…` returns the newest
+build's URL + md5 (falconwing 2.8.87b3, the build every hook and
+ui-policy selector is verified against) — recommended for the panel;
+the image's own 2.8.75 is offered only as a fallback when that is
+declined or unreachable (it passes the movie-start check and its
+Settings disables verified inert by pick-trace, but misses the
+`music_sources` fixture URL shape — development.md in the fork,
+2026-07-14). The device id in the query is deliberately zeroed — no
+identity leaves the box (NFR6 untouched), and installs stay
+non-interactive: the script is only ever run by hand. Files are
+written 0644 (the 0.8.1 lesson). The 0.8.2 stock-clock widget download
+and the `chumby-local-widgets` offer are gone: with zero widgets the
+panel now shows its built-in clock (fork FR17, `bi_clock` embedded in
+controlpanel.swf), so a fresh install needs no widget at all.
+
+**Boot opening animation** (0.9.0, 2026-07-14): the launcher reproduces
+rcS's `start_opening_anim` before the intro/panel: `alt_opening.swf`
+when the `/psp/alt_opening` magic file exists, else `opening.swf`, both
+from `$STATE`. `opening.swf` plays ~11 s into a held end frame and
+never exits (real hardware killed it when boot finished) — the launcher
+runs it under `timeout 20`; `alt_opening.swf` quits itself via
+`fscommand("quit")` at its last frame (~12 s), `timeout 30` as a crash
+guard. The `/mnt/usb/opening.swf` factory override is dropped, as for
+the intro.
 
 **Distribution** (2026-07-13): a **signed flat apt repo on GitHub Pages**
 (`https://yanosz.github.io/chumby-pi/apt`, sources line

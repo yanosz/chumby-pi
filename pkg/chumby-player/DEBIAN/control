@@ -4,7 +4,7 @@ Architecture: arm64
 Maintainer: Jan <jan@simula.no>
 Section: misc
 Priority: optional
-Depends: cage, mpv, pipewire-alsa, python3, libc6, libgcc-s1, libfontconfig1, libssl3t64, libasound2t64, libudev1
+Depends: cage, mpv, pipewire-alsa, python3, 7zip | p7zip-full, libc6, libgcc-s1, libfontconfig1, libssl3t64, libasound2t64, libudev1
 Description: Chumby control panel player (chumby-fork Ruffle kiosk)
  Runs the original Chumby Classic control panel under a patched Ruffle
  inside a cage Wayland kiosk on tty1. Installing this package and
@@ -12,10 +12,10 @@ Description: Chumby control panel player (chumby-fork Ruffle kiosk)
  stays available, and "systemctl disable --now chumby-player" is the
  escape hatch.
  .
- Ships everything except the copyrighted chumby firmware files: copy
- controlpanel.swf (and optionally widgets, alarm tones, intro.swf)
- from your chumby or its backup into /var/lib/chumby — the launcher
- prints the exact paths when something is missing.
+ Ships everything except the copyrighted chumby firmware files:
+ chumby-download-firmware fetches them from Chumby's servers, or copy
+ them from your chumby or its backup into /var/lib/chumby — the
+ launcher prints the exact paths when something is missing.
  .
  Library dependencies match the NEEDED entries of the shipped binary
  on Debian trixie (Raspberry Pi OS base); the package is still built

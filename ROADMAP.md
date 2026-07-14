@@ -50,10 +50,12 @@ Roughly in order. The player-side detail lives in the fork's
 
 4. **Intro widget: the on-device tour pass.** *Feature closed 2026-07-12;
    the remaining pass postponed until new hardware arrives (Jan,
-   2026-07-14).* Since 0.8.x the INTRO button is gated on an owner-copied
-   `intro.swf` (not downloadable — backup only), so the pass needs that
-   file on the device: tour on the TFT, flag buttons, next-boot gating,
-   in-panel INTRO.
+   2026-07-14).* Since 0.9.0 `intro.swf` is downloadable
+   (`chumby-download-firmware` extracts it from the 1.7.3 firmware
+   image), so the pass no longer needs a backup: tour on the TFT, flag
+   buttons, next-boot gating, in-panel INTRO. The 0.9.0 boot opening
+   animation and the empty-channel clock (fork FR17) join the same
+   on-device pass.
 
 5. **Remote channels + registration.** *Registration and channel/widget
    download are done and verified live* (2026-07-11): DCID reverse-engineered
@@ -119,12 +121,16 @@ These still bind. Changing one is a decision, not drift.
   `controlpanel.swf`, widget SWFs, thumbnails, alarm tones, the decompile.
   Since 0.8.0 (2026-07-13) there is no private deb at all: the former
   `chumby-player-data` was retired and owners copy those files from their
-  chumby (or its backup) into `/var/lib/chumby`.
+  chumby (or its backup) into `/var/lib/chumby` — or, since 0.9.0
+  (2026-07-14), fetch them all with `chumby-download-firmware` (the 1.7.3
+  `update.zip` + the `download_cp` protocol, ask-first, from Chumby's own
+  servers).
 
 ## Done
 
 | When | Milestone |
 |------|-----------|
+| 2026-07-14 | **Firmware from update.zip, 0.9.0 (desktop-verified; device pass rides with items 2/4).** `chumby-download-firmware` rewritten: the classic 1.7.3 `update.zip` (files.chumby.com, md5-pinned, CRAMFS via 7-Zip) yields intro.swf, opening/alt_opening and the alarm tones — byte-identical to the backup, nothing is backup-only any more; the panel still comes newest-first via `download_cp` (2.8.87b3), the image's 2.8.75 only as fallback (runs; its Settings disables verified inert). Stock-clock widget download dropped: an empty channel now shows the panel's built-in `bi_clock` (fork FR17, PR #26 — `fetchWidgetInstanceXML` wrapped onto `beAClock`). Launcher plays the boot opening (`alt_opening` on the `/psp/alt_opening` magic file). Deb depends on 7zip. |
 | 2026-06-12 | **M1 — understand the panel.** Decompiled 2.8.87b3; the environment contract, the gap analysis against stock Ruffle, the screen catalog, zurk's prior art. |
 | 2026-06-13 | **M2 — stub the API.** `ChumbyHost` + `FixtureHost`; the panel boots to its main screen on fixtures. Alarms, My Streams, volume, bend sensor, mpv audio. |
 | 2026-07-06 | **M3 — Raspberry Pi.** Cross-build, two debs, cage kiosk, boot straight to the panel on the SPI TFT. Then CPU halved (~215% → ~103%) and the phantom cursor killed. |
