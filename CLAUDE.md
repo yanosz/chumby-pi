@@ -1,22 +1,28 @@
-# Project: Chumby control panel on Raspberry Pi via modified Ruffle
+# Project: Maintenance of Chumby control panel on Raspberry Pi via modified Ruffle
 
-`ROADMAP.md` is what is left, what is done, and the decisions that still
-bind. Read it first — it is short. It was compressed from a much longer
-plan and says so: treat it as a map, not as evidence. When it, a doc, and
-the code disagree, **the code wins** — grep for the artifact before
-believing a claim about it.
+Your task is to support maintenance (e.g. bug-fixes, minor features) of this project.
+
+The project aims at creating a patchset for ruffle to mimic a chumby.
+Ruffle is a rust flash emulator. Chumby is smart radio clock (year 2006 - 2012), 
+a patchset is needed, because the old flash movie steers the software.
+
+This repository contains all infrastructure, whereas ruffle contains the patchset.
+
+Both repositories contain a folder called claude-docs. These are internal documents that were create when 
+the project was active and had not reached maintenance mode, yet. This notes can be helpful for understanding design 
+decisions but are not changed any longer.
+
+When being tasked to fix a bug or do a feature, create a plan with steps / checkpoints first.
 
 Non-negotiable rules:
+- Work in branch "dev" - both repositories. Default branches are main (chumby-pi) and chumby (ruffle).
+  Rebase dev branches to main / chumby when tasked. Work in main / chumby only when requested explicitly. 
 - STOP at every CHECKPOINT. Summarize findings, ask the user, and wait for
   an answer. Never proceed past a checkpoint on your own. When scope is
   ambiguous, ask — one clarifying question beats an exploratory detour, and
   a question from the user is a question, not a licence to start coding.
-- Every step must end with the engineering record under `claude-docs/`
-  updated (`docs/` is end-user documentation). There are exactly three
-  documents per repo — `requirements.md`, `design.md`, `development.md` —
-  and findings are folded into whichever fits. Do not start a fourth
-  file, and do not keep per-session or per-milestone records: what
-  survives a milestone is the decision and its reason.
+- Every step must end with the engineering record under `claude/`
+  updated (`docs/` is end-user documentation). 
 - The docs are split like the code. Anything about the Rust player —
   what the panel demands of it, the host boundary, the fixtures, the
   decompiled SWF, how to build/run/verify/rebase it — belongs in the
@@ -31,23 +37,6 @@ Non-negotiable rules:
 - /home/jan/chumby_backup is read-only ground truth. Never write there.
 - Work on ONE step at a time. Do not look ahead or start the next step's
   work while the current step is unfinished.
-- Scope creep guard: before implementing support for a panel screen, check
-  it against the scope table (`claude-docs/requirements.md` §1 FR5) and ask
-  if it is not listed.
-- One feature branch per working session — in this repo and in the
-  `ruffle/` submodule. **Finishing the session means pushing it and opening
-  the pull request** in each repo you touched; do that yourself. Jan reviews
-  and squash-merges. Commit after each completed step. Bump the submodule
-  gitlink in the same change that needs it, and merge the fork's PR before
-  this repo's (squashing replaces the commit the gitlink pins — see
-  `claude-docs/development.md` §1).
-- Keep code comments brief. Code should speak for itself; comment only
+- - Keep code comments brief. Code should speak for itself; comment only
   what cannot be read from the code — the why, a non-obvious constraint, a
   reference. Do not narrate what the code plainly does.
-- Every operation performed on the Raspberry Pi (packages installed,
-  config.txt/overlay changes, systemd units, sysfs writes, build steps,
-  anything typed over SSH that changes device state) must be documented
-  as it happens — command, why, and result — in the device record,
-  `claude-docs/development.md`. The goal is that a "make your Raspberry
-  Pi into a Chumby" howto can be assembled from it after the fact without
-  re-deriving anything from memory or shell history.
