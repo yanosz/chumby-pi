@@ -10,7 +10,9 @@ if [ "$1" = "configure" ]; then
         install -d -o pi -g pi /var/lib/chumby
     fi
     systemctl daemon-reload || true
-    systemctl enable chumby-player.service || true
+    # reenable, not enable: drops the stale graphical.target.wants
+    # symlink from installs before 0.8.5 (WantedBy changed).
+    systemctl reenable chumby-player.service || true
     udevadm control --reload-rules || true
     udevadm trigger --subsystem-match=input || true
     # re-run the USB-music rule for a stick that is already inserted
