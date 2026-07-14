@@ -375,8 +375,25 @@ politely instead of tracebacking. (b) postinst now creates
 right after `apt install` without sudo (Jan ran them as root, which
 worked only because the downloader chmods 0644).
 
-Installed version: **0.8.3** (deployed 2026-07-13, above; 0.8.4 pending
-Jan's apt install). Earlier:
+Version **0.8.5** (built and deployed 2026-07-14, player unchanged at
+`0b4e81b13`): the 3rd vanilla-card boot came up **white** — the unit was
+`WantedBy=graphical.target`, which the Lite image (the reference OS,
+default target multi-user) never reaches, so the kiosk never started at
+boot; masked until now because every earlier card got at least one
+manual start. Fix: `WantedBy=multi-user.target`, postinst `reenable`
+(drops the stale graphical symlink on upgrade). Verified end-to-end on
+the device: deploy → symlink in multi-user.target.wants only →
+unattended reboot → service self-started, journal shows `SPI TFT
+detected: …3f204000…`, panel on the TFT. Boot-timing data from the same
+morning: ili9486 DRM device at t=11.5 s vs systemd-user-sessions (our
+`After=`) at t=28.1 s — the 0.8.4 auto-detect has ~17 s of structural
+margin, no wait logic needed. Jan also reported no music and hangs on
+some clicks on the pre-fix boot; both unreproducible after the fix
+(default sink = USB dongle at 40 %, test tone played, panel music
+audible) — treated as artifacts of that boot's odd state, no change.
+
+Installed version: **0.8.5** (deployed 2026-07-14, above). Earlier:
+0.8.4/0.8.3 (2026-07-13, above); 
 0.8.2 (2026-07-13, above); 
 0.8.1 (2026-07-13, above); 
 0.5.0 (2026-07-12 via `pkg/deploy-pi.sh`,
