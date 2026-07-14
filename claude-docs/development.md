@@ -195,7 +195,9 @@ that were specific to it are not repeated here.
 **Packages installed:** `mpv`, `cage`, `grim`, `pipewire-alsa`. The last one
 is not optional — without it ALSA clients (the player's `cpal`) have no route
 into PipeWire and audio-device creation fails. mpv talks to PipeWire natively
-and never needed it.
+and never needed it. All but `grim` arrive as deb dependencies now; `grim`
+(the remote screenshot tool, §5) is dev-only and was apt-installed by hand
+again on the vanilla card 2026-07-14 for a no-physical-access check.
 
 **`/boot/firmware/config.txt`** (backups `config.txt.bak`, `config.txt.bak-tft`):
 
