@@ -70,20 +70,18 @@ Roughly in order. The player-side detail lives in the fork's
    **out of scope** (Jan, 2026-07-11) — `main-send`/`main-rate` stay
    disabled and those endpoints are never passed through. Item 5 is closed.
 
-6. **Fork git housekeeping.** *Rebuild done 2026-07-14; two steps remain.*
-   The fork is branch `chumby-rebuild`: **two commits on pinned upstream
-   master `8328af42d`** (2026-07-14) — pure additions first, the design §8
-   patch surface second, so rebase conflicts concentrate in the second
-   commit. The old history (18 commits on `7f62f5dbf`) is parked as
+6. ~~**Fork git housekeeping.**~~ **Done 2026-07-14** (force-pushed by
+   Jan): `chumby` is now **two commits on pinned upstream master
+   `8328af42d`** — pure additions (`c3afbec41`) first, the design §8 patch
+   surface (`2ac3acc2e`) second, so rebase conflicts concentrate in the
+   second commit. Old history (18 commits on `7f62f5dbf`) parked as
    `chumby-old`; `Cargo.lock` regenerated (upstream's + the three core
-   deps); `chumby-ctl` moved to chumby-pi `pkg/chumby-player/`. The
-   upstream move itself went cleanly — every patch applied without
-   conflict, hooks alive in all §8 files, 40/40 chumby unit tests,
-   movie-start check green, screens walked on the desktop (the one
-   casualty was `verify-screens.sh` missing `windowraise`, fixed).
-   Remaining: **Jan force-pushes** `chumby-rebuild` onto `chumby`
-   (his call, explicitly not the agent's), and the on-device pass with
-   the next deploy (rides with items 2 and 4).
+   deps), `chumby-ctl` moved to chumby-pi `pkg/chumby-player/`. The
+   upstream move itself was a real merge and went cleanly: zero conflicts,
+   hooks alive in all §8 files, 40/40 chumby unit tests, movie-start check
+   green, screens walked on the desktop (`verify-screens.sh` gained the
+   missing `windowraise` — the §7 trap). The on-device pass rides with the
+   next deploy (items 2 and 4). Fork record: its `development.md` §6.
 
 7. **End-user docs pass.** `docs/setup.md` rewritten 2026-07-14 around the
    real install story (apt repo, display overlay vs HDMI/DSI,
