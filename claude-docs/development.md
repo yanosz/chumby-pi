@@ -619,8 +619,8 @@ path (the same llvmpipe rasterizer sits underneath); a client-side
 `set_cursor_visible` hook (the cursor is server-drawn); `wlrctl`'s virtual
 pointer under headless cage (never reaches the client).
 
-Version **0.9.0** (2026-07-14, desktop-verified; **no device deploy yet** —
-rides with the next one, items 2/4): `chumby-download-firmware` rewritten
+Version **0.9.0** (2026-07-14, desktop-verified; deployed the same evening
+on the 4th vanilla card — see 0.9.1): `chumby-download-firmware` rewritten
 around the 1.7.3 `update.zip` (design §5) — verified end-to-end on the dev
 box three ways: full run (update.zip → intro/openings/tones extracted, all
 md5-identical to the backup; download_cp → 2.8.87b3), the declined-cp
@@ -632,6 +632,39 @@ the fork player. Deb: `Depends: 7zip | p7zip-full` added, version default
 0.9.0. Companion fork PR #26 (empty channel → built-in clock, FR17) is what
 lets the widgetless fresh install boot to a clock; gitlink bump follows its
 squash-merge.
+
+Version **0.9.1** (2026-07-14): the gitlink bump to the squash-merged fork
+#26 (`d591d68d3`), plus the two corrections from the **4th vanilla-card
+e2e** (Jan, same evening, on the 0.9.0 pre-#26 build). The downloader
+worked first try on the device (all files written 0644 as user pi, byte
+sizes as on the dev box). Three symptoms, diagnosed read-only over SSH:
+*Black panel after the tour's NEVER-SHOW-AGAIN* — `/psp/disable_intro` was
+correctly written and the panel ran at its normal ~84 % CPU; the installed
+binary simply predated fork #26 (`strings` on the shipped `ruffle_desktop`
+finds no `empty widget channel` log line — a valid probe, the dev build
+with the hook has it), so zero widgets = the documented black rotation.
+Fixed by this gitlink bump + redeploy.
+*No sound in the intro* (it has a real streamed soundtrack — 3646
+`SoundStreamBlock` tags nested in sprites): pipewire, pipewire-alsa and
+wireplumber were installed and *enabled*, but `pipewire.socket` /
+`pipewire-pulse.socket` / `wireplumber.service` were **inactive** — apt
+enabled them mid-session, pi's user manager predated the apt run, and user
+units only arm at session start. A reboot fixes it (and explains the same
+observation on the previous card); since 0.9.1 the launcher starts the
+three units itself (design §5).
+*~1 min of black before the tour* — the opening's 20 s timeout was consumed
+entirely by ruffle startup (~30 s class on the 3B+), so the animation was
+killed before its first frame. Rather than tune timeouts, **the boot
+opening was dropped in 0.9.1** (Jan: not worth the complexity; full
+reasoning design §5) — launcher plays nothing before the intro, downloader
+no longer extracts the two opening SWFs. **Open**: whether the tour also
+*renders* too slowly on the 3B+ (Jan: "video didn't progress", plus
+sluggish clicks on the previous card) or was audio-related — re-observe
+after a redeploy with working audio, `RUST_LOG=warn,chumby_host=info` if it
+persists.
+Incidental: the fresh card regenerated its SSH host key (known_hosts entry
+refreshed on the dev box); `grim` is dev-only and not reinstalled yet — no
+remote screenshots on this card so far.
 
 ## 7. Traps
 
