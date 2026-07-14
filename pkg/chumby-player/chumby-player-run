@@ -12,6 +12,9 @@
 #   alarmtones/*.mp3  from /usr/chumby/alarmtones/           optional
 #                     (stock filenames — the panel hardcodes them)
 #   intro.swf         from /usr/widgets/intro.swf            optional
+#   opening.swf, alt_opening.swf  from /usr/widgets/         optional
+# chumby-download-firmware fetches all of these from Chumby's servers
+# instead (the 1.7.3 firmware image + the download_cp protocol).
 #
 # Overrides (set in /etc/default/chumby-player for the service; the
 # last two exist so a dev box can drive this script against a staged
@@ -53,8 +56,8 @@ chumby or its backup (on the device: /usr/widgets/controlpanel.swf) to:
 Optional, same sources: widget SWFs into $STATE/widgets (then run
 chumby-local-widgets), /usr/chumby/alarmtones/*.mp3 into
 $STATE/alarmtones, /usr/widgets/intro.swf to $STATE/intro.swf.
-No backup at hand? chumby-download-firmware fetches the control panel
-and a clock widget from chumby.com (intro and tones stay backup-only).
+No backup at hand? chumby-download-firmware fetches the control panel,
+intro, boot animations and alarm tones from Chumby's servers.
 EOF
         return 1
     fi
@@ -185,6 +188,28 @@ export RUST_LOG="${RUST_LOG:-warn}"
 export LP_NUM_THREADS="${LP_NUM_THREADS:-1}"
 
 check_swf || exit 1
+
+# Boot opening animation, as rcS's start_opening_anim: alt_opening.swf
+# when the /psp/alt_opening magic file exists, else opening.swf.
+# opening.swf never exits — it plays ~11 s into a held end frame, and the
+# original firmware killed the player once boot had finished — so it runs
+# under a hard timeout. alt_opening.swf quits itself (fscommand("quit") at
+# its last frame); its longer timeout is only a crash guard. The
+# /mnt/usb/opening.swf override is dropped, as for the intro.
+OPENING="$STATE/opening.swf"
+OPENING_TIMEOUT=20
+if [ -e "$STATE/fixtures/rootfs/psp/alt_opening" ] && [ -f "$STATE/alt_opening.swf" ]; then
+    OPENING="$STATE/alt_opening.swf"
+    OPENING_TIMEOUT=30
+fi
+if [ -f "$OPENING" ] && [ -r "$OPENING" ]; then
+    timeout "$OPENING_TIMEOUT" "$RUFFLE" \
+        --load-behavior blocking \
+        --filesystem-access-mode allow \
+        --chumby-fixtures "$STATE/fixtures" \
+        --fullscreen \
+        "$OPENING" || true
+fi
 
 # Boot-time intro, as rcS's start_intro: the tour plays before the panel,
 # every boot until its "never show again" button writes /psp/disable_intro

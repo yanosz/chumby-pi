@@ -1,30 +1,52 @@
 #!/usr/bin/env python3
 """chumby-download-firmware — fetch the files the package cannot ship.
 
-controlpanel.swf and the widgets are copyrighted Chumby Industries
-firmware, so the Debian package does not contain them. The revived
-chumby.com still serves them; this helper shows exactly what it would
-download and asks before touching the network. Nothing is sent except
-the requests shown (the device id in the control-panel query is zeroed —
-no identity leaves the box), and the player itself stays offline
-afterwards.
-
-intro.swf and the alarm tones only ever shipped inside firmware images
-and cannot be downloaded; the exact paths to copy them from a chumby
-(or its backup) are printed at the end.
+The control panel, intro tour, boot animations and alarm tones are
+copyrighted Chumby Industries firmware, so the Debian package does not
+contain them. Chumby's own servers still do: the classic 1.7.3 firmware
+image (update.zip, ~30 MB) carries everything but the newest control
+panel, and chumby.com serves that panel through the same protocol the
+original firmware's download_cp used. This helper shows exactly what it
+would download and asks before touching the network. Nothing identifying
+is sent (the device id in the control-panel query is zeroed), and the
+player itself stays offline afterwards.
 """
 
 import hashlib
 import os
-import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import urllib.request
 import xml.etree.ElementTree as ET
+import zipfile
 from pathlib import Path
 
 STATE = Path(os.environ.get("CHUMBY_STATE", "/var/lib/chumby"))
-WIDGETS = STATE / "widgets"
+
+UPDATE_URL = "https://files.chumby.com/resources/classic/1-7-3/update.zip"
+UPDATE_MD5 = "3fa64d39777d27908586d51824bb0eb7"
+# Inside the blob: a zip per partition; rfs1.bin is the CRAMFS rootfs.
+RFS_MEMBER = "update2/rfs1.bin.zip"
+RFS_NAME = "rfs1.bin"
+
+# CRAMFS path in the 1.7.3 rootfs -> file under $STATE.
+FIRMWARE_FILES = {
+    "usr/widgets/intro.swf": "intro.swf",
+    "usr/widgets/opening.swf": "opening.swf",
+    "usr/widgets/alt_opening.swf": "alt_opening.swf",
+    "usr/chumby/alarmtones/Beep.mp3": "alarmtones/Beep.mp3",
+    "usr/chumby/alarmtones/Bugle.mp3": "alarmtones/Bugle.mp3",
+    "usr/chumby/alarmtones/ClockStrikes.mp3": "alarmtones/ClockStrikes.mp3",
+    "usr/chumby/alarmtones/Gong.mp3": "alarmtones/Gong.mp3",
+    "usr/chumby/alarmtones/Klaxon.mp3": "alarmtones/Klaxon.mp3",
+    "usr/chumby/alarmtones/Nightingale.mp3": "alarmtones/Nightingale.mp3",
+    "usr/chumby/alarmtones/RoosterCrow.mp3": "alarmtones/RoosterCrow.mp3",
+}
+# The blob's own control panel — 2.8.75, older than the 2.8.87b3 this
+# project is verified against. Fallback only (see download_controlpanel).
+BLOB_CONTROLPANEL = "usr/widgets/controlpanel.swf"
 
 # The panel-download protocol of the original firmware's download_cp
 # script. Identity params are deliberately zero/static: the server
@@ -33,15 +55,8 @@ CP_QUERY = ("https://www.chumby.com/xml/controlpanel"
             "?id=00000000-0000-0000-0000-000000000000"
             "&hw=3.8&sw=1.7.2&fw=1.7.2&lang=en-us")
 
-# The chumby.com widget guide embeds a download token for each widget;
-# the "Unsubscribed Clock" is the stock dashboard clock.
-CLOCK_NAME = "Unsubscribed Clock"
-CLOCK_GUID = "F1899D99-EDF7-3F38-A161-E6F3C89499E5"
-GUIDE_URL = "https://chumby.com/guide/{guid}/widget"
-THUMB_URL = "https://chumby.com/xml/{guid}/thumbnails"
 
-
-def fetch(url: str, timeout: int = 120) -> bytes:
+def fetch(url: str, timeout: int = 300) -> bytes:
     with urllib.request.urlopen(url, timeout=timeout) as resp:
         return resp.read()
 
@@ -65,51 +80,89 @@ def save(path: Path, data: bytes) -> None:
     print(f"  wrote {path} ({len(data)} bytes)")
 
 
-def download_controlpanel() -> None:
+def sevenzip() -> str:
+    for name in ("7zz", "7z", "7za"):
+        if shutil.which(name):
+            return name
+    sys.exit("no 7-Zip binary found — install it with: sudo apt install 7zip")
+
+
+def extract_rootfs(workdir: Path) -> Path | None:
+    """Download update.zip, unpack the CRAMFS rootfs, return its tree."""
+    missing = [t for t in FIRMWARE_FILES.values() if not (STATE / t).is_file()]
+    if not missing:
+        print("firmware files: all present, skipping update.zip.")
+        return None
+
+    print("The classic 1.7.3 firmware image provides intro.swf, the boot")
+    print("animations and the alarm tones (a ~30 MB download):")
+    print(f"  {UPDATE_URL}")
+    if not confirm("Download it?"):
+        print("  skipped.")
+        return None
+
+    blob = fetch(UPDATE_URL)
+    if hashlib.md5(blob).hexdigest() != UPDATE_MD5:
+        sys.exit(f"md5 mismatch (expected {UPDATE_MD5}) — not keeping the file.")
+    blob_path = workdir / "update.zip"
+    blob_path.write_bytes(blob)
+
+    with zipfile.ZipFile(blob_path) as z:
+        z.extract(RFS_MEMBER, workdir)
+    with zipfile.ZipFile(workdir / RFS_MEMBER) as z:
+        z.extract(RFS_NAME, workdir)
+
+    # Only the two firmware directories: elsewhere the image's busybox
+    # symlinks make 7-Zip exit nonzero ("dangerous link path").
+    tree = workdir / "rootfs"
+    subprocess.run([sevenzip(), "x", "-y", f"-o{tree}", str(workdir / RFS_NAME),
+                    "usr/widgets", "usr/chumby/alarmtones"],
+                   check=True, stdout=subprocess.DEVNULL)
+
+    for src, target in FIRMWARE_FILES.items():
+        dest = STATE / target
+        if dest.is_file():
+            print(f"  {dest} already present, kept.")
+            continue
+        save(dest, (tree / src).read_bytes())
+    return tree
+
+
+def download_controlpanel(rootfs: Path | None) -> None:
     target = STATE / "controlpanel.swf"
     if target.is_file():
         print(f"controlpanel.swf: already at {target}, skipping.")
         return
 
-    meta = ET.fromstring(fetch(CP_QUERY, timeout=30))
-    url = meta.findtext("url", "")
-    md5 = meta.findtext("md5", "")
-    build = meta.get("build", "?")
-    if not url or not md5:
-        sys.exit("chumby.com answered without a download URL — server changed?")
-
-    print(f"controlpanel.swf, build {build}:")
-    print(f"  {url}")
-    if not confirm("Download it?"):
+    print("controlpanel.swf: chumby.com serves the newest build (2.8.87b3),")
+    print("the one this player is tested against — recommended.")
+    try:
+        meta = ET.fromstring(fetch(CP_QUERY, timeout=30))
+        url = meta.findtext("url", "")
+        md5 = meta.findtext("md5", "")
+        build = meta.get("build", "?")
+    except OSError as e:
+        print(f"  chumby.com query failed ({e}).")
+        url = md5 = ""
+        build = "?"
+    if url and md5:
+        print(f"controlpanel.swf, build {build}:")
+        print(f"  {url}")
+        if confirm("Download it?"):
+            data = fetch(url)
+            if hashlib.md5(data).hexdigest() != md5:
+                sys.exit(f"md5 mismatch (expected {md5}) — not keeping the file.")
+            save(target, data)
+            return
         print("  skipped.")
-        return
-    data = fetch(url)
-    if hashlib.md5(data).hexdigest() != md5:
-        sys.exit(f"md5 mismatch (expected {md5}) — not keeping the file.")
-    save(target, data)
 
-
-def download_clock() -> bool:
-    if any(WIDGETS.glob("*.swf")):
-        print(f"widgets: {WIDGETS} is not empty, skipping.")
-        return False
-
-    guide = GUIDE_URL.format(guid=CLOCK_GUID)
-    print(f"{CLOCK_NAME} (the stock dashboard clock widget):")
-    print(f"  {guide}")
-    if not confirm("Download it?"):
-        print("  skipped.")
-        return False
-
-    token = re.search(r"/xml/moviefile\?id=[^\"']+",
-                      fetch(guide, timeout=30).decode(errors="replace"))
-    if not token:
-        sys.exit("no download token on the widget's guide page — server changed?")
-    save(WIDGETS / f"{CLOCK_NAME}.swf",
-         fetch("https://chumby.com" + token.group()))
-    save(WIDGETS / f"{CLOCK_NAME}.jpg",
-         fetch(THUMB_URL.format(guid=CLOCK_GUID), timeout=30))
-    return True
+    # Last resort: the 1.7.3 image's own panel. Runs, but it is not the
+    # build this project verifies against (claude-docs/development.md).
+    if rootfs is not None:
+        print("The firmware image carries an older panel (2.8.75). It works,")
+        print("but this project is tested against 2.8.87b3 only.")
+        if confirm("Use the 2.8.75 panel from the image instead?"):
+            save(target, (rootfs / BLOB_CONTROLPANEL).read_bytes())
 
 
 def main() -> None:
@@ -119,23 +172,16 @@ def main() -> None:
         sys.exit(f"{STATE} does not exist and is not creatable — "
                  "install chumby-player first (or run with sudo once).")
 
-    download_controlpanel()
-    print()
-    got_widgets = download_clock()
-
-    if got_widgets:
+    with tempfile.TemporaryDirectory(prefix="chumby-fw-") as tmp:
+        rootfs = extract_rootfs(Path(tmp))
         print()
-        if confirm("Generate the widget channel from it (chumby-local-widgets)?"):
-            subprocess.run(["chumby-local-widgets"], check=False)
+        download_controlpanel(rootfs)
 
     print()
-    print("Not downloadable — if you have a chumby (or a backup of one),")
-    print("copy these; left side is the path on the chumby:")
-    print(f"  /usr/widgets/intro.swf        ->  {STATE}/intro.swf")
-    print(f"  /usr/chumby/alarmtones/*.mp3  ->  {STATE}/alarmtones/")
-    print("        (keep the filenames — the panel hardcodes them)")
-    print(f"  /usr/widgets/*.swf and *.jpg  ->  {STATE}/widgets/")
-    print("        (more widgets; then re-run chumby-local-widgets)")
+    print("Widgets are optional — without any, the panel is a clock.")
+    print("To add some, put .swf files (plus .jpg/.png previews) into")
+    print(f"{STATE}/widgets — e.g. copied from a chumby backup's")
+    print("/usr/widgets — then run chumby-local-widgets.")
     print()
     print("Start (or restart) the panel:  sudo systemctl restart chumby-player")
 

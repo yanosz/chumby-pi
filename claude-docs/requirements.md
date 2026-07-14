@@ -125,13 +125,19 @@ SWF from the private share only to *run* the movie test, never to package
 it. The documentation says where the files come from without embedding a
 link.
 
-Amendment (Jan, 2026-07-13): `chumby-download-firmware` may fetch the
-control panel and the stock clock widget *from chumby.com itself* — a
-user-invoked, ask-first script (design §5). It embeds only the firmware's
-own protocol endpoint and a widget GUID, never a direct file URL; the
-files still never enter a package, and nothing runs without the owner
-confirming. intro.swf and the alarm tones are not served by chumby.com
-and stay backup-only.
+Amendment (Jan, 2026-07-13): `chumby-download-firmware` may fetch
+firmware *from Chumby's own servers* — a user-invoked, ask-first script
+(design §5); the files still never enter a package, and nothing runs
+without the owner confirming. Amended again (Jan, 2026-07-14): the
+script's source is now the classic **1.7.3 firmware image**
+(`update.zip` on files.chumby.com, md5-pinned) — its CRAMFS rootfs
+carries intro.swf, both boot openings and the alarm tones, all
+byte-identical to Jan's backup — plus the `download_cp` protocol for
+the newest control panel. Nothing is backup-only any more except extra
+widgets. The script embeds the image URL and the protocol endpoint;
+the *documentation* still names no file URLs. The former stock-clock
+widget download was dropped outright: a widgetless panel shows its
+built-in clock (fork FR17), so no widget needs to be fetched at all.
 
 The GPL and LGPL texts shipped in the virtual rootfs are freely
 distributable and *are* committed.
