@@ -394,7 +394,7 @@ audible) — treated as artifacts of that boot's odd state, no change.
 
 Version **0.8.6** (built and deployed 2026-07-14 via `deploy-pi.sh`,
 player at fork branch `local-merge-flag` `919b2bb8d`, PR #25): the
-fork's `merge_local_widgets` flag (FR14; default 0 keeps local widgets
+fork's `merge_local_remote_widgets` flag (FR14; default 0 keeps local widgets
 out of curated chumby.com channels on a remote-active box) and its
 updated `player.toml` conffile template — the template change alone
 forces the bump (the 0.5.0 conffile trap); existing installs keep their
@@ -404,9 +404,9 @@ edited player.toml and get the new default from the player.
 `RUST_LOG=…chumby_host=debug,avm_trace=info` temporarily via
 `/etc/default/chumby-player`, reverted after): flag absent/0 → the
 account profile loads from chumby.com, `mergeLocalProfile` probes all
-four paths, each logs "hidden (merge_local_widgets = 0, remote channels
+four paths, each logs "hidden (merge_local_remote_widgets = 0, remote channels
 live)", channel ends at "total 1 widget instances" (the account's own);
-`merge_local_widgets = 1` appended to `/etc/chumby-player/player.toml` →
+`merge_local_remote_widgets = 1` appended to `/etc/chumby-player/player.toml` →
 "found a local profile … adding 1 local widget instances … total 2".
 Both toggles removed afterwards; the device runs the default.
 
