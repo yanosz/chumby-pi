@@ -70,22 +70,18 @@ Roughly in order. The player-side detail lives in the fork's
    **out of scope** (Jan, 2026-07-11) — `main-send`/`main-rate` stay
    disabled and those endpoints are never passed through. Item 5 is closed.
 
-6. **Fork git housekeeping — the last 2026-07-13 housekeeping task, Jan's
-   next session.** Goal: make merging upstream as easy as reasonably
-   possible, then test how well an upstream merge actually goes. Plan
-   agreed 2026-07-13: keep the current history as branch `chumby-old`;
-   rebuild the fork as one or two commits on a **pinned** current
-   upstream master — the two-commit variant puts pure additions
-   (`core/src/chumby/`, fixtures, docs, harness scripts) first and the
-   small edits to upstream files (the fork design §8 patch surface)
-   second, so rebase conflicts concentrate in the second commit.
-   Regenerate `Cargo.lock`, never merge it. Move `chumby-ctl` to
-   chumby-pi/pkg — the only non-player piece left in the fork. An
-   upstream move is a real merge ("the movie runs", not "it compiles"):
-   full desktop verify, then the on-device pass, which also still owes
-   items 1, 2 and 4 above and the undeployed 0.7.0/0.8.0 debs. The
-   branch-rename chain reaction (GitHub default branch, CI, the
-   chumby-pi gitlink) is accepted.
+6. ~~**Fork git housekeeping.**~~ **Done 2026-07-14** (force-pushed by
+   Jan): `chumby` is now **two commits on pinned upstream master
+   `8328af42d`** — pure additions (`c3afbec41`) first, the design §8 patch
+   surface (`2ac3acc2e`) second, so rebase conflicts concentrate in the
+   second commit. Old history (18 commits on `7f62f5dbf`) parked as
+   `chumby-old`; `Cargo.lock` regenerated (upstream's + the three core
+   deps), `chumby-ctl` moved to chumby-pi `pkg/chumby-player/`. The
+   upstream move itself was a real merge and went cleanly: zero conflicts,
+   hooks alive in all §8 files, 40/40 chumby unit tests, movie-start check
+   green, screens walked on the desktop (`verify-screens.sh` gained the
+   missing `windowraise` — the §7 trap). The on-device pass rides with the
+   next deploy (items 2 and 4). Fork record: its `development.md` §6.
 
 7. **End-user docs pass.** `docs/setup.md` rewritten 2026-07-14 around the
    real install story (apt repo, display overlay vs HDMI/DSI,
