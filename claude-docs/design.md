@@ -171,8 +171,7 @@ script; `update2/rfs1.bin.zip` inside it holds the CRAMFS rootfs, which
 7-Zip unpacks unprivileged (deb depends on `7zip | p7zip-full`; only
 `usr/widgets` + `usr/chumby/alarmtones` are extracted — elsewhere the
 image's busybox symlinks make 7-Zip exit nonzero). That yields
-intro.swf, opening.swf, alt_opening.swf and the seven alarm tones,
-byte-identical to Jan's backup. Second, the firmware's own
+intro.swf and the seven alarm tones, byte-identical to Jan's backup. Second, the firmware's own
 `download_cp` protocol — `GET /xml/controlpanel?…` returns the newest
 build's URL + md5 (falconwing 2.8.87b3, the build every hook and
 ui-policy selector is verified against) — recommended for the panel;
@@ -188,15 +187,35 @@ and the `chumby-local-widgets` offer are gone: with zero widgets the
 panel now shows its built-in clock (fork FR17, `bi_clock` embedded in
 controlpanel.swf), so a fresh install needs no widget at all.
 
-**Boot opening animation** (0.9.0, 2026-07-14): the launcher reproduces
-rcS's `start_opening_anim` before the intro/panel: `alt_opening.swf`
-when the `/psp/alt_opening` magic file exists, else `opening.swf`, both
-from `$STATE`. `opening.swf` plays ~11 s into a held end frame and
-never exits (real hardware killed it when boot finished) — the launcher
-runs it under `timeout 20`; `alt_opening.swf` quits itself via
-`fscommand("quit")` at its last frame (~12 s), `timeout 30` as a crash
-guard. The `/mnt/usb/opening.swf` factory override is dropped, as for
-the intro.
+**Boot opening animation: shipped in 0.9.0, dropped in 0.9.1** (Jan,
+2026-07-14: "not worth the complexity"). The 0.9.0 launcher reproduced
+rcS's `start_opening_anim` sequentially under `timeout 20`, and the 4th
+vanilla-card test showed why that cannot work well: `opening.swf` never
+exits by itself (it plays ~11 s into a held end frame; real hardware ran
+it *in parallel with boot* and killed it from outside when boot
+finished), so a sequential stand-in needs a kill timeout that must also
+cover ruffle's own startup — ~30 s on a Pi 3B+ — leaving only bad
+choices: a short slot shows black and kills the animation before its
+first frame (what Jan saw), a long one delays every boot. The faithful
+alternative (opening in the background covering the panel's startup,
+killed when the panel's window maps) needs a window-mapped signal the
+launcher does not have, plus two software-rendered players competing on
+the 3B+. Dropped instead: the launcher plays nothing before the intro,
+and the downloader no longer extracts `opening.swf`/`alt_opening.swf`.
+The `/psp/alt_opening` magic file is thereby out of scope too.
+
+**Audio backend self-heal** (0.9.1, 2026-07-14): pipewire's user units
+(`pipewire.socket`, `pipewire-pulse.socket`, `wireplumber.service`)
+only arm at user-session start. On a first install pi's user manager
+predates the apt run, so every audio path — ruffle's cpal (the intro
+soundtrack, the backup-alarm beep) *and* mpv — is silent until a
+reboot (the 4th-card finding, development.md §6). The launcher
+therefore `systemctl --user start`s the three units before playing
+anything: idempotent, `|| true` (a box with a broken audio stack still
+boots to the panel rather than flapping in `Restart=on-failure`), and
+it also heals standalone/debug runs, which an `ExecStartPre=` in the
+unit would not — the unit's `PAMName=login` session is what makes
+`systemctl --user` reachable there at all.
 
 **Distribution** (2026-07-13): a **signed flat apt repo on GitHub Pages**
 (`https://yanosz.github.io/chumby-pi/apt`, sources line

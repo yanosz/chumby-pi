@@ -21,9 +21,9 @@ around between reboots.
 - A **Raspberry Pi with a small touchscreen.** The reference build is a
   Pi 3B+ with a 3.5″ SPI display and a USB audio dongle; other displays
   and sound devices work too — see [docs/hardware.md](docs/hardware.md).
-- The **Chumby firmware files** — `controlpanel.swf`, the intro and
-  boot animations, and the alarm tones. These are copyrighted and **not
-  included here**: pull them from your own Chumby's backup, or let
+- The **Chumby firmware files** — `controlpanel.swf`, the intro, and
+  the alarm tones. These are copyrighted and **not included here**:
+  pull them from your own Chumby's backup, or let
   `chumby-download-firmware` (part of the package) fetch them all from
   Chumby's still-running servers — it asks first and shows what it
   downloads. Widgets are optional; without any, the panel is a clock.

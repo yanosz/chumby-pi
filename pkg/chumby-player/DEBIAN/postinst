@@ -65,9 +65,9 @@ EOF
     if [ "$have_swf" = no ]; then
         cat >&2 <<'EOF'
   * controlpanel.swf is copyrighted chumby firmware and not included.
-    Run  chumby-download-firmware  to fetch it — plus the intro, boot
-    animations and alarm tones — from Chumby's servers, or copy the
-    files from your chumby or its backup into /var/lib/chumby.
+    Run  chumby-download-firmware  to fetch it — plus the intro and
+    alarm tones — from Chumby's servers, or copy the files from your
+    chumby or its backup into /var/lib/chumby.
 EOF
     fi
     echo "" >&2

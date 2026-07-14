@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """chumby-download-firmware — fetch the files the package cannot ship.
 
-The control panel, intro tour, boot animations and alarm tones are
+The control panel, intro tour and alarm tones are
 copyrighted Chumby Industries firmware, so the Debian package does not
 contain them. Chumby's own servers still do: the classic 1.7.3 firmware
 image (update.zip, ~30 MB) carries everything but the newest control
@@ -34,8 +34,6 @@ RFS_NAME = "rfs1.bin"
 # CRAMFS path in the 1.7.3 rootfs -> file under $STATE.
 FIRMWARE_FILES = {
     "usr/widgets/intro.swf": "intro.swf",
-    "usr/widgets/opening.swf": "opening.swf",
-    "usr/widgets/alt_opening.swf": "alt_opening.swf",
     "usr/chumby/alarmtones/Beep.mp3": "alarmtones/Beep.mp3",
     "usr/chumby/alarmtones/Bugle.mp3": "alarmtones/Bugle.mp3",
     "usr/chumby/alarmtones/ClockStrikes.mp3": "alarmtones/ClockStrikes.mp3",
@@ -94,8 +92,8 @@ def extract_rootfs(workdir: Path) -> Path | None:
         print("firmware files: all present, skipping update.zip.")
         return None
 
-    print("The classic 1.7.3 firmware image provides intro.swf, the boot")
-    print("animations and the alarm tones (a ~30 MB download):")
+    print("The classic 1.7.3 firmware image provides intro.swf and the")
+    print("alarm tones (a ~30 MB download):")
     print(f"  {UPDATE_URL}")
     if not confirm("Download it?"):
         print("  skipped.")

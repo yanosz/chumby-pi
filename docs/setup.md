@@ -72,9 +72,8 @@ chumby-download-firmware
 It explains what it fetches and from where (Chumby's servers still
 carry the classic firmware image and the newest control panel), asks
 before touching the network, and verifies checksums. It gets you the
-control panel, the guided-tour intro, the boot animations and the
-alarm tones — a complete chumby that boots to a clock; widgets are
-optional extras.
+control panel, the guided-tour intro and the alarm tones — a complete
+chumby that boots to a clock; widgets are optional extras.
 
 **Copy from your own chumby or its backup** — the same files, plus any
 widgets you want; left side is the path on the chumby:
@@ -85,7 +84,6 @@ widgets you want; left side is the path on the chumby:
 | `/usr/widgets/*.swf` + `*.jpg` | `/var/lib/chumby/widgets/` | more widgets — then run `chumby-local-widgets` |
 | `/usr/chumby/alarmtones/*.mp3` | `/var/lib/chumby/alarmtones/` | alarm sounds; **keep the filenames** (the panel hardcodes them) |
 | `/usr/widgets/intro.swf` | `/var/lib/chumby/intro.swf` | the guided-tour INTRO (its button stays dimmed without it) |
-| `/usr/widgets/opening.swf`, `alt_opening.swf` | `/var/lib/chumby/` | the boot animation (`alt_opening` plays instead when `/psp/alt_opening` exists — create it via the fixtures tree) |
 
 Files must be readable by the `pi` user — if you copied with `sudo`,
 `sudo chmod 644` them (the player says exactly this in

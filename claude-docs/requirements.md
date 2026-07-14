@@ -131,9 +131,10 @@ firmware *from Chumby's own servers* — a user-invoked, ask-first script
 without the owner confirming. Amended again (Jan, 2026-07-14): the
 script's source is now the classic **1.7.3 firmware image**
 (`update.zip` on files.chumby.com, md5-pinned) — its CRAMFS rootfs
-carries intro.swf, both boot openings and the alarm tones, all
-byte-identical to Jan's backup — plus the `download_cp` protocol for
-the newest control panel. Nothing is backup-only any more except extra
+carries intro.swf and the alarm tones, all byte-identical to Jan's
+backup — plus the `download_cp` protocol for the newest control panel.
+(The image's boot openings were extracted in 0.9.0 only; the boot
+animation was dropped in 0.9.1 — design §5.) Nothing is backup-only any more except extra
 widgets. The script embeds the image URL and the protocol endpoint;
 the *documentation* still names no file URLs. The former stock-clock
 widget download was dropped outright: a widgetless panel shows its
