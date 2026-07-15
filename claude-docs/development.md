@@ -593,9 +593,12 @@ first tested from `/etc/udev/rules.d/` with
 `udevadm control --reload && udevadm trigger /dev/input/event*`; that copy was
 removed once the packaged rule shipped, so the device carries exactly one.
 
-**`LP_NUM_THREADS=1`** is a launcher default, not a device file. It was
-trialled through `/etc/default/chumby-player`, which was then removed — the
-device carries no local override.
+**`LP_NUM_THREADS=1`** ships as an explicit setting in
+`/etc/default/chumby-player` (a conffile, so owner edits survive upgrades),
+inherited by the player via the unit's `EnvironmentFile`. The launcher does
+**not** default it: removing or blanking the line means lavapipe falls back to
+its own thread count, never a silent 1. Raise it to trade CPU/heat for render
+throughput (NFR4).
 
 **Desktop session**: `systemctl disable --now lightdm`, with
 `loginctl enable-linger pi` set **first** so the user manager (and PipeWire)

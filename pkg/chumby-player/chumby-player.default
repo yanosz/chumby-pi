@@ -15,6 +15,9 @@
 # (HDMI/DSI) could drop this.
 #WLR_RENDERER=pixman
 
+# lavapipe (software Vulkan) worker threads; higher trades CPU/heat for render throughput (NFR4).
+LP_NUM_THREADS=1
+
 # Send music and alarms to a specific output instead of the PipeWire
 # default sink. Names as mpv prints them: mpv --audio-device=help
 #CHUMBY_AUDIO_DEVICE=alsa/plughw:CARD=Headphones

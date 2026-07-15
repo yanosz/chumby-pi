@@ -27,6 +27,7 @@
 #   CHUMBY_SHARE         installed data (default /usr/share/chumby-player)
 #   CHUMBY_RUFFLE        player binary  (default
 #                        /usr/lib/chumby-player/ruffle_desktop)
+#   LP_NUM_THREADS       lavapipe worker threads; unset ⇒ lavapipe default (NFR4)
 
 set -eu
 
@@ -188,11 +189,9 @@ systemctl --user start pipewire.socket pipewire-pulse.socket \
 
 export RUST_LOG="${RUST_LOG:-warn}"
 
-# lavapipe (software Vulkan) worker threads: extra workers roughly
-# double total CPU for the same 12 fps output on the Pi 3B+ —
-# measured 215% (4 threads) vs 103% (1 thread), see
-# claude-docs/requirements.md NFR4.
-export LP_NUM_THREADS="${LP_NUM_THREADS:-1}"
+# LP_NUM_THREADS (lavapipe worker cap) is deliberately NOT defaulted here:
+# it comes only from /etc/default/chumby-player, so an unset value means
+# lavapipe's own default, not a silent 1. Rationale in requirements.md NFR4.
 
 check_swf || exit 1
 
