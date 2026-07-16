@@ -21,3 +21,27 @@ preference — a userspace spidev reader in PiHost feeding ASnative(5,60)/
 (5,61) — which needs no kernel module; the port only pays off if something
 besides PiHost must consume /dev/accel. Findings and the full access chain:
 hardware/chumby-hat/accelerometer.md.
+
+---
+
+Number: 2
+Timestamp: 2026-07-17, 01:00
+Title: Daughtercard breakout board (supersedes the HAT concept).
+Status: open
+Description: Reframe hardware/chumby-hat/ from a Pi HAT to a passive breakout
+with a soldered-on 2x13 header the chumbilical plugs into. Mapping: DC jack →
+USB-A power-only port (decide: 5 V supply into the barrel jack, or buck for
+the original 12 V wart); speakers → 4-pin PH2.0 (Waveshare amp); 2x USB-A
+male toward a hub carrying DATA + GND ONLY — VBUS for both jacks is the
+shared P50V net, fed once from the breakout's own 5 V rail, never from the
+hub's ports, so both USB ports work without back-feeding the hub; headphones
+→ screw terminal; battery unconnected. Everything else on a single 2x5
+dupont block mating Pi header pins 17-26 (3V3, SPI0 with both CEs, 2x GND,
+GPIO24/25 for bend/reset — moves bend off FR3's GPIO17, one gpio-key config
+line). Open before drawing: confirm shared P50V and the power switch sitting
+in series with RAW_PWR (no button net crosses the chumbilical); HP_NOTIN
+placement (screw terminal, dupont, or dropped); measure the cable-end
+housing (dimensions, polarization, latches) to pick the through-hole header;
+mechanical alignment of rigid USB-A plugs with a hub — fallback is a short
+captive cable. Alternative still on the table: replace the connectors on the
+daughtercard itself (unassessed).

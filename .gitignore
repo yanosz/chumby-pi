@@ -22,3 +22,6 @@ __pycache__/
 
 # Downloaded reference schematics (large, fetch on demand)
 pdf/
+
+# KiCad generation tryout, not part of the record
+/hardware/breakout-tryout/
