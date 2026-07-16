@@ -19,3 +19,6 @@
 
 /resources/zurks-offline-firmware-classic/
 __pycache__/
+
+# Downloaded reference schematics (large, fetch on demand)
+pdf/

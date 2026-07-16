@@ -319,6 +319,28 @@ the player's `cpal` output both land on it with no configuration —
 wired, the remote-control path for scripted testing over SSH, and the
 intended home of the eventual `exit-player` magic key.
 
+The hardware path for that GPIO17 button — and for reviving the Chumby
+Classic daughtercard generally (its two USB-A ports, passive 4 Ω BTL
+speakers, headphone jack, and bend/reset switches) — is the
+**`hardware/chumby-hat/`** KiCad project. It bridges the daughtercard's
+"chumbilical" ribbon (Molex 71349-2011) to a Pi 3B+: USB by pigtail with
+a TPS2051 VBUS switch, buttons to GPIO17/27, speakers via a Waveshare
+USB→audio module, and headphones off the Pi's own 3.5 mm jack with
+`HP_NOTIN`→GPIO driving a software sink switch. Full net map, GPIO
+assignment and the open board-verification items live in that project's
+`README.md`. The daughtercard is mostly a breakout but not passive: it
+carries the Kionix KXP74-1050 accelerometer and the AT25080A ID EEPROM
+on SPI across the chumbilical (two chip selects), reachable from Pi
+SPI0 — no Linux driver exists for the KXP74, so PiHost would read it
+via `spidev` and answer the panel's ASnative(5,60)/(5,61) from live
+values (full chain and open probes:
+`hardware/chumby-hat/accelerometer.md`). The original
+mainboard schematics and Gerbers are `pdf/` (git-ignored) — no
+daughtercard-specific design files exist publicly (search closed
+2026-07-16, see that README's "Daughtercard files" section). The chumbilical
+pin table is derived from the mainboard schematic and physical
+verification, not from any daughtercard source.
+
 The kiosk showed a mouse cursor on a device with no mouse. The cause was not
 the client: `libinput list-devices` traced the seat's only pointer capability
 to `vc4-hdmi`, the HDMI-CEC input device. wlroots drew a cursor for that
