@@ -204,6 +204,35 @@ the 3B+. Dropped instead: the launcher plays nothing before the intro,
 and the downloader no longer extracts `opening.swf`/`alt_opening.swf`.
 The `/psp/alt_opening` magic file is thereby out of scope too.
 
+**Boot opening animation, take two: a Plymouth theme** (prototype,
+2026-07-17, claude/issues.md #3 — built, not yet verified on-device, test
+Pi offline). Plymouth's lifecycle — run during boot, get told to quit by
+something else — matches real hardware's opening.swf far better than a
+sequential Ruffle run ever could: no second software renderer, no
+window-mapped signal to invent. `opening.swf` is 320×240, 12 fps, 132
+frames (~11 s, held end frame); `ruffle/exporter --frames all` (already
+built for test fixtures) rasterizes it 1:1, no new SWF decoder needed.
+`chumby-download-firmware` now also fetches `opening.swf` (added to
+`FIRMWARE_FILES`, saved to `$STATE/opening.swf` like `intro.swf`), then
+`install_boot_theme()` runs the bundled `ruffle-exporter` binary, renames
+its zero-padded output to `frame-N.png`, and — the one step in the script
+needing root, since the destination is `/usr/share/plymouth/themes/` —
+`sudo`s the frames into `/usr/share/plymouth/themes/chumby/frames/` and
+runs `sudo plymouth-set-default-theme chumby`. The theme itself
+(`pkg/chumby-player/plymouth-theme-chumby/`) ships in the package without
+frames; it only ever gets activated once real frames exist, so a box
+that never runs the downloader keeps its stock (or absent) splash rather
+than a half-built theme. `chumby-player-run`'s `--kiosk` branch fires a
+backgrounded, non-fatal `plymouth quit` right before `exec cage` — the
+same "boot is over" role `wait_for_opening`'s external kill played on
+real hardware, though this is a proxy for "cage is about to start," not
+a true window-mapped signal, so the DRM handoff timing is unverified
+until tested on the Pi. Audio (the original had a streamed soundtrack)
+is out of scope — Plymouth is silent, and reproducing it was judged not
+worth the added complexity, same call as the 0.9.1 drop above.
+`alt_opening.swf` (the `/psp/alt_opening` factory variant, six separate
+audio streams per `ffprobe`) is also out of scope for this pass.
+
 **Audio backend self-heal** (0.9.1, 2026-07-14): pipewire's user units
 (`pipewire.socket`, `pipewire-pulse.socket`, `wireplumber.service`)
 only arm at user-session start. On a first install pi's user manager

@@ -86,6 +86,16 @@ cargo build --profile dist -p ruffle_desktop \
     --target aarch64-unknown-linux-gnu --manifest-path ruffle/Cargo.toml
 ```
 
+`build-debs.sh` also needs `ruffle/exporter` cross-built the same way
+(same command, `-p exporter`) — bundled into the package as
+`ruffle-exporter`, it rasterizes `opening.swf` into the Plymouth boot
+theme's frames at download time (design.md §5, claude/issues.md #3):
+
+```sh
+cargo build --profile dist -p exporter \
+    --target aarch64-unknown-linux-gnu --manifest-path ruffle/Cargo.toml
+```
+
 The binary, the fixtures, the SWF and the two helper scripts the debs
 install all come out of `ruffle/`; `build-debs.sh` knows where.
 

@@ -4,7 +4,7 @@ Architecture: arm64
 Maintainer: Jan <jan@simula.no>
 Section: misc
 Priority: optional
-Depends: cage, mpv, pipewire-alsa, python3, 7zip | p7zip-full, libc6, libgcc-s1, libfontconfig1, libssl3t64, libasound2t64, libudev1
+Depends: cage, mpv, pipewire-alsa, python3, 7zip | p7zip-full, plymouth, libc6, libgcc-s1, libfontconfig1, libssl3t64, libasound2t64, libudev1
 Description: Chumby control panel player (chumby-fork Ruffle kiosk)
  Runs the original Chumby Classic control panel under a patched Ruffle
  inside a cage Wayland kiosk on tty1. Installing this package and

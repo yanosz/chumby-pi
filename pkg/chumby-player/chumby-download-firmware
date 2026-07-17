@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """chumby-download-firmware — fetch the files the package cannot ship.
 
-The control panel, intro tour and alarm tones are
+The control panel, intro tour, boot animation and alarm tones are
 copyrighted Chumby Industries firmware, so the Debian package does not
 contain them. Chumby's own servers still do: the classic 1.7.3 firmware
 image (update.zip, ~30 MB) carries everything but the newest control
@@ -10,6 +10,11 @@ original firmware's download_cp used. This helper shows exactly what it
 would download and asks before touching the network. Nothing identifying
 is sent (the device id in the control-panel query is zeroed), and the
 player itself stays offline afterwards.
+
+The boot animation (opening.swf) is rasterized into a Plymouth theme,
+which needs root (the theme lives under /usr/share/plymouth/themes/);
+that one step asks separately and uses sudo, unlike the rest of this
+script.
 """
 
 import hashlib
@@ -34,6 +39,7 @@ RFS_NAME = "rfs1.bin"
 # CRAMFS path in the 1.7.3 rootfs -> file under $STATE.
 FIRMWARE_FILES = {
     "usr/widgets/intro.swf": "intro.swf",
+    "usr/widgets/opening.swf": "opening.swf",
     "usr/chumby/alarmtones/Beep.mp3": "alarmtones/Beep.mp3",
     "usr/chumby/alarmtones/Bugle.mp3": "alarmtones/Bugle.mp3",
     "usr/chumby/alarmtones/ClockStrikes.mp3": "alarmtones/ClockStrikes.mp3",
@@ -45,6 +51,15 @@ FIRMWARE_FILES = {
 # The blob's own control panel — 2.8.75, older than the 2.8.87b3 this
 # project is verified against. Fallback only (see download_controlpanel).
 BLOB_CONTROLPANEL = "usr/widgets/controlpanel.swf"
+
+# opening.swf -> Plymouth boot theme (claude/issues.md #3). 132 frames,
+# 12 fps, 320x240 — fixed values for this specific movie, not derived,
+# since the theme script (pkg/chumby-player/plymouth-theme-chumby/) is
+# written against exactly this asset.
+BOOT_THEME_FRAME_COUNT = 132
+PLYMOUTH_THEME_DIR = Path("/usr/share/plymouth/themes/chumby")
+EXPORTER = Path(os.environ.get(
+    "CHUMBY_EXPORTER", "/usr/lib/chumby-player/ruffle-exporter"))
 
 # The panel-download protocol of the original firmware's download_cp
 # script. Identity params are deliberately zero/static: the server
@@ -92,8 +107,8 @@ def extract_rootfs(workdir: Path) -> Path | None:
         print("firmware files: all present, skipping update.zip.")
         return None
 
-    print("The classic 1.7.3 firmware image provides intro.swf and the")
-    print("alarm tones (a ~30 MB download):")
+    print("The classic 1.7.3 firmware image provides intro.swf, opening.swf")
+    print("and the alarm tones (a ~30 MB download):")
     print(f"  {UPDATE_URL}")
     if not confirm("Download it?"):
         print("  skipped.")
@@ -163,6 +178,56 @@ def download_controlpanel(rootfs: Path | None) -> None:
             save(target, (rootfs / BLOB_CONTROLPANEL).read_bytes())
 
 
+def install_boot_theme() -> None:
+    """Rasterize opening.swf into the Plymouth theme and activate it.
+
+    Needs root (the theme lives under /usr/share/plymouth/themes/), so
+    this is the one step in the script that shells out to sudo — everything
+    else here runs, and writes, as the invoking user.
+    """
+    frames_dir = PLYMOUTH_THEME_DIR / "frames"
+    if (frames_dir / f"frame-{BOOT_THEME_FRAME_COUNT - 1}.png").is_file():
+        print("boot animation: Plymouth theme already installed, skipping.")
+        return
+
+    opening = STATE / "opening.swf"
+    if not opening.is_file():
+        print("boot animation: no opening.swf, skipping (re-run after")
+        print("  downloading it above).")
+        return
+
+    if not EXPORTER.is_file():
+        print(f"boot animation: {EXPORTER} not found — is chumby-player")
+        print("  installed? skipping.")
+        return
+
+    print("boot animation: rasterizing opening.swf into a Plymouth theme")
+    print(f"  and installing it to {PLYMOUTH_THEME_DIR} (needs sudo).")
+    if not confirm("Install it?"):
+        print("  skipped.")
+        return
+
+    with tempfile.TemporaryDirectory(prefix="chumby-boot-theme-") as tmp:
+        raw = Path(tmp) / "raw"
+        staged = Path(tmp) / "staged"
+        staged.mkdir()
+        subprocess.run([str(EXPORTER), str(opening), str(raw), "--frames", "all"],
+                        check=True)
+
+        frames = sorted(raw.glob("*.png"), key=lambda p: int(p.stem))
+        if len(frames) != BOOT_THEME_FRAME_COUNT:
+            sys.exit(f"boot animation: expected {BOOT_THEME_FRAME_COUNT} frames, "
+                      f"exporter produced {len(frames)} — not installing.")
+        for frame in frames:
+            frame.rename(staged / f"frame-{int(frame.stem)}.png")
+
+        subprocess.run(["sudo", "mkdir", "-p", str(frames_dir)], check=True)
+        subprocess.run(["sudo", "cp", "-t", str(frames_dir), *[
+            str(staged / f.name) for f in staged.iterdir()]], check=True)
+        subprocess.run(["sudo", "plymouth-set-default-theme", "chumby"], check=True)
+    print(f"  installed and activated ({BOOT_THEME_FRAME_COUNT} frames).")
+
+
 def main() -> None:
     print(__doc__)
     print(f"Files go to {STATE}.")
@@ -174,6 +239,9 @@ def main() -> None:
         rootfs = extract_rootfs(Path(tmp))
         print()
         download_controlpanel(rootfs)
+
+    print()
+    install_boot_theme()
 
     print()
     print("Widgets are optional — without any, the panel is a clock.")

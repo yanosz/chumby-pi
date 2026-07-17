@@ -13,7 +13,10 @@
 #                     (stock filenames — the panel hardcodes them)
 #   intro.swf         from /usr/widgets/intro.swf            optional
 # chumby-download-firmware fetches all of these from Chumby's servers
-# instead (the 1.7.3 firmware image + the download_cp protocol).
+# instead (the 1.7.3 firmware image + the download_cp protocol), and
+# also rasterizes opening.swf into a Plymouth boot theme (not consumed
+# by this script — it plays before cage/this script ever starts, and is
+# ended by the `plymouth quit` call below).
 #
 # Overrides (set in /etc/default/chumby-player for the service; the
 # last two exist so a dev box can drive this script against a staged
@@ -109,6 +112,15 @@ if [ "${1:-}" = "--kiosk" ]; then
         [ -n "${WLR_DRM_DEVICES:-}" ] || \
             echo "chumby-player: no SPI DRM device — cage chooses the display" >&2
     fi
+    # Release Plymouth's boot animation (if chumby-download-firmware
+    # installed and activated it) right as cage is about to claim the
+    # display. Backgrounded and non-fatal: cage must not wait on it, and
+    # a box without the theme (or without Plymouth at all) still boots.
+    # This is a proxy for "boot finished," not a window-mapped signal —
+    # the same gap that sank the sequential-Ruffle boot opening attempt
+    # (claude-docs/design.md §5); on-device timing is unverified
+    # (claude/issues.md #3).
+    command -v plymouth >/dev/null 2>&1 && { plymouth quit || true; } &
     exec /usr/bin/cage -- "$0"
 fi
 
@@ -195,12 +207,16 @@ export RUST_LOG="${RUST_LOG:-warn}"
 
 check_swf || exit 1
 
-# The boot opening animation is deliberately NOT reproduced (Jan,
-# 2026-07-14, after the 4th vanilla-card test): opening.swf never exits
-# by itself — real hardware ran it in parallel with boot and killed it
-# when done — and any sequential stand-in needs a kill timeout that must
-# also cover ~30 s of player startup on a Pi 3B+. Either the boot gets
-# slower or the animation never shows. Not worth the complexity.
+# The boot opening animation is NOT reproduced by running opening.swf
+# sequentially here (Jan, 2026-07-14, after the 4th vanilla-card test):
+# it never exits by itself — real hardware ran it in parallel with boot
+# and killed it externally when done — and a sequential stand-in needs a
+# kill timeout that must also cover ~30 s of player startup on a Pi 3B+.
+# Either the boot gets slower or the animation never shows. Not worth
+# the complexity. Superseded by a Plymouth theme instead (the `plymouth
+# quit` call in --kiosk above): Plymouth's own "run until told to quit"
+# model matches the original external-kill behavior without a second
+# software renderer competing for the display (claude/issues.md #3).
 
 # Boot-time intro, as rcS's start_intro: the tour plays before the panel,
 # every boot until its "never show again" button writes /psp/disable_intro

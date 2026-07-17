@@ -4,10 +4,12 @@
 #                         git-clean fixtures tree — publishable, needs
 #                         no .swf to build or install
 #
-# Input: the cross-compiled dist binary (claude-docs/development.md §3),
-# nothing else. The copyrighted files (controlpanel.swf, widget SWFs,
-# alarm tones, intro.swf) never enter a package: the owner copies them
-# from a chumby or its backup into /var/lib/chumby — see
+# Input: the cross-compiled dist binaries, ruffle_desktop and exporter
+# (claude-docs/development.md §3), nothing else. The copyrighted files
+# (controlpanel.swf, widget SWFs, alarm tones, intro.swf, opening.swf)
+# never enter a package: the owner copies them from a chumby or its
+# backup into /var/lib/chumby, or chumby-download-firmware fetches them
+# and rasterizes opening.swf with the bundled exporter — see
 # chumby-player-run and design.md §5.
 # Output: pkg/out/*.deb, staging in pkg/build/ (both gitignored).
 
@@ -20,10 +22,12 @@ VERSION="${VERSION:-0.9.1}"
 # dist = release + fat LTO + codegen-units=1 (what upstream ships);
 # measurably lighter on the Pi's CPU-bound rasterization (doc 11).
 BIN="$REPO/ruffle/target/aarch64-unknown-linux-gnu/dist/ruffle_desktop"
+EXPORTER_BIN="$REPO/ruffle/target/aarch64-unknown-linux-gnu/dist/exporter"
 BUILD="$REPO/pkg/build"
 OUT="$REPO/pkg/out"
 
 [ -x "$BIN" ] || { echo "missing $BIN — cross-build with --profile dist first (claude-docs/development.md §3)" >&2; exit 1; }
+[ -x "$EXPORTER_BIN" ] || { echo "missing $EXPORTER_BIN — cross-build with: cargo build --profile dist -p exporter --target aarch64-unknown-linux-gnu --manifest-path ruffle/Cargo.toml" >&2; exit 1; }
 
 rm -rf "$BUILD"
 mkdir -p "$BUILD" "$OUT"
@@ -33,7 +37,8 @@ P="$BUILD/chumby-player"
 mkdir -p "$P/DEBIAN" "$P/usr/bin" "$P/usr/lib/chumby-player" \
          "$P/lib/systemd/system" "$P/usr/lib/udev/rules.d" \
          "$P/media/chumby-usb" "$P/etc/chumby-player" \
-         "$P/etc/default" "$P/usr/share/chumby-player"
+         "$P/etc/default" "$P/usr/share/chumby-player" \
+         "$P/usr/share/plymouth/themes/chumby"
 sed "s/@VERSION@/$VERSION/" chumby-player/DEBIAN/control > "$P/DEBIAN/control"
 install -m 755 chumby-player/DEBIAN/postinst chumby-player/DEBIAN/prerm "$P/DEBIAN/"
 # Owner config (fork FR14/FR15): shipped as a dpkg conffile so local edits
@@ -46,6 +51,12 @@ install -m 644 "$REPO/ruffle/fixtures/player.toml.example" \
 # commented out; the unit's built-in defaults suit the reference Pi 3.
 install -m 644 chumby-player/chumby-player.default "$P/etc/default/chumby-player"
 install -m 755 "$BIN" "$P/usr/lib/chumby-player/ruffle_desktop"
+install -m 755 "$EXPORTER_BIN" "$P/usr/lib/chumby-player/ruffle-exporter"
+# Theme script + config only — frames/ is populated later, by
+# chumby-download-firmware, from the copyrighted opening.swf (design.md §5).
+install -m 644 chumby-player/plymouth-theme-chumby/chumby.plymouth \
+    chumby-player/plymouth-theme-chumby/chumby.script \
+    "$P/usr/share/plymouth/themes/chumby/"
 install -m 755 chumby-player/chumby-ctl "$P/usr/bin/chumby-ctl"
 install -m 755 chumby-player/chumby-local-widgets "$P/usr/bin/chumby-local-widgets"
 install -m 755 chumby-player/chumby-download-firmware "$P/usr/bin/chumby-download-firmware"

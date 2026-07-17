@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Chumby Boot
+Description=Chumby octopus boot animation, replaying the real device's opening.swf
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/chumby
+ScriptFile=/usr/share/plymouth/themes/chumby/chumby.script
