@@ -6,10 +6,13 @@ Appliance-side issues only; player issues live in ruffle/claude/issues.md.
 ---
 
 Number: 1
-Timestamp: 2026-07-17, 00:15
+Timestamp: 2026-07-17, 00:15 (moved 2026-07-17, 18:00)
 Title: Check chumby_accel.c applicability to the Pi kernel.
-Status: open
-Description: The chumby kernel source is public (GPL), so the accelerometer
+Status: open — moved to the pcb-ideas branch with hardware/
+Description: All PCB/hardware work (this issue, #2, and hardware/) now
+lives on the pcb-ideas branch, kept out of dev's tree. This entry stays
+here only as a pointer; the full text (unchanged) is on pcb-ideas.
+The chumby kernel source is public (GPL), so the accelerometer
 driver behind /dev/accel — chumby_accel.c, "2.1-Kionix-Ironforge", bunnie's
 one-off that also carries the dcid EEPROM driver — can be read and possibly
 ported. Assess what a port to the Raspberry Pi kernel would take: it
@@ -25,10 +28,11 @@ hardware/chumby-hat/accelerometer.md.
 ---
 
 Number: 2
-Timestamp: 2026-07-17, 01:00
+Timestamp: 2026-07-17, 01:00 (moved 2026-07-17, 18:00)
 Title: Daughtercard breakout board (supersedes the HAT concept).
-Status: open
-Description: Reframe hardware/chumby-hat/ from a Pi HAT to a passive breakout
+Status: open — moved to the pcb-ideas branch with hardware/
+Description: See issue 1's note — this issue and hardware/breakout-tryout/
+now live on pcb-ideas, unchanged. Reframe hardware/chumby-hat/ from a Pi HAT to a passive breakout
 with a soldered-on 2x13 header the chumbilical plugs into. Mapping: DC jack →
 USB-A power-only port (decide: 5 V supply into the barrel jack, or buck for
 the original 12 V wart); speakers → 4-pin PH2.0 (Waveshare amp); 2x USB-A
