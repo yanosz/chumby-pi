@@ -141,9 +141,16 @@ reset button GPIO3+GND, bend button GPIO5+GND):
   issue 2 proposes GPIO24/25, this box uses GPIO5 — docs should settle
   on one recommendation eventually.
 
+- Bend press VERIFIED by Jan after one fix in the fork (dev 715a60f3c):
+  the panel polls _bent per frame (~83 ms) and a crisp GPIO tap is
+  shorter — level-only set_bent lost it ("sometimes does not fire,
+  sometimes takes seconds" = re-pressing until a poll caught one). The
+  Home-key handler now also latches tap_bend() on the press edge.
+  No kernel-side debounce/hold was involved (gpio-keys default 5 ms).
+
 Still outstanding:
-- Jan's at-screen observation of handoff quality, bend press, power
-  button shutdown/wake (asked 2026-07-19).
+- Jan's at-screen observation of handoff quality (black gap?) and the
+  power button shutdown/wake test (asked 2026-07-19).
 - The original test Pi (192.168.42.51, SPI TFT ILI9486): does the DRM
   handoff behave with the SPI panel, where plymouth's drm renderer and
   cage contend for a much slower device? Untested — box offline.
