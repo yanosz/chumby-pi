@@ -6,6 +6,11 @@ The folder is gitignored. Decisions still open in issue 2 (P50V
 beep-out, power switch, HP_NOTIN, cable-end housing) are baked in here
 as assumptions — do not fab from this.
 
+**2026-07-19: gen_sch.py's P1 net map is known wrong** — it inherits a
+one-row misread of the schematic, since corrected by measurement
+(`../chumby-hat/accelerometer.md` §3: reset = sch 9↔11, bend line =
+sch 17). Regenerate only after taking the corrected table.
+
 - `gen_sch.py` → `chumby-breakout.kicad_sch` — symbols pulled from the
   stock KiCad 9 libs, nets as global labels at computed pin endpoints.
   **ERC: 0 violations** (`--severity-all`).

@@ -25,9 +25,20 @@ hardware/chumby-hat/accelerometer.md.
 ---
 
 Number: 2
-Timestamp: 2026-07-17, 01:00
+Timestamp: 2026-07-17, 01:00 (amended 2026-07-19)
 Title: Daughtercard breakout board (supersedes the HAT concept).
 Status: open
+Amendment 2026-07-19: first real measurements landed (second test Pi,
+Jan's multimeter + working gpio-key buttons) — the schematic pin table
+underlying this issue was one row off, and the device numbers pins
+sequentially per row, not odd/even. Corrected, anchor-verified table:
+hardware/chumby-hat/accelerometer.md §3. Measured: bend line = phys 9
+(sch 17); reset switch = phys 5↔6 (sch 9↔11, CHUMBY_RESET_REQ ↔
+P33VBKUP — the "P33VBKUP = SPI supply" presumption is now in doubt, it
+is at least the reset-switch common). Wired on the test box: 5→GPIO3,
+6→GND, stock gpio-shutdown, shutdown+wake verified. Bend's return pin
+and the SPI pins remain unmeasured; gen_sch.py's P1 map must be
+regenerated from the corrected table before any fab.
 Description: Reframe hardware/chumby-hat/ from a Pi HAT to a passive breakout
 with a soldered-on 2x13 header the chumbilical plugs into. Mapping: DC jack →
 USB-A power-only port (decide: 5 V supply into the barrel jack, or buck for

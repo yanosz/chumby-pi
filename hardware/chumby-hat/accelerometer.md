@@ -79,23 +79,47 @@ status page.
 
 ## 3. Wiring it to the Pi
 
+**Numbering correction (2026-07-19, measured).** The original table here
+read the schematic's P701 labels one row off. Two measured anchors fixed
+it: the bend switch line is physical pin 9 (proven by a working
+`gpio-key` button on the second test Pi), and the reset switch closes
+physical 5↔6 (multimeter). Two numbering schemes are in play — keep them
+apart:
+
+- **Physical** (marked on the device): pin 1 left-front with the
+  polarization notch toward the viewer; front row 1–13, back row 14–26.
+- **Schematic** (P701 symbol): odd/even zigzag — front row odd 1..25,
+  back row even 2..26. Physical front-row *n* = schematic 2n−1;
+  physical back-row *n* = schematic 2(n−13).
+
+Measured: physical 9 (sch 17) = `CHUMBY_BEND`; physical 5↔6
+(sch 9↔11) = reset switch = `CHUMBY_RESET_REQ` ↔ `P33VBKUP`. Everything
+else below is derived from the corrected one-row shift and is
+**unmeasured** until beeped.
+
 The Pi 3B+ header has SPI0 at 3.3 V, matching the i.MX21's I/O levels —
 a straight wire-up:
 
-| Chumbilical pin | Net | Pi header |
-|---:|---|---|
-| 5 | `CSPI1_MOSI` | GPIO10 / pin 19 (MOSI) |
-| 3 | `CSPI1_MISO` | GPIO9 / pin 21 (MISO) |
-| 4 | `CSPI1_SCLK` | GPIO11 / pin 23 (SCLK) |
-| 6 | `CSPI1_SS0` | GPIO8 / pin 24 (CE0) |
-| 8 | `CSPI1_SS1` | GPIO7 / pin 26 (CE1) |
+| Physical pin | Schematic pin | Net | Pi header |
+|---:|---:|---|---|
+| 4 | 7 | `CSPI1_MOSI` | GPIO10 / pin 19 (MOSI) |
+| 3 | 5 | `CSPI1_MISO` | GPIO9 / pin 21 (MISO) |
+| 16 | 6 | `CSPI1_SCLK` | GPIO11 / pin 23 (SCLK) |
+| 17 | 8 | `CSPI1_SS0` | GPIO8 / pin 24 (CE0) |
+| 18 | 10 | `CSPI1_SS1` | GPIO7 / pin 26 (CE1) |
 
 Power: the only 3.3 V net crossing the chumbilical is `P33VBKUP`
-(pin 9), so presumably it feeds the KXP74 + EEPROM and would come from
-the Pi's 3.3 V rail — **inference from the net list, verify before
-relying on it** (KXP74 tolerates 2.7–5.25 V, the AT25080A 1.8–5.5 V, so
-the rail itself is safe either way; the SPI signal levels must stay
-3.3 V).
+(physical 6 / sch 11). It is now **measured to be the reset switch's
+common** (the switch closes it to `CHUMBY_RESET_REQ` — matching the
+mainboard sheet-2 note "reset switch on DC / reset pulls up", with
+R109 10 k pull-down + C614 0.1 µF on the line there). Whether it *also*
+feeds the KXP74 + EEPROM is still unverified. If it does, the pin is
+shared: grounding it for a Pi power button (physical 5 → GPIO3,
+6 → GND — how the second test Pi wires it) forecloses using it as the
+accel supply. If not, the SPI chips' supply arrives some other way —
+none of the remaining labeled nets is a plausible 3.3 V source, so
+probe before wiring the accelerometer. (KXP74 tolerates 2.7–5.25 V, the
+AT25080A 1.8–5.5 V; the SPI signal levels must stay 3.3 V.)
 
 ## 4. Q: connector pitch — do jumper wires fit?
 
@@ -143,10 +167,20 @@ Options, best first:
 ## Open verification items (adds to the README's list)
 
 1. Which chip select (SS0/SS1) is the accelerometer vs. the AT25080A.
-2. Which chumbilical pin actually powers the two SPI chips
-   (presumed `P33VBKUP`, pin 9).
+2. Which chumbilical pin actually powers the two SPI chips.
+   `P33VBKUP` (physical 6) was the presumption, but it is now measured
+   as the reset switch's common (§3) — shared or not is the question.
 3. Confirm the cable-end housing is a C-Grid-compatible 2×13
    receptacle before sourcing `P1`.
+4. The bend switch's return pin (its line is physical 9, measured; the
+   second pin of the working button pair is not recorded yet).
+5. Beep out the SPI pins (physical 3/4/16/17/18) — derived from the
+   corrected row shift, not yet measured.
+
+Resolved 2026-07-19: the reset switch is physical 5↔6, a dry contact —
+on the Pi, 5 → GPIO3 + 6 → GND gives stock `gpio-shutdown`
+shutdown-and-wake (verified working). The mainboard's active-high
+biasing was its own affair; it does not constrain the Pi wiring.
 
 Sources: [Molex C-Grid 2.54 mm catalog](https://ptelectronics.ru/wp-content/uploads/katalog/Molex/molex_pcb_wire_connectors_2,54mm_pitch.pdf),
 [SnapEDA 71349 series](https://www.snapeda.com/parts/71349-1001/Molex/view-part/),

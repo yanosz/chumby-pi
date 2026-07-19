@@ -67,6 +67,16 @@ list is certain; **the exact pin numbers below are provisional** — read
 off a raster schematic — and must be confirmed by beeping out the
 physical cable before copper.
 
+**2026-07-19 correction:** first measurements (working bend button, reset
+beeped 5↔6) showed the original read of that raster sheet was one row
+off, and that the device's own numbering is sequential per row (front
+row 1–13, back 14–26), not the schematic's odd/even. The corrected,
+anchor-verified numbering lives in [accelerometer.md](accelerometer.md)
+§3 — trust it over the table below where they disagree. Three anchored
+corrections: reset line = sch 9 / phys 5 (not 7); its partner is
+`P33VBKUP` = sch 11 / phys 6 (the switch common — the "supply" role is
+unconfirmed); bend line = sch 17 / phys 9 (not 15).
+
 | Pin | Net | Used by HAT? | Goes to |
 |----:|-----|:---:|---------|
 | 1 | `BATTERY` | – | (mainboard battery sense; unused) |
@@ -118,10 +128,15 @@ and answers the panel's ASnative(5,60)/(5,61) natives from live values.
 Which select is which chip, and which pin powers the chips (presumed
 `P33VBKUP`), must be probed. Full detail: [accelerometer.md](accelerometer.md).
 
-**Bend / reset — GPIO.** Switch-to-GND on the daughtercard.
-`CHUMBY_BEND` → **GPIO17** (matches FR3's `gpio-key` design),
-`CHUMBY_RESET_REQ` → **GPIO27**. Pi internal pull-ups (the mainboard's
-pull-ups are gone with it).
+**Bend / reset — GPIO.** Both switches are dry contacts whose pairs
+cross the cable. Reset is measured: it closes `CHUMBY_RESET_REQ` to
+`P33VBKUP` (phys 5↔6) — on the original mainboard that *pulled the line
+up* (R109 pull-down there); on the Pi the same contact wired to a GPIO
+and GND is a clean active-low button (verified: stock `gpio-shutdown`
+on GPIO3, shutdown + wake). Bend's line is `CHUMBY_BEND` (phys 9); its
+return pin is not yet recorded. `CHUMBY_BEND` → **GPIO17** (matches
+FR3's `gpio-key` design), `CHUMBY_RESET_REQ` → **GPIO27**. Pi internal
+pull-ups (the mainboard's pull-ups are gone with it).
 
 **Power — external.** A single external 5 V supply powers the Pi
 normally; the HAT taps the header 5 V for `P50V`. The daughtercard's
