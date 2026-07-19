@@ -202,19 +202,25 @@ An earlier
 Pi 3A+ (512 MB, wifi-only, HDMI) was used for the first bring-up; findings
 that were specific to it are not repeated here.
 
-A **second test box** (192.168.210.159, plain Raspbian Lite trixie,
-HDMI 640×480 WaveShare WS170120 USB touchscreen, power button on
-GPIO3+GND, bend button on GPIO5+GND) joined 2026-07-19 for the Plymouth
-boot-animation pass (claude/issues.md #3). Changed there: the 0.9.1 deb
-installed, `chumby-download-firmware` run in full (real servers),
-`update-initramfs -u` by hand (now the downloader's `-R`), cmdline.txt
-gained `quiet splash plymouth.ignore-serial-consoles` (backup
-`cmdline.txt.bak-plymouth-test`), config.txt gained
+A **second test box** (192.168.210.159, a Pi 3A+ — 512 MB, plain
+Raspbian Lite trixie, HDMI 640×480 WaveShare WS170120 USB touchscreen,
+the real chumby daughtercard's buttons wired via the chumbilical:
+reset switch → GPIO3+GND, bend switch → GPIO5+GND) joined 2026-07-19
+for the Plymouth boot-animation pass (claude/issues.md #3). Changed
+there: the 0.9.1 deb installed, `chumby-download-firmware` run in full
+(real servers), `update-initramfs -u` by hand (now the downloader's
+`-R`), cmdline.txt gained `quiet splash plymouth.ignore-serial-consoles`
+(backup `cmdline.txt.bak-plymouth-test`), config.txt gained
 `dtoverlay=gpio-shutdown` and
 `dtoverlay=gpio-key,gpio=5,keycode=102,label=chumby-bend` — both
 APPENDED after `[all]` (backup `config.txt.bak-plymouth-test`; a first
 attempt placed them before `[all]`, which put them in the `[pi5]`
-section where they silently do not load — see §7 Traps).
+section where they silently do not load — see §7 Traps). A `--release`
+hot-replace of `ruffle_desktop` (fork dev 715a60f3c, the bend tap
+latch) is ahead of the installed deb. The chumby reset switch's
+chumbilical pair is physical 5↔6 — measured; the corrected chumbilical
+pin table lives on the pcb-ideas branch
+(hardware/chumby-hat/accelerometer.md §3, commit 3746462).
 
 **Packages installed:** `mpv`, `cage`, `grim`, `pipewire-alsa`. The last one
 is not optional — without it ALSA clients (the player's `cpal`) have no route

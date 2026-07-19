@@ -147,10 +147,23 @@ reset button GPIO3+GND, bend button GPIO5+GND):
   sometimes takes seconds" = re-pressing until a poll caught one). The
   Home-key handler now also latches tap_bend() on the press edge.
   No kernel-side debounce/hold was involved (gpio-keys default 5 ms).
+- Power button RESOLVED (2026-07-19, later the same day): the wired
+  chumby reset button never fired because the press never reached
+  GPIO3 (debugfs pin watch: level never left hi). A direct short of Pi
+  pins 5–6 shuts down and wakes cleanly — the whole software chain is
+  good. Root cause was on the chumby side: the reset switch's
+  chumbilical pair is physical 5↔6, not the guessed pins — found via
+  the mainboard schematic ("reset switch on DC / reset pulls up",
+  sheet 2) plus Jan's continuity measurement, which also exposed a
+  one-row misread in the recorded pin table. Full corrected table and
+  the P33VBKUP-role question: pcb-ideas branch, commit 3746462
+  (hardware/chumby-hat/accelerometer.md §3). Wiring: chumbilical 5 →
+  Pi GPIO3, chumbilical 6 → Pi GND; stock gpio-shutdown, wake
+  included — the mainboard's active-high biasing was its own affair.
 
 Still outstanding:
-- Jan's at-screen observation of handoff quality (black gap?) and the
-  power button shutdown/wake test (asked 2026-07-19).
+- Jan's at-screen observation of handoff quality (black gap?)
+  (asked 2026-07-19).
 - The original test Pi (192.168.42.51, SPI TFT ILI9486): does the DRM
   handoff behave with the SPI panel, where plymouth's drm renderer and
   cage contend for a much slower device? Untested — box offline.
