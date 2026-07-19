@@ -204,9 +204,10 @@ the 3B+. Dropped instead: the launcher plays nothing before the intro,
 and the downloader no longer extracts `opening.swf`/`alt_opening.swf`.
 The `/psp/alt_opening` magic file is thereby out of scope too.
 
-**Boot opening animation, take two: a Plymouth theme** (prototype,
-2026-07-17, claude/issues.md #3 — built, not yet verified on-device, test
-Pi offline). Plymouth's lifecycle — run during boot, get told to quit by
+**Boot opening animation, take two: a Plymouth theme** (prototype
+2026-07-17, first on-device pass 2026-07-19 — animation confirmed on a
+second test Pi with HDMI display; full findings and remaining
+verification in claude/issues.md #3). Plymouth's lifecycle — run during boot, get told to quit by
 something else — matches real hardware's opening.swf far better than a
 sequential Ruffle run ever could: no second software renderer, no
 window-mapped signal to invent. `opening.swf` is 320×240, 12 fps, 132
@@ -226,8 +227,12 @@ than a half-built theme. `chumby-player-run`'s `--kiosk` branch fires a
 backgrounded, non-fatal `plymouth quit` right before `exec cage` — the
 same "boot is over" role `wait_for_opening`'s external kill played on
 real hardware, though this is a proxy for "cage is about to start," not
-a true window-mapped signal, so the DRM handoff timing is unverified
-until tested on the Pi. Audio (the original had a streamed soundtrack)
+a true window-mapped signal. Two Lite-image findings from the first
+on-device pass (2026-07-19) are now handled in the downloader: Plymouth
+only draws with `splash` on the kernel cmdline (an ask-first
+`enable_splash()` appends `quiet splash plymouth.ignore-serial-consoles`,
+backup kept), and the theme must ride the initramfs
+(`plymouth-set-default-theme -R`; apt's own rebuild predates the frames). Audio (the original had a streamed soundtrack)
 is out of scope — Plymouth is silent, and reproducing it was judged not
 worth the added complexity, same call as the 0.9.1 drop above.
 `alt_opening.swf` (the `/psp/alt_opening` factory variant, six separate

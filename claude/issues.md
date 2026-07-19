@@ -100,15 +100,57 @@ Built (this session, audio dropped from scope per Jan):
 - Docs updated: design.md §5, development.md §3 (exporter cross-build),
   requirements.md.
 
-Outstanding, blocked on the test Pi (192.168.42.51, offline this session):
-0. Whether Plymouth is installed/enabled at all on the target Lite image
-   today — the observed white screen (vs. full Raspbian's rainbow splash)
-   suggests it may not be; may need `plymouth` enabling steps beyond what
-   `Depends: plymouth` alone gets you (apt install pulls it in, but Lite's
-   cmdline.txt may lack `splash`/`quiet` and the relevant units may not be
-   wired the way they are on the Full image).
-6. Full on-device pass: fresh Lite install and an existing config — theme
-   actually renders instead of white screen, duration/timing matches
-   opening.swf, `plymouth quit`-to-cage handoff has no black gap/flicker/
-   DRM-master race, and a box that never runs chumby-download-firmware
-   still boots cleanly with no half-built theme active.
+On-device pass (2026-07-19, second test Pi 192.168.210.159 — plain
+Raspbian Lite trixie, HDMI 640x480 touchscreen WaveShare WS170120,
+reset button GPIO3+GND, bend button GPIO5+GND):
+- Step 0 suspicion CONFIRMED twice over: Lite ships without plymouth at
+  all (our Depends pulls it in), AND two more pieces were missing —
+  `splash` was absent from the kernel cmdline (Plymouth never draws
+  without it; Full has `quiet splash plymouth.ignore-serial-consoles`),
+  and the theme must be REBUILT INTO THE INITRAMFS (auto_initramfs=1;
+  apt's rebuild predates the frames, leaving only the text fallback in
+  early boot). Both fixes now automated in chumby-download-firmware:
+  plymouth-set-default-theme gained -R, and a new ask-first
+  enable_splash() appends the three cmdline args (backup kept).
+- Full downloader pipeline verified e2e ON DEVICE: real 30 MB fetch →
+  opening.swf extracted (NB: 1.7.3 image's copy is 31374 bytes vs
+  31297 in Jan's backup — 77-byte variance, same 132-frame structure,
+  count check passed) → ruffle-exporter rasterized 132 frames on the
+  Pi → sudo install → Theme=chumby active → initramfs carries all
+  frames after -u.
+- BOOT ANIMATION CONFIRMED BY JAN AT THE SCREEN ("I saw plymouth
+  showing the chumby"). Touch confirmed too (he tapped through the
+  intro tour). Handoff-quality (black gap?), bend-button and
+  power-button presses still awaiting his observation.
+- TRAP found and hit: dtoverlay lines sed-inserted before `[all]`
+  landed inside the preceding `[pi5]` filter section and silently do
+  not load on non-Pi5 boxes — APPEND to config.txt instead. postinst
+  guidance now says so explicitly.
+- Power button: `dtoverlay=gpio-shutdown` (defaults = GPIO3,
+  active-low, pull-up — exactly the button-to-GND wiring). Wake needs
+  NO configuration: a halted Pi always wakes on a GPIO3 short
+  (firmware). postinst now prints this guidance when the overlay is
+  absent. Guidance only — the package never edits config.txt itself.
+- Bend button: ZERO NEW CODE. FR3's designed gpio-key path composes
+  with the fork's existing Home-key→tap_bend mapping:
+  `dtoverlay=gpio-key,gpio=5,keycode=102,label=chumby-bend` makes the
+  button a keyboard-class evdev device (name "button@5" — the label
+  param does NOT name the device), cage forwards KEY_HOME (verified in
+  the key-capability bitmap: 0x4000000000 in word 2 = bit 102) to the
+  player like any keyboard. Pin is per-device config: FR3 says GPIO17,
+  issue 2 proposes GPIO24/25, this box uses GPIO5 — docs should settle
+  on one recommendation eventually.
+
+Still outstanding:
+- Jan's at-screen observation of handoff quality, bend press, power
+  button shutdown/wake (asked 2026-07-19).
+- The original test Pi (192.168.42.51, SPI TFT ILI9486): does the DRM
+  handoff behave with the SPI panel, where plymouth's drm renderer and
+  cage contend for a much slower device? Untested — box offline.
+- No-firmware-downloaded case: a box that never runs the downloader
+  must still boot cleanly with no half-built theme (theme chrome ships
+  but is never activated — believed safe by construction, unverified).
+- pkg changes since the 0.9.1 deb build (postinst guidance, -R,
+  enable_splash) need a rebuild + re-test of the deb itself; the
+  on-device run used the 0.9.1 deb plus manual equivalents of the new
+  steps.

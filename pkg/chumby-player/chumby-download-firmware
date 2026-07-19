@@ -60,6 +60,10 @@ BOOT_THEME_FRAME_COUNT = 132
 PLYMOUTH_THEME_DIR = Path("/usr/share/plymouth/themes/chumby")
 EXPORTER = Path(os.environ.get(
     "CHUMBY_EXPORTER", "/usr/lib/chumby-player/ruffle-exporter"))
+# Plymouth only draws when `splash` is on the kernel command line —
+# Raspberry Pi OS Lite ships without it (Full has it).
+BOOT_CMDLINE = Path("/boot/firmware/cmdline.txt")
+SPLASH_ARGS = "quiet splash plymouth.ignore-serial-consoles"
 
 # The panel-download protocol of the original firmware's download_cp
 # script. Identity params are deliberately zero/static: the server
@@ -188,6 +192,7 @@ def install_boot_theme() -> None:
     frames_dir = PLYMOUTH_THEME_DIR / "frames"
     if (frames_dir / f"frame-{BOOT_THEME_FRAME_COUNT - 1}.png").is_file():
         print("boot animation: Plymouth theme already installed, skipping.")
+        enable_splash()
         return
 
     opening = STATE / "opening.swf"
@@ -224,8 +229,41 @@ def install_boot_theme() -> None:
         subprocess.run(["sudo", "mkdir", "-p", str(frames_dir)], check=True)
         subprocess.run(["sudo", "cp", "-t", str(frames_dir), *[
             str(staged / f.name) for f in staged.iterdir()]], check=True)
-        subprocess.run(["sudo", "plymouth-set-default-theme", "chumby"], check=True)
+        # -R rebuilds the initramfs: plymouth starts from there (RPi OS
+        # ships auto_initramfs=1), and without the rebuild the early-boot
+        # copy only carries the text fallback themes, never this one.
+        subprocess.run(["sudo", "plymouth-set-default-theme", "-R", "chumby"],
+                        check=True)
     print(f"  installed and activated ({BOOT_THEME_FRAME_COUNT} frames).")
+    enable_splash()
+
+
+def enable_splash() -> None:
+    """Put `splash` on the kernel command line if it is missing.
+
+    Raspberry Pi OS Lite ships without it, and Plymouth never draws
+    then — the theme would be installed but invisible.
+    """
+    try:
+        cmdline = BOOT_CMDLINE.read_text()
+    except OSError:
+        print(f"  note: {BOOT_CMDLINE} not found — put 'splash' on the")
+        print("  kernel command line yourself or the animation never shows.")
+        return
+    if "splash" in cmdline.split():
+        return
+
+    print(f"  Your kernel command line lacks 'splash' — without it Plymouth")
+    print(f"  never draws. This appends: {SPLASH_ARGS}")
+    if not confirm(f"Update {BOOT_CMDLINE} (backup kept)?"):
+        print("  skipped — the theme is installed but will not show.")
+        return
+    subprocess.run(["sudo", "cp", str(BOOT_CMDLINE),
+                    f"{BOOT_CMDLINE}.bak-chumby"], check=True)
+    new = cmdline.rstrip("\n") + f" {SPLASH_ARGS}\n"
+    subprocess.run(["sudo", "tee", str(BOOT_CMDLINE)], input=new.encode(),
+                    check=True, stdout=subprocess.DEVNULL)
+    print(f"  updated (original at {BOOT_CMDLINE}.bak-chumby).")
 
 
 def main() -> None:
