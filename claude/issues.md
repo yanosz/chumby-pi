@@ -155,8 +155,10 @@ reset button GPIO3+GND, bend button GPIO5+GND):
   chumbilical pair is physical 5↔6, not the guessed pins — found via
   the mainboard schematic ("reset switch on DC / reset pulls up",
   sheet 2) plus Jan's continuity measurement, which also exposed a
-  one-row misread in the recorded pin table. Full corrected table and
-  the P33VBKUP-role question: pcb-ideas branch, commit 3746462
+  one-row misread in the recorded pin table. Full corrected table
+  (provenance-tagged, refined against pstrick2's 2019 forum survey —
+  numbering convention comes from that post, not a board marking) and
+  the P33VBKUP-role question: pcb-ideas branch, commit 7a1f3ef
   (hardware/chumby-hat/accelerometer.md §3). Wiring: chumbilical 5 →
   Pi GPIO3, chumbilical 6 → Pi GND; stock gpio-shutdown, wake
   included — the mainboard's active-high biasing was its own affair.
