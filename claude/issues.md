@@ -29,16 +29,26 @@ Timestamp: 2026-07-17, 01:00 (amended 2026-07-19)
 Title: Daughtercard breakout board (supersedes the HAT concept).
 Status: open
 Amendment 2026-07-19: first real measurements landed (second test Pi,
-Jan's multimeter + working gpio-key buttons) — the schematic pin table
-underlying this issue was one row off, and the device numbers pins
-sequentially per row, not odd/even. Corrected, anchor-verified table:
-hardware/chumby-hat/accelerometer.md §3. Measured: bend line = phys 9
-(sch 17); reset switch = phys 5↔6 (sch 9↔11, CHUMBY_RESET_REQ ↔
-P33VBKUP — the "P33VBKUP = SPI supply" presumption is now in doubt, it
-is at least the reset-switch common). Wired on the test box: 5→GPIO3,
-6→GND, stock gpio-shutdown, shutdown+wake verified. Bend's return pin
-and the SPI pins remain unmeasured; gen_sch.py's P1 map must be
-regenerated from the corrected table before any fab.
+Jan's multimeter + working gpio-key buttons), then cross-checked
+against pstrick2's 2019 photo-annotated continuity survey
+(forum.chumby.com/viewtopic.php?pid=58250 — note the 5,6 reply there
+is Jan's own 2026 post, not independent). The schematic pin table
+underlying this issue was off by one row from row 3 on and missed a
+GND/GND row; the working physical numbering is sequential per row
+(pstrick2's convention, anchored by the board's pin-1 silkscreen).
+Corrected, provenance-tagged table: hardware/chumby-hat/
+accelerometer.md §3. Measured/confirmed: bend line = phys 9, returning
+to board GND; reset switch = phys 5↔6 (CHUMBY_RESET_REQ ↔ P33VBKUP);
+plain grounds = phys 2 and 15; battery+ = 1, 12 V = 14; USB data
+7/20 + 8/21; headphone 10/23/24/11; speakers 12/13 + 25/26. With
+grounds identified, "P33VBKUP = SPI supply" is back to plausible
+(coexists with its measured reset-high-side role) but unverified — if
+true, the test box's button wiring (6 → GND) must move before accel
+work. Wired on the test box: 5→GPIO3, 6→GND, stock gpio-shutdown,
+shutdown+wake verified. Still unmeasured: the SPI pins (derived only)
+and phys 19; pstrick2's 06.07.06 switch label vs the measured 5↔6 is a
+recorded discrepancy. gen_sch.py's P1 map must be regenerated from the
+corrected table before any fab.
 Description: Reframe hardware/chumby-hat/ from a Pi HAT to a passive breakout
 with a soldered-on 2x13 header the chumbilical plugs into. Mapping: DC jack →
 USB-A power-only port (decide: 5 V supply into the barrel jack, or buck for

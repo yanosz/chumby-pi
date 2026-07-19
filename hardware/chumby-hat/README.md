@@ -68,14 +68,17 @@ off a raster schematic — and must be confirmed by beeping out the
 physical cable before copper.
 
 **2026-07-19 correction:** first measurements (working bend button, reset
-beeped 5↔6) showed the original read of that raster sheet was one row
-off, and that the device's own numbering is sequential per row (front
-row 1–13, back 14–26), not the schematic's odd/even. The corrected,
-anchor-verified numbering lives in [accelerometer.md](accelerometer.md)
-§3 — trust it over the table below where they disagree. Three anchored
-corrections: reset line = sch 9 / phys 5 (not 7); its partner is
-`P33VBKUP` = sch 11 / phys 6 (the switch common — the "supply" role is
-unconfirmed); bend line = sch 17 / phys 9 (not 15).
+beeped 5↔6) plus pstrick2's 2019 photo-annotated continuity survey
+([forum](https://forum.chumby.com/viewtopic.php?pid=58250#p58250))
+showed the original read of that raster sheet was off by one row from
+row 3 on — it missed a GND/GND row — and that the working physical
+numbering is sequential per row (front row 1–13, back 14–26; pstrick2's
+convention, anchored by the board's own `pin 1` silkscreen), not the
+schematic's odd/even. The corrected, provenance-tagged table lives in
+[accelerometer.md](accelerometer.md) §3 — trust it over the table below
+where they disagree. Highlights: reset switch = phys 5↔6
+(`CHUMBY_RESET_REQ` ↔ `P33VBKUP`); bend line = phys 9, returning to
+board GND; the two plain ground pins are **phys 2 and 15**.
 
 | Pin | Net | Used by HAT? | Goes to |
 |----:|-----|:---:|---------|

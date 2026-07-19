@@ -79,47 +79,88 @@ status page.
 
 ## 3. Wiring it to the Pi
 
-**Numbering correction (2026-07-19, measured).** The original table here
-read the schematic's P701 labels one row off. Two measured anchors fixed
-it: the bend switch line is physical pin 9 (proven by a working
-`gpio-key` button on the second test Pi), and the reset switch closes
-physical 5↔6 (multimeter). Two numbering schemes are in play — keep them
-apart:
+**Numbering correction (2026-07-19, measured; refined the same day
+against pstrick2's 2019 continuity survey).** The original table here
+read the schematic's P701 labels off by one row from row 3 on, and
+missed a GND/GND row entirely. Anchors: Jan's measurements (bend line =
+physical 9, proven by a working `gpio-key` button; reset switch closes
+physical 5↔6, multimeter) plus pstrick2's photo-annotated continuity
+survey of the daughtercard
+([forum post](https://forum.chumby.com/viewtopic.php?pid=58250#p58250),
+2019-12-01; images `i.imgur.com/Y1xdBqo.png`, `i.imgur.com/6JYD1EX.png`).
+Note: the 5,6 reply in that thread is Jan's own 2026 post — our
+measurement, not independent confirmation. Two numbering schemes are in
+play — keep them apart:
 
-- **Physical** (marked on the device): pin 1 left-front with the
-  polarization notch toward the viewer; front row 1–13, back row 14–26.
+- **Physical** (pstrick2's convention, anchored by the daughtercard's
+  own `pin 1` silkscreen arrow): pin 1 left-front with the polarization
+  notch toward the viewer; front row 1–13, back row 14–26, sequential
+  per row.
 - **Schematic** (P701 symbol): odd/even zigzag — front row odd 1..25,
   back row even 2..26. Physical front-row *n* = schematic 2n−1;
   physical back-row *n* = schematic 2(n−13).
 
-Measured: physical 9 (sch 17) = `CHUMBY_BEND`; physical 5↔6
-(sch 9↔11) = reset switch = `CHUMBY_RESET_REQ` ↔ `P33VBKUP`. Everything
-else below is derived from the corrected one-row shift and is
-**unmeasured** until beeped.
+Where the three sources overlap they now agree on every pin but one:
+pstrick2 labels a three-leg switch `06.07.06` (bridging 6↔7); Jan's
+2026 meter reading of the reset pair is 5↔6, which also matches the
+mainboard's reset-pulls-up-to-`P33VBKUP` topology — recorded here as
+the standing discrepancy, ours preferred.
 
 The Pi 3B+ header has SPI0 at 3.3 V, matching the i.MX21's I/O levels —
-a straight wire-up:
+a straight wire-up. Full corrected table, with per-pin provenance —
+J = Jan's meter/working button 2026-07-19, P = pstrick2's continuity
+survey 2019, S = derived from the corrected schematic read only:
 
-| Physical pin | Schematic pin | Net | Pi header |
+| Phys | Sch | Net / role | Source |
 |---:|---:|---|---|
-| 4 | 7 | `CSPI1_MOSI` | GPIO10 / pin 19 (MOSI) |
-| 3 | 5 | `CSPI1_MISO` | GPIO9 / pin 21 (MISO) |
-| 16 | 6 | `CSPI1_SCLK` | GPIO11 / pin 23 (SCLK) |
-| 17 | 8 | `CSPI1_SS0` | GPIO8 / pin 24 (CE0) |
-| 18 | 10 | `CSPI1_SS1` | GPIO7 / pin 26 (CE1) |
+| 1 | 1 | `BATTERY` (+) | P |
+| 2 | 3 | **GND** | P |
+| 3 | 5 | `CSPI1_MISO` → Pi GPIO9 / pin 21 | S |
+| 4 | 7 | `CSPI1_MOSI` → Pi GPIO10 / pin 19 | S |
+| 5 | 9 | `CHUMBY_RESET_REQ` (reset switch) | J |
+| 6 | 11 | `P33VBKUP` (reset switch's other side) | J |
+| 7 | 13 | `USBB_DN` | P |
+| 8 | 15 | `USBB2_DN` | P |
+| 9 | 17 | `CHUMBY_BEND` (bend switch; returns to GND) | J+P |
+| 10 | 19 | `HP_NOTIN` (headphone jack) | P |
+| 11 | 21 | headphone jack contact (return?) | P |
+| 12 | 23 | `SPKL_VO2` (left speaker pair) | P |
+| 13 | 25 | `SPKL_VO1` (left speaker pair) | P |
+| 14 | 2 | `RAW_PWR` (12 V barrel) | P |
+| 15 | 4 | **GND** | P |
+| 16 | 6 | `CSPI1_SCLK` → Pi GPIO11 / pin 23 | S |
+| 17 | 8 | `CSPI1_SS0` → Pi GPIO8 / pin 24 (CE0) | S |
+| 18 | 10 | `CSPI1_SS1` → Pi GPIO7 / pin 26 (CE1) | S |
+| 19 | 12 | unknown (earlier "ferrite GND" claim withdrawn) | — |
+| 20 | 14 | `USBB_DP` | P |
+| 21 | 16 | `USBB2_DP` | P |
+| 22 | 18 | `P50V` (USB VBUS) | S |
+| 23 | 20 | `HPLEFT` (headphone jack) | P |
+| 24 | 22 | `HPRIGHT` (headphone jack) | P |
+| 25 | 24 | `SPKR_VO2` (right speaker pair) | P |
+| 26 | 26 | `SPKR_VO1` (right speaker pair) | P |
 
-Power: the only 3.3 V net crossing the chumbilical is `P33VBKUP`
-(physical 6 / sch 11). It is now **measured to be the reset switch's
-common** (the switch closes it to `CHUMBY_RESET_REQ` — matching the
-mainboard sheet-2 note "reset switch on DC / reset pulls up", with
-R109 10 k pull-down + C614 0.1 µF on the line there). Whether it *also*
-feeds the KXP74 + EEPROM is still unverified. If it does, the pin is
-shared: grounding it for a Pi power button (physical 5 → GPIO3,
-6 → GND — how the second test Pi wires it) forecloses using it as the
-accel supply. If not, the SPI chips' supply arrives some other way —
-none of the remaining labeled nets is a plausible 3.3 V source, so
-probe before wiring the accelerometer. (KXP74 tolerates 2.7–5.25 V, the
-AT25080A 1.8–5.5 V; the SPI signal levels must stay 3.3 V.)
+(The speaker/headphone pair orderings within each pair are pstrick2's
+photo labels; L/R and VO1/VO2 assignment inside a pair is unverified.)
+
+Grounds and switch returns: the chumbilical carries **two plain GND
+pins — physical 2 and 15** (pstrick2; this withdraws the earlier claim
+of a ferrite ground on 19 and resolves the old "no clean GND pin"
+puzzle). The bend switch is `09 / G` on its board connector — it
+returns to daughtercard ground, i.e. pins 2/15 across the cable, which
+is why it works wired straight to a Pi GND.
+
+Power: `P33VBKUP` (physical 6 / sch 11) is **measured to be the reset
+switch's high side** (the switch closes it to `CHUMBY_RESET_REQ` —
+matching the mainboard sheet-2 note "reset switch on DC / reset pulls
+up", R109 10 k pull-down + C614 0.1 µF on the line there). With real
+grounds now known at 2/15, the original presumption that `P33VBKUP`
+*also* supplies the KXP74 + EEPROM is back to plausible — both roles
+coexist naturally — but remains unverified. If true, the second test
+Pi's power-button wiring (physical 5 → GPIO3, 6 → GND) must change
+before the accelerometer is wired: pin 6 cannot be both button-GND and
+a 3.3 V supply. (KXP74 tolerates 2.7–5.25 V, the AT25080A 1.8–5.5 V;
+the SPI signal levels must stay 3.3 V.)
 
 ## 4. Q: connector pitch — do jumper wires fit?
 
@@ -167,20 +208,25 @@ Options, best first:
 ## Open verification items (adds to the README's list)
 
 1. Which chip select (SS0/SS1) is the accelerometer vs. the AT25080A.
-2. Which chumbilical pin actually powers the two SPI chips.
-   `P33VBKUP` (physical 6) was the presumption, but it is now measured
-   as the reset switch's common (§3) — shared or not is the question.
+2. Whether `P33VBKUP` (physical 6) supplies the two SPI chips in
+   addition to being the reset switch's high side (§3) — decides
+   whether the power-button wiring must move off pin 6 before accel
+   work.
 3. Confirm the cable-end housing is a C-Grid-compatible 2×13
    receptacle before sourcing `P1`.
-4. The bend switch's return pin (its line is physical 9, measured; the
-   second pin of the working button pair is not recorded yet).
-5. Beep out the SPI pins (physical 3/4/16/17/18) — derived from the
+4. Beep out the SPI pins (physical 3/4/16/17/18) — derived from the
    corrected row shift, not yet measured.
+5. Physical 19 (sch 12): unknown net (the withdrawn ferrite-GND
+   candidate); also the pstrick2-vs-Jan reset discrepancy (his
+   `06.07.06` three-leg switch label vs the measured 5↔6) deserves one
+   more look at the actual switch legs.
 
 Resolved 2026-07-19: the reset switch is physical 5↔6, a dry contact —
 on the Pi, 5 → GPIO3 + 6 → GND gives stock `gpio-shutdown`
 shutdown-and-wake (verified working). The mainboard's active-high
-biasing was its own affair; it does not constrain the Pi wiring.
+biasing was its own affair; it does not constrain the Pi wiring. The
+bend switch's return is daughtercard ground (pins 2/15 across the
+cable), per pstrick2's `09 / G` connector labels.
 
 Sources: [Molex C-Grid 2.54 mm catalog](https://ptelectronics.ru/wp-content/uploads/katalog/Molex/molex_pcb_wire_connectors_2,54mm_pitch.pdf),
 [SnapEDA 71349 series](https://www.snapeda.com/parts/71349-1001/Molex/view-part/),
