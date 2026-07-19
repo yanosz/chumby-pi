@@ -165,12 +165,19 @@ that line changed. `docs/hardware.md` is the user-facing version of this.
 
 ### NFR4 — It has to be quiet and cool enough
 
-The content was authored for a 350 MHz ARM9. On a Pi 3B+ at 480×320 and
-12 fps the player sits at roughly one core; the remainder is software
-rasterization, which is the floor for this renderer. Two levers got it
-there: `LP_NUM_THREADS=1` and the fat-LTO `dist` profile — measurements and
+The content was authored for a 350 MHz ARM9, which Adobe's player served
+with a dirty-rectangle CPU rasterizer. Ruffle instead repaints every frame
+through wgpu on lavapipe (software Vulkan), so pixel count and MSAA are the
+cost drivers, and the packaged defaults pin both: `CHUMBY_QUALITY=low`
+(no MSAA, ~2.4× per frame) and `LP_NUM_THREADS=2` — measured 2026-07-19 on
+a Pi 3A+ at 640×480 as ~12 fps (the movie's own rate) on ~1.7 cores,
+against 2.5 fps on one core for the 0.8.x-era defaults (`high`, 1 thread).
+The fat-LTO `dist` profile is the third lever. Full measurement chain and
 the lavapipe explanation in [development.md](development.md) §6. A heatsink
 is recommended; the SoC brushes its soft thermal limit under sustained load.
+Hardware rendering is closed on VideoCore IV Pis (no Vulkan driver; Mesa
+vc4 GLES 2.0 is below wgpu's 3.0 floor); a frame cap in the fork is the
+remaining open lever, the one that would cut watts rather than raise fps.
 
 ### NFR5 — Every device change is written down as it happens
 

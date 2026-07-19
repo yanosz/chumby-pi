@@ -15,8 +15,16 @@
 # (HDMI/DSI) could drop this.
 #WLR_RENDERER=pixman
 
-# lavapipe (software Vulkan) worker threads; higher trades CPU/heat for render throughput (NFR4).
-LP_NUM_THREADS=1
+# lavapipe (software Vulkan) worker threads; trades CPU/heat for render
+# throughput (NFR4). Measured on a Pi 3A+ at 640×480 with
+# CHUMBY_QUALITY=low: 1 thread ≈ 6 fps on one core, 2 ≈ the movie's
+# 12 fps on ~1.7 cores.
+LP_NUM_THREADS=2
+
+# Flash stage quality (low/medium/high). low skips MSAA — ~2.4× faster
+# per frame on software rendering, and the movie was authored for a
+# 320×240 LCD. Unset means the player's own default (high).
+CHUMBY_QUALITY=low
 
 # Send music and alarms to a specific output instead of the PipeWire
 # default sink. Names as mpv prints them: mpv --audio-device=help

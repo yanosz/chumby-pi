@@ -646,11 +646,14 @@ truth. The Pi never reads it either; the SWF is copied at build time.
 170 was lavapipe's four raster worker threads. Temperature ~60 °C with the
 soft-limit sticky bit set.
 
-Things that did **not** help, recorded so nobody retries them: `--quality low`
-(MSAA is not the cost driver); rebuilding Mesa or swapping lavapipe for a GL
-path (the same llvmpipe rasterizer sits underneath); a client-side
-`set_cursor_visible` hook (the cursor is server-drawn); `wlrctl`'s virtual
-pointer under headless cage (never reaches the client).
+Things that did **not** help, recorded so nobody retries them: rebuilding
+Mesa or swapping lavapipe for a GL path (the same llvmpipe rasterizer sits
+underneath); a client-side `set_cursor_visible` hook (the cursor is
+server-drawn); `wlrctl`'s virtual pointer under headless cage (never reaches
+the client). `--quality low` used to sit in this list ("MSAA is not the cost
+driver") because CPU stayed pegged when it was tried — the 2026-07-19 entry
+below shows CPU was the wrong metric: the uncapped render loop always pegs
+its thread, and quality moves the *frame rate* instead.
 
 Version **0.9.0** (2026-07-14, desktop-verified; deployed the same evening
 on the 4th vanilla card — see 0.9.1): `chumby-download-firmware` rewritten
@@ -698,6 +701,33 @@ persists.
 Incidental: the fresh card regenerated its SSH host key (known_hosts entry
 refreshed on the dev box); `grim` is dev-only and not reinstalled yet — no
 remote screenshots on this card so far.
+
+**Rendering measurements, 2026-07-19** (second test Pi: 3A+, WaveShare
+WS170120 HDMI 640×480@75, quality/threads injected via a temporary systemd
+drop-in + wrapper; fps counted as cage's `DRM_IOCTL_MODE_ATOMIC` commits
+over 6 s, thread CPU via `top -H`). The panel is render-bound: the lavapipe
+worker paints back-to-back with zero idle, so achieved fps — not CPU % — is
+the metric that responds to tuning. Stock (`high` = 4× MSAA, 1 thread):
+2.5 fps, render thread 96 %. `--quality low`: 6 fps, thread 91 % — 2.4× per
+frame, refuting the earlier "MSAA is not the cost driver" note above.
+`low` + `LP_NUM_THREADS=2`: ~11 fps (66 commits/6 s), 2 workers × 83 % —
+effectively the movie's 12 fps ceiling; shipped as the packaged defaults
+(`CHUMBY_QUALITY=low`, `LP_NUM_THREADS=2`) since 0.9.1. Resolution scaling,
+measured offscreen with the bundled `ruffle-exporter` (`opening.swf`, 132
+frames, 1 thread): 640×480 193 ms/frame, 480×320 123, 320×240 92 — ~2× for
+stage-native, not the naive 4×, fixed per-frame costs don't shrink.
+Dead ends, verified: a forced `video=HDMI-A-1:320x240M@60` cmdline mode is
+rejected by the kernel (`vc4-drm: User-defined mode not supported` — CVT
+needs a 6 MHz pixel clock, below the HDMI encoder's ~25 MHz floor) and that
+boot also left Plymouth without a modeset, so the token is harmful, not
+just useless; GPU rendering on any VideoCore IV Pi (Zero–3) — no Vulkan
+(v3dv starts at VC VI; rpi-vk-driver, last commit 2021, takes only its own
+QPU-assembly shader format, `vkCreateShaderModule` rejects the SPIR-V wgpu
+emits) and Mesa vc4's GLES 2.0 is below wgpu's GLES 3.0 floor, so
+`--graphics gl` lands back on llvmpipe. Open levers, both fork-sized:
+render at stage size and let the compositor upscale (~2×, would put 12 fps
+back on one thread), and a frame cap (the only lever that converts headroom
+into idle time / watts — at 12 fps the loop still never sleeps).
 
 ## 7. Traps
 
