@@ -402,6 +402,14 @@ replacement: ~3.5" SPI HAT on the 2×20 header, touch, 480×320-ish, a
 **PWM-dimmable** backlight, and a mainline DRM driver so §5 and §6 carry over
 unchanged.
 
+Since 2026-07-26 there are two more criteria, and they cut across this list:
+**4:3** (the content is 320×240, while every panel below is 480×320 = 3:2) and
+**12 fps**, which the display now decides rather than the player — the CPU
+renderer leaves ~90 % of a core idle and the panel still delivers ~6–7 fps,
+because 480×320 RGB565 over 24 MHz SPI caps at ~9.8 fps before overhead. The
+candidates below were picked for dimming and driver support, never for
+throughput or aspect. The open selection is issue #4 in `claude/issues.md`.
+
 - **Adafruit PiTFT Plus 3.5" (2441)** — recommended. HX8357D + STMPE610.
   Backlight over the STMPE's spare GPIO (on/off, appears under
   `/sys/class/backlight`) or GPIO18 = hardware PWM0 for smooth dimming.

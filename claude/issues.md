@@ -176,3 +176,53 @@ Still outstanding:
   enable_splash) need a rebuild + re-test of the deb itself; the
   on-device run used the 0.9.1 deb plus manual equivalents of the new
   steps.
+
+---
+
+Number: 4
+Timestamp: 2026-07-26, 19:45
+Title: Find a display: 3.5", 4:3, real brightness control, and 12 fps.
+Status: open — the deciding criteria are now known; no candidate meets all four
+Description: With the CPU renderer shipped (fork
+claude/tiny-skia-backend-plan.md; CHUMBY_RENDERER=tiny-skia), the player is no
+longer what limits the panel: it draws the control panel using 37 % of one core
+and leaves ~90 % of that core idle, while the achieved rate stays ~6-7 fps. On
+the current ILI9486 SPI TFT the *display* is the ceiling, so choosing a panel is
+now the same decision as choosing a frame rate. Four criteria, all required:
+
+1. **3.5"** — the enclosure and the original device's size (design.md §8).
+2. **4:3** — the control panel and every widget were authored for 320x240.
+   Note that the usual Pi 3.5" panels are 480x320, which is 3:2, not 4:3; the
+   Waveshare 3.5" HDMI LCD (E) already on the second box is 640x480 and *is*
+   4:3.
+3. **Brightness control in hardware** — FR16 ships and is inert without it.
+   The current clone ties its backlight rail to 3.3 V; on the (E) every
+   software path was probed dead (no kernel backlight, vendor USB command
+   accepted but ignored, no DDC/CI — design.md §8), leaving its PWM solder pad.
+4. **12 fps** — the movie's own rate, and what the original hardware did.
+
+Why the current panel cannot reach it: the piscreen overlay clocks SPI at
+24 MHz (`speed=24000000`), and one 480x320 RGB565 frame is 307 200 bytes, i.e.
+~2.46 Mbit. That caps the link at ~9.8 fps before any overhead, which matches
+the measured ~6-7. So on SPI, 12 fps is a bandwidth question first: a 4:3 panel
+at 320x240 needs only 153 600 bytes/frame (~19 fps at 24 MHz), while 640x480
+needs 614 400 (~4.9 fps) and is out of reach over SPI entirely.
+
+Cheapest experiments first, before buying anything:
+- Raise the SPI clock on the panel in hand (`speed=32000000`, then 48) and
+  re-measure fps the way development.md §6 counts it. Free, and it tests the
+  bandwidth arithmetic directly; the controller may or may not tolerate it.
+- Measure the (E) at 640x480 with tiny-skia on the second box (192.168.210.159,
+  offline on 2026-07-26). It is the only 4:3 3.5" panel here, HDMI so no SPI
+  bandwidth limit, and §6 measured ~11-12 fps on it with the *old* renderer;
+  with the CPU renderer it should clear 12 fps with headroom. If it does, the
+  whole question reduces to brightness — i.e. to the PWM solder-pad mod.
+- Only then survey panels against all four criteria. design.md §8's existing
+  candidates (Adafruit PiTFT Plus 3.5" 2441, Waveshare 3.5" (C)) were chosen for
+  dimming and driver support, both are 480x320 3:2, and neither was assessed for
+  throughput. DPI panels stay out: they consume the GPIO header, killing SPI and
+  the bend button.
+
+Decision to make once measured: keep 4:3 and accept the (E) plus a soldering
+mod, take a 3:2 panel with clean dimming and letterbox the 4:3 content, or drop
+to a 320x240-class panel where SPI has the bandwidth for 12 fps.
