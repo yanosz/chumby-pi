@@ -32,6 +32,7 @@
 #                        /usr/lib/chumby-player/ruffle_desktop)
 #   LP_NUM_THREADS       lavapipe worker threads; unset ⇒ lavapipe default (NFR4)
 #   CHUMBY_QUALITY       Flash stage quality (low/medium/high); unset ⇒ player default
+#   CHUMBY_RENDERER      render backend (wgpu/tiny-skia); unset ⇒ player default
 
 set -eu
 
@@ -202,10 +203,10 @@ systemctl --user start pipewire.socket pipewire-pulse.socket \
 
 export RUST_LOG="${RUST_LOG:-warn}"
 
-# LP_NUM_THREADS (lavapipe worker cap) and CHUMBY_QUALITY are deliberately
-# NOT defaulted here: they come only from /etc/default/chumby-player, so an
-# unset value means the tool's own default, not a silent constant.
-# Rationale in requirements.md NFR4.
+# LP_NUM_THREADS (lavapipe worker cap), CHUMBY_QUALITY and CHUMBY_RENDERER
+# are deliberately NOT defaulted here: they come only from
+# /etc/default/chumby-player, so an unset value means the tool's own default,
+# not a silent constant. Rationale in requirements.md NFR4.
 
 check_swf || exit 1
 
@@ -239,6 +240,7 @@ if [ -f "$INTRO" ] && [ -r "$INTRO" ] && [ ! -e "$STATE/fixtures/rootfs/psp/disa
         --filesystem-access-mode allow \
         --chumby-fixtures "$STATE/fixtures" \
         ${CHUMBY_QUALITY:+--quality "$CHUMBY_QUALITY"} \
+        ${CHUMBY_RENDERER:+--renderer "$CHUMBY_RENDERER"} \
         --fullscreen \
         "$INTRO" || true
 fi
@@ -249,6 +251,7 @@ exec "$RUFFLE" \
     --chumby-fixtures "$STATE/fixtures" \
     --chumby-control "$CTL" \
     ${CHUMBY_QUALITY:+--quality "$CHUMBY_QUALITY"} \
+    ${CHUMBY_RENDERER:+--renderer "$CHUMBY_RENDERER"} \
     --fullscreen \
     -PlocalCache=1 \
     "$SWF"
