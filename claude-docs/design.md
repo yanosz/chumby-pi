@@ -421,6 +421,34 @@ unchanged.
 - **DPI panels** (HyperPixel and friends) consume the whole GPIO header,
   killing SPI and the bend button. Out.
 
+The purchase (2026-07-19) landed outside this list: a **Waveshare 3.5"
+HDMI LCD (E)** (EDID `WS-35-640`, 640×480 capacitive IPS), on the 3A+ test
+box. Probe results, all negative for software-only dimming:
+
+- **No kernel backlight** — `/sys/class/backlight` is empty; FR16's slider
+  mode and `90-chumby-backlight.rules` stay inert.
+- **USB vendor command ignored.** Touch is a WaveShare WS170120
+  (`0eef:0005`, `hidraw0`); its descriptor carries a vendor output report
+  (ID 4, 63 bytes), and the 7"-family brightness protocol
+  (`04 aa 01 00 00 00 <percent>`, reverse-engineered in
+  rotdrop/waveshare-ws170120-brightness) is *accepted* — clean 38- and
+  64-byte writes — but the backlight never changed across observed
+  100↔10↔0 sweeps. Not pursued further: fuzzing undocumented vendor
+  commands into the chip that also does touch is not worth the risk.
+- **No DDC/CI.** The scaler serves EDID but fails DDC communication
+  (`ddcutil detect` on `/dev/i2c-2`, i2c-dev + ddcutil left installed on
+  the box), so VCP 0x10 is unreachable.
+
+What remains, per the Waveshare wiki for the (E): the panel's own OSD
+buttons (manual only), or the **external-PWM solder-pad mod** — move a 10K
+resistor to the pad under the PWM pad, feed a Pi PWM GPIO, active low;
+afterwards OSD brightness stops working. The mod would make FR16's
+`brightness_ctl` (or a `pwm-backlight` overlay = real kernel backlight +
+sliders) viable, but hardware PWM is shared with the Pi's analog audio,
+and the breakout (issue 2) has not fixed the audio path yet. Decision —
+solder mod vs. brightness staying honestly disabled — is open with Jan;
+`settings-brightness` keeps the control disabled by itself meanwhile.
+
 ## 9. CI
 
 One chumby workflow per repository (the fork also carries upstream's, kept
