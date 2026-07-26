@@ -166,18 +166,26 @@ that line changed. `docs/hardware.md` is the user-facing version of this.
 ### NFR4 — It has to be quiet and cool enough
 
 The content was authored for a 350 MHz ARM9, which Adobe's player served
-with a dirty-rectangle CPU rasterizer. Ruffle instead repaints every frame
-through wgpu on lavapipe (software Vulkan), so pixel count and MSAA are the
-cost drivers, and the packaged defaults pin both: `CHUMBY_QUALITY=low`
-(no MSAA, ~2.4× per frame) and `LP_NUM_THREADS=2` — measured 2026-07-19 on
-a Pi 3A+ at 640×480 as ~12 fps (the movie's own rate) on ~1.7 cores,
-against 2.5 fps on one core for the 0.8.x-era defaults (`high`, 1 thread).
-The fat-LTO `dist` profile is the third lever. Full measurement chain and
-the lavapipe explanation in [development.md](development.md) §6. A heatsink
-is recommended; the SoC brushes its soft thermal limit under sustained load.
-Hardware rendering is closed on VideoCore IV Pis (no Vulkan driver; Mesa
-vc4 GLES 2.0 is below wgpu's 3.0 floor); a frame cap in the fork is the
-remaining open lever, the one that would cut watts rather than raise fps.
+with a dirty-rectangle CPU rasterizer. Ruffle repaints every frame, so how
+it rasterises is the cost driver — and since 2026-07-26 the fork can do it
+the same way Adobe did. `CHUMBY_RENDERER=tiny-skia` selects a CPU
+rasteriser that hands finished frames to the compositor through shared
+memory, loading no Vulkan at all: on a 3B+ with the 480×320 SPI TFT it
+draws the panel at 37 % of a core and 105 MB, against wgpu-on-lavapipe's
+129 % and 252 MB at the same frame rate, which that panel caps anyway.
+On the wgpu path pixel count and MSAA are the drivers instead, and
+`CHUMBY_QUALITY=low` (no MSAA, ~2.4× per frame) with `LP_NUM_THREADS=2`
+pin both — measured 2026-07-19 on a Pi 3A+ at 640×480 as ~12 fps (the
+movie's own rate) on ~1.7 cores, against 2.5 fps on one core for the
+0.8.x-era defaults (`high`, 1 thread). The fat-LTO `dist` profile is the
+third lever. Full measurement chain in [development.md](development.md) §6.
+A heatsink is recommended; the SoC brushes its soft thermal limit under
+sustained load on the wgpu path. Hardware rendering stays closed on
+VideoCore IV Pis (no Vulkan driver; Mesa vc4 GLES 2.0 is below wgpu's 3.0
+floor), which is what makes the CPU path the answer rather than a
+workaround. A frame cap in the fork is the remaining open lever: with
+tiny-skia leaving ~90 % of a core idle, it is the one that would cut watts
+rather than raise fps.
 
 ### NFR5 — Every device change is written down as it happens
 

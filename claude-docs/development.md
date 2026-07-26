@@ -716,6 +716,32 @@ effectively the movie's 12 fps ceiling; shipped as the packaged defaults
 measured offscreen with the bundled `ruffle-exporter` (`opening.swf`, 132
 frames, 1 thread): 640×480 193 ms/frame, 480×320 123, 320×240 92 — ~2× for
 stage-native, not the naive 4×, fixed per-frame costs don't shrink.
+**tiny-skia replaces the software-Vulkan path, 2026-07-26** (first test Pi:
+3B+, 480×320 SPI TFT, cage on pixman; panel started as the service does, CPU
+from `/proc` over a 15 s steady-state window, fps from cage's atomic commits
+measured outside that window because strace slows what it traces). The fork's
+CPU renderer (`--renderer tiny-skia`, fork `claude/tiny-skia-backend-plan.md`)
+rasterises into a pixmap and hands it to the compositor through shared memory,
+so no Vulkan is loaded at all:
+
+| config | player CPU | whole box | RSS | fps |
+|---|---|---|---|---|
+| wgpu, shipped defaults (`low`, 2 threads) | 129 % of a core | 139 % | 252 MB | ~7 |
+| wgpu, stock (no quality/threads) | 241 % | 245 % | 296 MB | ~6 |
+| **tiny-skia** | **37 %** | **46 %** | **105 MB** | ~6 |
+
+3.5× less CPU than the shipped wgpu configuration and 2.4× less memory at the
+same frame rate — and on this panel the frame rate is **display**-capped, not
+renderer-capped: tiny-skia leaves ~90 % of a core idle and still lands at ~6 fps,
+so the SPI TFT's own update rate is the ceiling (the 11–12 fps above is the HDMI
+box's ceiling, a different one). Presenting itself is cheap: ~6 ms of whole-box
+CPU per frame, ~7 % of a core at 12 fps. Fidelity was checked with `grim` under
+both renderers — 93 % of pixels within 16 levels, the rest being the differing
+seconds digits and text anti-aliasing. Selected by `CHUMBY_RENDERER` in
+`/etc/default/chumby-player`; `LP_NUM_THREADS` and `CHUMBY_QUALITY` apply to the
+wgpu path only. The 640×480 HDMI box was offline that day and is still
+unmeasured.
+
 Dead ends, verified: a forced `video=HDMI-A-1:320x240M@60` cmdline mode is
 rejected by the kernel (`vc4-drm: User-defined mode not supported` — CVT
 needs a 6 MHz pixel clock, below the HDMI encoder's ~25 MHz floor) and that
@@ -770,6 +796,13 @@ These are the ones this repo owns.
   progressively, so during a transfer the top rows already carry the new frame
   and the lower rows the previous one — motion looks banded. There is no
   tear-free path on this panel and it is not a renderer artifact.
+- **A shipped default in `/etc/default` only reaches fresh installs.**
+  `deploy-pi.sh` installs with `--force-confold`, so dpkg keeps a locally
+  modified conffile and the new value never lands. Found 2026-07-26: the test
+  box was running neither `CHUMBY_QUALITY` nor `LP_NUM_THREADS` despite both
+  having shipped since 0.9.1, which made its baseline the *stock* renderer
+  configuration. Read the knobs off the running process
+  (`tr '\0' ' ' </proc/<pid>/cmdline`), never off the packaged file.
 
 ## 8. Documentation
 
