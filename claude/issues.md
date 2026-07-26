@@ -182,10 +182,11 @@ Still outstanding:
 Number: 4
 Timestamp: 2026-07-26, 19:45 (updated 2026-07-26, 22:40)
 Title: Find a display: 3.5", 4:3, real brightness control, and 12 fps.
-Status: open, but reduced — criterion 4 is MET on the panel in hand: a pinned
-core clock plus `speed=40000000` took it 6.5 -> 12.0 fps, the movie's own rate.
-Pixel integrity at 40 MHz is UNVERIFIED (needs eyes on the screen). What is
-still unmet is 4:3 and brightness.
+Status: open — criterion 4 is NOT met and cannot be tuned into being: every SPI
+clock above the overlay's nominal 24 MHz visibly corrupts the picture. The
+panel's honest clean ceiling is 8.4 fps, reached by pinning the core clock
+alone. 4:3 and brightness remain unmet too. All three criteria now point at a
+different display.
 Description: With the CPU renderer shipped (fork
 claude/tiny-skia-backend-plan.md; CHUMBY_RENDERER=tiny-skia), the player is no
 longer what limits the panel: it draws the control panel using 37 % of one core
@@ -256,35 +257,48 @@ same box and method, `core_freq_min=400` throughout, one reboot per step):
 | 32 MHz | 28.6 MHz (CDIV 14) | 11.6 fps | 85-86 | ~10.7 |
 | **40 MHz** | **40 MHz (CDIV 10)** | 16.3 fps | **95-96** | **12.0** |
 
-At 40 MHz the panel holds **exactly the movie's 12 fps** — 144 commits over a
-12 s window, dead on 12.0, and the only row that falls short of its predicted
-ceiling (74 % of 16.3, where the other two hit 92-94 %). That shortfall is the
-finding, not a disappointment: the link stopped being the constraint and the
-source rate took over. The player draws those frames at 49 % of one core and
-120 MB RSS, with the box 86 % idle — twice the frames of the 2026-07-26 spike
-measurement for 12 points more CPU. 48.9 C, `get_throttled` 0x0, and no SPI or
-DRM errors in `dmesg` at any step.
+At 40 MHz the frame counter reads **exactly the movie's 12 fps** — 144 commits
+over a 12 s window — at 49 % of one core, 120 MB RSS, 48.9 C, `get_throttled`
+0x0 and no SPI or DRM errors in `dmesg` at any step.
 
-**Caveat, and it is the reason this is not closed: pixel integrity at 40 MHz is
-unverified.** 40 MHz is far above what the ILI9486 datasheet rates for a write
-cycle. A clean `dmesg` proves only that the SPI controller had nothing to
-complain about — corruption on an overclocked display bus is silent, and `grim`
-cannot see it either, because it captures the compositor's buffer and not what
-the glass actually shows. This needs someone at the screen looking for torn or
-speckled pixels, ideally warm and over time. If 40 MHz proves dirty, 32 MHz
-(10.7 fps) is the fallback and is far more likely to be within spec.
+**And it was measuring a corrupted picture.** Jan at the screen, 2026-07-26:
 
-**What it changes.** Criterion 4 is no longer a reason to buy a display: the
-panel in hand does 12 fps. The search reduces to **4:3 and hardware
-brightness**, and a candidate that is 4:3 at a *smaller* pixel count now has
-bandwidth to spare rather than needing it — 320x240 is half the bytes of the
-current panel, so it would reach 12 fps even at the original 24 MHz setting.
+| `speed=` | core | effective SPI | fps | picture on the glass |
+|---|---|---|---|---|
+| 24 MHz | unpinned, 250-400 | ~14-22, wandering | 6.5 | clean |
+| **24 MHz** | **pinned 400** | **22.2 constant** | **8.4** | **clean — shippable** |
+| 32 MHz | pinned 400 | 28.6 | 10.6 | artifacts |
+| 40 MHz | pinned 400 | 40 | 12.0 | artifacts |
+
+The artifacts read as "super-high contrast, with a small bright border around
+every symbol", "anti-aliasing going mad". They appear at 28.6 MHz and above and
+vanish below, with the renderer held constant — so they are the SPI bus, not
+tiny-skia. Note what this means for instrumentation: `dmesg` was clean at every
+step, the atomic-commit counter was honest, and both were counting frames that
+arrived at the panel damaged. Neither can see this class of fault, and neither
+can `grim`, which captures the compositor's buffer rather than the glass. Only
+eyes on the screen closed this.
+
+**The clean win is the core-clock pin by itself.** `speed=24000000` with
+`core_freq_min=400` holds a constant 22.2 MHz — not an overclock at all, since
+it is *below* the 24 MHz the overlay has always requested and merely stops the
+rate sagging to ~14 whenever the SoC idles. 6.5 -> 8.4 fps, verified clean at
+the screen, one config.txt line, no hardware change. That is the configuration
+to ship, and whether it becomes postinst guidance alongside the other
+config.txt lines is the open packaging question.
+
+**What it changes.** Criterion 4 is unreachable on this panel: the ILI9486
+clone does not tolerate a faster bus, and 8.4 fps is its honest clean ceiling
+against the movie's 12. Bandwidth is therefore still the reason to buy — but
+for a panel with *fewer pixels*, not a faster link. 320x240 is half this
+panel's bytes per frame, so it clears 12 fps at the same safe 22 MHz this one
+tops out at. That makes the QVGA candidate class below the strongest option on
+throughput as well as on aspect and fidelity.
 
 Cheapest experiments first, before buying anything:
-- DONE, both of them, and together they met criterion 4: pin the core clock
-  (`core_freq_min=400`) and raise `speed=` to 40 MHz. See the two measurement
-  blocks above. What remains is not a measurement but an observation — Jan
-  confirming the 40 MHz picture is clean on the glass.
+- DONE, and they closed criterion 4 negatively. Pinning the core clock is worth
+  +29 % and is clean; every `speed=` above nominal is fast and corrupt. See the
+  measurement blocks above.
 - Measure the (E) at 640x480 with tiny-skia on the second box (192.168.210.159,
   offline on 2026-07-26). It is the only 4:3 3.5" panel here, HDMI so no SPI
   bandwidth limit, and §6 measured ~11-12 fps on it with the *old* renderer;
