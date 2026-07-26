@@ -180,9 +180,12 @@ Still outstanding:
 ---
 
 Number: 4
-Timestamp: 2026-07-26, 19:45
+Timestamp: 2026-07-26, 19:45 (updated 2026-07-26, 22:40)
 Title: Find a display: 3.5", 4:3, real brightness control, and 12 fps.
-Status: open — the deciding criteria are now known; no candidate meets all four
+Status: open, but reduced — criterion 4 is MET on the panel in hand: a pinned
+core clock plus `speed=40000000` took it 6.5 -> 12.0 fps, the movie's own rate.
+Pixel integrity at 40 MHz is UNVERIFIED (needs eyes on the screen). What is
+still unmet is 4:3 and brightness.
 Description: With the CPU renderer shipped (fork
 claude/tiny-skia-backend-plan.md; CHUMBY_RENDERER=tiny-skia), the player is no
 longer what limits the panel: it draws the control panel using 37 % of one core
@@ -201,28 +204,112 @@ now the same decision as choosing a frame rate. Four criteria, all required:
    accepted but ignored, no DDC/CI — design.md §8), leaving its PWM solder pad.
 4. **12 fps** — the movie's own rate, and what the original hardware did.
 
-Why the current panel cannot reach it: the piscreen overlay clocks SPI at
-24 MHz (`speed=24000000`), and one 480x320 RGB565 frame is 307 200 bytes, i.e.
-~2.46 Mbit. That caps the link at ~9.8 fps before any overhead, which matches
-the measured ~6-7. So on SPI, 12 fps is a bandwidth question first: a 4:3 panel
-at 320x240 needs only 153 600 bytes/frame (~19 fps at 24 MHz), while 640x480
-needs 614 400 (~4.9 fps) and is out of reach over SPI entirely.
+Why this looked like a purchase: one 480x320 RGB565 frame is 307 200 bytes,
+i.e. ~2.46 Mbit, so at the overlay's original `speed=24000000` the link caps at
+~9.8 fps before any overhead — below the movie's rate however good the player
+gets. That framing was right about the arithmetic and wrong about the premise:
+`speed=` is a free variable, and the panel tolerated being asked for more (see
+"The SPI clock was simply set too low" below). For reference, the same
+arithmetic on other geometries: 320x240 needs 153 600 bytes/frame, 640x480
+needs 614 400.
+
+Measured 2026-07-26, 21:40-21:50 (first test Pi, 3B+, ILI9486 SPI TFT, 0.9.1
+deb, CHUMBY_RENDERER=tiny-skia; fps as cage's DRM_IOCTL_MODE_ATOMIC commits
+over 8 s under strace, development.md §6's method — strace overhead is in every
+number, so the ratios are the finding, not the absolutes):
+
+**The panel was never running at 24 MHz.** No `core_freq` was pinned, and the
+SPI baud divisor derives from the core clock, which the firmware scales down
+when the SoC is idle: `vcgencmd measure_clock core` sampled 400, 287.5, 268.75,
+250, 268.75 MHz over five seconds at idle, while the kernel clock tree reports
+`vpu` at a flat 400 MHz (what the driver divides from). Shipping the CPU
+renderer made the box idle, and the idle box clocked its own display link down
+— part of the measured ~6-7 fps was self-inflicted.
+
+| condition | core | ARM | commits/8 s | fps |
+|---|---|---|---|---|
+| stock, idle (`ondemand`) | 250-400, scaling | 1100 MHz | 52-53 | ~6.5 |
+| stock + 2 busy cores | 400 MHz | — | 67 | ~8.4 |
+| stock + `performance` governor | 400 MHz | 1400 MHz | 67 | ~8.4 |
+| **`core_freq_min=400` + `ondemand`** | **400 MHz** | 1400 MHz | **67-68** | **~8.5** |
+| `core_freq_min=400` + `powersave` | 400 MHz | 600 MHz | 66 | ~8.25 |
+
+**+29 % for one config.txt line, and the cause is isolated.** The last row is
+the control: forcing the ARM cores 2.3x slower (1400 -> 600 MHz) costs ~2 %, so
+the gain is SPI baud, not the ili9486 driver's CPU-side XRGB8888->RGB565
+conversion. Applied to the box as `core_freq_min=400`, appended inside `[all]`
+(backup `/boot/firmware/config.txt.bak-corefreq`); after the change, 47.8 C,
+`get_throttled` 0x0, box 88 % idle. Not packaged — whether this becomes postinst
+guidance like the other config.txt lines is open.
+
+The numbers fit the divisor model, though this is INFERENCE and was not checked
+against spi-bcm2835's source: an even CDIV of 18 gives 400/18 = 22.2 MHz
+(ceiling 9.0 fps, measured ~8.5) pinned, and ~280/18 = 15.6 MHz (ceiling 6.3,
+measured ~6.5) at the pre-pin sampled average.
+
+**The SPI clock was simply set too low** (measured 2026-07-26, 22:10-22:40,
+same box and method, `core_freq_min=400` throughout, one reboot per step):
+
+| `speed=` | implied effective SPI | predicted ceiling | commits/8 s | fps |
+|---|---|---|---|---|
+| 24 MHz | 22.2 MHz (CDIV 18) | 9.0 fps | 67-68 | ~8.5 |
+| 32 MHz | 28.6 MHz (CDIV 14) | 11.6 fps | 85-86 | ~10.7 |
+| **40 MHz** | **40 MHz (CDIV 10)** | 16.3 fps | **95-96** | **12.0** |
+
+At 40 MHz the panel holds **exactly the movie's 12 fps** — 144 commits over a
+12 s window, dead on 12.0, and the only row that falls short of its predicted
+ceiling (74 % of 16.3, where the other two hit 92-94 %). That shortfall is the
+finding, not a disappointment: the link stopped being the constraint and the
+source rate took over. The player draws those frames at 49 % of one core and
+120 MB RSS, with the box 86 % idle — twice the frames of the 2026-07-26 spike
+measurement for 12 points more CPU. 48.9 C, `get_throttled` 0x0, and no SPI or
+DRM errors in `dmesg` at any step.
+
+**Caveat, and it is the reason this is not closed: pixel integrity at 40 MHz is
+unverified.** 40 MHz is far above what the ILI9486 datasheet rates for a write
+cycle. A clean `dmesg` proves only that the SPI controller had nothing to
+complain about — corruption on an overclocked display bus is silent, and `grim`
+cannot see it either, because it captures the compositor's buffer and not what
+the glass actually shows. This needs someone at the screen looking for torn or
+speckled pixels, ideally warm and over time. If 40 MHz proves dirty, 32 MHz
+(10.7 fps) is the fallback and is far more likely to be within spec.
+
+**What it changes.** Criterion 4 is no longer a reason to buy a display: the
+panel in hand does 12 fps. The search reduces to **4:3 and hardware
+brightness**, and a candidate that is 4:3 at a *smaller* pixel count now has
+bandwidth to spare rather than needing it — 320x240 is half the bytes of the
+current panel, so it would reach 12 fps even at the original 24 MHz setting.
 
 Cheapest experiments first, before buying anything:
-- Raise the SPI clock on the panel in hand (`speed=32000000`, then 48) and
-  re-measure fps the way development.md §6 counts it. Free, and it tests the
-  bandwidth arithmetic directly; the controller may or may not tolerate it.
+- DONE, both of them, and together they met criterion 4: pin the core clock
+  (`core_freq_min=400`) and raise `speed=` to 40 MHz. See the two measurement
+  blocks above. What remains is not a measurement but an observation — Jan
+  confirming the 40 MHz picture is clean on the glass.
 - Measure the (E) at 640x480 with tiny-skia on the second box (192.168.210.159,
   offline on 2026-07-26). It is the only 4:3 3.5" panel here, HDMI so no SPI
   bandwidth limit, and §6 measured ~11-12 fps on it with the *old* renderer;
   with the CPU renderer it should clear 12 fps with headroom. If it does, the
   whole question reduces to brightness — i.e. to the PWM solder-pad mod.
-- Only then survey panels against all four criteria. design.md §8's existing
-  candidates (Adafruit PiTFT Plus 3.5" 2441, Waveshare 3.5" (C)) were chosen for
-  dimming and driver support, both are 480x320 3:2, and neither was assessed for
-  throughput. DPI panels stay out: they consume the GPIO header, killing SPI and
-  the bend button.
+- Only then survey panels, now against 4:3 and brightness rather than all four.
+  design.md §8's existing candidates (Adafruit PiTFT Plus 3.5" 2441, Waveshare
+  3.5" (C)) were chosen for dimming and driver support and are both 480x320
+  3:2. DPI panels stay out: they consume the GPIO header, killing SPI and the
+  bend button.
 
-Decision to make once measured: keep 4:3 and accept the (E) plus a soldering
-mod, take a 3:2 panel with clean dimming and letterbox the 4:3 content, or drop
-to a 320x240-class panel where SPI has the bandwidth for 12 fps.
+The class not yet considered, and the best fit on paper: a **3.5" 320x240
+(QVGA) SPI TFT**. It is exactly 4:3 and exactly the content's pixel grid, so
+the movie maps 1:1 with no scaling; it is period-correct, since the original
+chumby's screen was 3.5" QVGA; it halves the bytes per frame, putting 12 fps
+well inside budget even at 24 MHz; and ILI9341-class controllers have mainline
+`drm/tiny` drivers, so the DRM+cage stack of design.md §5/§6 carries over the
+way piscreen does — which is the part that took the most effort to get right.
+Brightness then reduces to whether the module breaks its backlight LED pin out
+separately instead of tying it to 3.3 V, which is usually readable from the
+pinout. UNVERIFIED and the reason this is an idea and not a recommendation:
+whether such a part is actually purchasable today. 3.5" is overwhelmingly sold
+as 480x320, and most 320x240 modules are 2.4"/2.8"; no specific part has been
+identified, priced, or checked for a mainline-supported controller.
+
+Decision to make: keep 4:3 and accept the (E) plus a soldering mod, take a 3:2
+panel with clean dimming and letterbox the 4:3 content, or find a 3.5" QVGA
+panel and get aspect, fidelity and bandwidth in one part.
