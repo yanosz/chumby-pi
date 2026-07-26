@@ -749,6 +749,27 @@ These are the ones this repo owns.
   before `[all]`" actually lands in whatever `[pi*]`/`[cm*]` filter block
   precedes it and silently does not load on other models. Append after
   `[all]` (hit 2026-07-19 with gpio-shutdown/gpio-key on the second box).
+- **cage will not start from an ssh session.** libseat finds no VT
+  (`Could not open target tty: Permission denied`), the DRM backend gives up
+  after `Timeout waiting session to become active`, and the stuck cage keeps
+  ssh's stdout open so the ssh call never returns either — even `timeout`
+  around it does not free the caller. Run graphical things from a transient
+  unit carrying the service's session setup, and log to a file rather than
+  down the ssh pipe:
+  `sudo systemd-run --unit=X --collect --property=User=pi
+  --property=PAMName=login --property=TTYPath=/dev/tty1
+  --property=StandardInput=tty-fail --property=TTYReset=yes
+  --property=TTYVHangup=yes --property=Environment=WLR_RENDERER=pixman …`
+  (found 2026-07-26 running the fork's present probe).
+- **`ondemand` hides behind low-load measurements.** The governor parks at
+  600 MHz of 1400 when a probe only uses a few percent of a core, so per-frame
+  times come out ~2× pessimistic while the real, busy player runs at full
+  clock. Pin `scaling_governor` to `performance` for any per-frame number
+  taken at low load, and restore it afterwards.
+- **The SPI TFT shows frames row by row.** tinydrm shifts a frame out
+  progressively, so during a transfer the top rows already carry the new frame
+  and the lower rows the previous one — motion looks banded. There is no
+  tear-free path on this panel and it is not a renderer artifact.
 
 ## 8. Documentation
 
