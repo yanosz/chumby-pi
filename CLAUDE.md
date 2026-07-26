@@ -12,6 +12,13 @@ Both repositories contain a folder called claude-docs. These are internal docume
 the project was active and had not reached maintenance mode, yet. This notes can be helpful for understanding design 
 decisions but are not changed any longer.
 
+Active spike: `ruffle` branch `renderer/tiny-skia-spike` is prototyping a
+CPU-only `tiny-skia` `RenderBackend`, to test whether it beats the current
+wgpu-on-lavapipe (software Vulkan) render path on CPU load — hardware
+acceleration is a closed door on VideoCore IV Pis (Zero–3), so this targets
+the software path itself. Plan and checkpoints:
+`ruffle/claude/tiny-skia-render-backend-plan.md`.
+
 When being tasked to fix a bug or do a feature, create a plan with steps / checkpoints first.
 
 Non-negotiable rules:
@@ -26,13 +33,13 @@ Non-negotiable rules:
 - The docs are split like the code. Anything about the Rust player —
   what the panel demands of it, the host boundary, the fixtures, the
   decompiled SWF, how to build/run/verify/rebase it — belongs in the
-  `ruffle/` submodule, which is self-contained for player work and has
-  its own `CLAUDE.md`. Anything about the appliance — packaging, kiosk,
+  `ruffle/` submodule, which is self-contained for player work and keeps
+  its own engineering record under `ruffle/claude/`. Anything about the appliance — packaging, kiosk,
   hardware, the device record, CI — belongs in this repo's `claude-docs/`.
   If a finding fits neither, it is obsolete — say so and ask the user.
 - **Player work happens in `ruffle/`, not here.** If the task is about
   the panel, the natives, the fixtures or the UI policy, work from that
-  repo and read its `CLAUDE.md` first.
+  repo and read its `claude/` engineering record first.
 - Never modify controlpanel.swf or any extracted SWF.
 - /home/jan/chumby_backup is read-only ground truth. Never write there.
 - Work on ONE step at a time. Do not look ahead or start the next step's
