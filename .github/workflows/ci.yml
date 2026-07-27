@@ -89,6 +89,10 @@ jobs:
           name: chumby-player-deb
           path: pkg/out/chumby-player_*.deb
           if-no-files-found: error
+          # Handoff to apt-repo only; the deb's lasting home is the apt
+          # repo on Pages. The 90-day default parked ~340 MB against the
+          # account's Actions storage allowance.
+          retention-days: 1
 
   apt-repo:
     # Signed flat apt repo on GitHub Pages (design.md §5), plus the

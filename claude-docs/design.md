@@ -485,3 +485,12 @@ binary natively, builds the debs, and installs them into an arm64
 dependencies are complete — then runs the movie-start check from the
 *packaged* SWF and fixtures. Only the SWF-free `chumby-player` deb is
 uploaded as an artifact.
+
+That artifact is a **handoff, not a release**: `debs` uploads it purely so
+`apt-repo` can download it into `site/apt`, and the deb's lasting home is the
+signed repo on Pages. It therefore carries `retention-days: 1` (2026-07-27).
+The 90-day default had parked 38 copies — ~340 MB — against the account's
+Actions storage allowance, none of them reachable by anything but the run
+that produced them. Build caches are unaffected: `Swatinem/rust-cache` keeps
+a ~587 MB cache that evicts on GitHub's own 7-day idle rule and counts
+against a separate per-repo limit, not the artifact allowance.
