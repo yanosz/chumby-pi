@@ -106,6 +106,11 @@ pstrick2 labels a three-leg switch `06.07.06` (bridging 6↔7); Jan's
 mainboard's reset-pulls-up-to-`P33VBKUP` topology — recorded here as
 the standing discrepancy, ours preferred.
 
+This table is the full connector. For what is actually plugged in today
+— which pins, which Pi header pins, which wire colours — see
+[`pins-in-use.md`](pins-in-use.md); it defers to this section for nets
+and numbering.
+
 The Pi 3B+ header has SPI0 at 3.3 V, matching the i.MX21's I/O levels —
 a straight wire-up. Full corrected table, with per-pin provenance —
 J = Jan's meter/working button 2026-07-19, P = pstrick2's continuity
