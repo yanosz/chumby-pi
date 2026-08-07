@@ -101,23 +101,60 @@ hang off the Pi's jack with `HP_NOTIN`→GPIO driving a software sink
 switch. With the display as the source, a Pi-side sink switch cannot mute
 anything: the mute would have to happen on the display's speaker feed.
 
-### OPEN: headphone detection
+**One HDMI sink, not two** (measured 2026-08-06, second test Pi
+192.168.210.159). The Pi cannot address the display's jack and its
+speaker interface separately: there is exactly one sink,
+`alsa_output.platform-3f902000.hdmi.hdmi-stereo` (card 1 `vc4hdmi`), and
+the split happens on the display board downstream of HDMI. So any
+speaker/headphone switching is the board's own doing — PipeWire has
+nothing to route.
 
-Nothing currently switches between speakers and headphones, and it is not
-yet known whether anything *can*, at either end:
+**FIXED: the player's audio never reached the display at all.** The
+PipeWire default sink was `Built-in Audio Stereo` — the *Pi's own* analog
+3.5 mm jack — and `ruffle_desktop` was streaming into `bcm2835
+Headphones`. HDMI carried no audio, so neither the display's speakers nor
+its jack could ever have made a sound, whatever the board does. Switching
+the default to the HDMI sink moved the player's stream to `MAI PCM
+i2s-hifi-0` and produced audible tone on the chumby hardware (Jan at the
+device, 2026-08-06). The switch is WirePlumber runtime state and survived
+a reboot; **it is not packaged** — the appliance should select the HDMI
+sink deliberately rather than inherit PipeWire's default pick, and
+`CHUMBY_AUDIO_DEVICE` does not cover this (it steers mpv only, not the
+player's `cpal` output). Open packaging question.
 
-- **Display side — does the (E) mute its speaker interface when a plug
-  enters its own 3.5 mm jack?** Unknown. The vendor wiki does not say,
-  and Waveshare publishes no schematic for this board (only 3D
-  drawings), so documentation cannot settle it. Two bench tests: play
-  audio, listen on the speaker output, insert a plug into the display's
-  jack and hear whether the speakers drop; or meter the display's jack
-  for a normalling switch (tip lug continuous to its switch lug with no
-  plug, open with one inserted).
-- **Chumby side — `HP_NOTIN` (breakout 10) is wired but unused.** It is
-  the daughtercard jack's detect line and the only signal that knows
-  headphones went into the *chumby's* jack. Whatever consumes it has to
-  act on the display's speaker feed now, not on a Pi sink.
+The display end is confirmed willing: its ELD advertises
+`monitor_name WS-35-640`, LPCM stereo, 32/44.1/48 kHz, FL/FR, and the Pi
+transmits `IEC958_SUBFRAME_LE` at 48 kHz with the PCM `RUNNING`.
+
+### Headphone detection: the display has it, in hardware
+
+**ANSWERED 2026-08-06 — the (E) mutes its speaker interface whenever a
+plug sits in its own 3.5 mm jack.** Vendor documentation could not settle
+this (the wiki does not mention it and Waveshare publishes no schematic
+for this board, only 3D drawings), so it was measured at the device: a
+440 Hz tone on the HDMI sink, `RUNNING` PCM, everything on the Pi side
+held constant, with the plug as the only variable. Jack out → tone at the
+speakers. Jack in → silence. Jan at the device both times.
+
+An earlier apparent version of this result was **discarded as a
+confound** and is recorded so nobody re-derives it: audio first became
+audible in the very step that the jack came out, but both preceding
+silent observations had no signal flowing at all (first the wrong default
+sink, then a `speaker-test` that had already exited on SSH close), so the
+jack-in case had never actually been tested. Only the controlled repeat
+counts.
+
+**The consequence for this harness:** it feeds the daughtercard's
+headphone jack *by plugging into the display's jack*, and that plug is
+exactly what mutes the speaker interface. As wired, speakers and
+headphones are mutually exclusive — the tap itself silences the speakers.
+Tapping the display's jack at its solder pads instead would keep the
+detect switch closed and both outputs live; which way to go belongs to
+issue 2.
+
+`HP_NOTIN` (breakout 10) stays wired and consumed by nothing. It cannot
+mute anything by itself here: the speakers are fed by the display's
+amplified output, which no Pi GPIO reaches.
 
 Unconfirmed in the table above, both flagged rather than guessed away:
 
