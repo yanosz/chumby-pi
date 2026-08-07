@@ -82,17 +82,30 @@ Panel audio (alarm tones, internet radio) plays through **mpv** into
 the `pi` user's PipeWire session; system sounds follow the panel's own
 volume/mute natives.
 
+There are **two** audio paths, which is why one knob is not enough: mpv
+plays music and alarm tones, while the player emits the panel's own
+sounds directly. Only the first follows `CHUMBY_AUDIO_DEVICE`; the
+player follows the PipeWire **default sink**.
+
 Two ways to route it:
 
-1. **Set the PipeWire default sink** (affects everything in the
-   session):
+1. **Choose the default sink** (affects everything — player and mpv),
+   in `/etc/default/chumby-player`:
 
    ```sh
-   wpctl status          # list sinks
-   wpctl set-default <sink-id>
+   CHUMBY_AUDIO_SINK=alsa_output.platform-3f902000.hdmi.hdmi-stereo
    ```
 
-2. **Pin mpv to a device** (affects only the panel audio), in
+   Find the name with `wpctl status` for the id, then `wpctl inspect
+   <id> | grep node.name`. The launcher applies it at every start;
+   unset leaves the default alone.
+
+   **Worth setting on an HDMI panel.** PipeWire's own pick is
+   arbitrary, and on a Pi 3A+ driving the Waveshare HDMI display it
+   chose the Pi's analog jack — so HDMI carried no audio at all and the
+   panel's speakers stayed silent, with nothing in any log to say so.
+
+2. **Pin mpv to a device** (affects only music and alarms), in
    `/etc/default/chumby-player`:
 
    ```sh

@@ -36,8 +36,19 @@ LP_NUM_THREADS=2
 # only: tiny-skia has no MSAA to skip.
 CHUMBY_QUALITY=low
 
+# Which output everything plays on, by making one sink the PipeWire
+# default. PipeWire's own pick is arbitrary and has chosen wrong: on a
+# 3A+ driving the HDMI panel it took the Pi's analog jack, so HDMI
+# carried no audio at all and the display's speakers stayed silent.
+# Unset leaves the default alone. List the names with:
+#   wpctl status                    # descriptions and ids
+#   wpctl inspect <id> | grep node.name
+#CHUMBY_AUDIO_SINK=alsa_output.platform-3f902000.hdmi.hdmi-stereo
+
 # Send music and alarms to a specific output instead of the PipeWire
-# default sink. Names as mpv prints them: mpv --audio-device=help
+# default sink. Narrower than CHUMBY_AUDIO_SINK: this steers mpv only,
+# and the player's own audio still follows the default sink.
+# Names as mpv prints them: mpv --audio-device=help
 #CHUMBY_AUDIO_DEVICE=alsa/plughw:CARD=Headphones
 
 # Player log filter (output lands in journalctl -u chumby-player).

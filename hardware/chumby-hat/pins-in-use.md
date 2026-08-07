@@ -122,10 +122,17 @@ its jack could ever have made a sound, whatever the board does. Switching
 the default to the HDMI sink moved the player's stream to `MAI PCM
 i2s-hifi-0` and produced audible tone on the chumby hardware (Jan at the
 device, 2026-08-06). The switch is WirePlumber runtime state and survived
-a reboot; **it is not packaged** — the appliance should select the HDMI
-sink deliberately rather than inherit PipeWire's default pick, and
-`CHUMBY_AUDIO_DEVICE` does not cover this (it steers mpv only, not the
-player's `cpal` output). Open packaging question.
+a reboot.
+
+**Packaged 2026-08-07** as `CHUMBY_AUDIO_SINK` in
+`/etc/default/chumby-player`: the node name of the sink to make default,
+applied by `chumby-player-run` at every start, unset meaning don't touch.
+It had to be a *sink* knob rather than reusing `CHUMBY_AUDIO_DEVICE`,
+which steers mpv only — the player's `cpal` output follows the default
+sink, so the two audio paths need one lever above both. `wpctl` takes
+object ids, so the launcher looks the name up rather than adding a
+`pw-metadata`/`jq` dependency for one line. **Not yet verified on the
+device** — the box was offline when this was written.
 
 The display end is confirmed willing: its ELD advertises
 `monitor_name WS-35-640`, LPCM stereo, 32/44.1/48 kHz, FL/FR, and the Pi
