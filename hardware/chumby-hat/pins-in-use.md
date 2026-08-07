@@ -8,9 +8,14 @@ than the Pi.
 This is the *as-built* record. The full 26-pin connector table, the two
 competing numbering schemes and the per-pin provenance live in
 [`accelerometer.md` §3](accelerometer.md) — read that first if you need
-a pin this page does not list. **All breakout numbers here are
-physical** (pstrick2's convention: pin 1 left-front with the
-polarization notch toward the viewer, front row 1–13, back row 14–26).
+a pin this page does not list. **That file lives only on the
+`hardware-ideas` branch**, along with the rest of `hardware/`; this page
+is the one piece carried on `dev` as well, so on `dev` the links to it do
+not resolve.
+
+**All breakout numbers here are physical** (pstrick2's convention: pin 1
+left-front with the polarization notch toward the viewer, front row
+1–13, back row 14–26).
 
 Wire colours are Jan's harness, not a board marking — they identify a
 wire in the bundle and mean nothing to anyone rebuilding it from
