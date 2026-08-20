@@ -369,9 +369,11 @@ SPI0 — no Linux driver exists for the KXP74, so PiHost would read it
 via `spidev` and answer the panel's ASnative(5,60)/(5,61) from live
 values (full chain and open probes:
 `hardware/chumby-hat/accelerometer.md`). The original
-mainboard schematics and Gerbers are `pdf/` (git-ignored) — no
+mainboard schematics and Gerbers are `pdf/` (git-ignored), fetched from
+`files.chumby.com/hdwedocs/` — URLs and hashes in
+[`pins-in-use.md` "Provenance"](../hardware/chumby-hat/pins-in-use.md) — and no
 daughtercard-specific design files exist publicly (search closed
-2026-07-16, see that README's "Daughtercard files" section). The chumbilical
+2026-07-16). The chumbilical
 pin table is derived from the mainboard schematic and physical
 verification, not from any daughtercard source.
 

@@ -221,3 +221,19 @@ Everything else on the cable, for completeness — see §3 for the nets:
   authority, this one only says what is plugged in.
 - Pi pin/GPIO correspondence: the Raspberry Pi documentation diagram
   above.
+- Mainboard schematic set (the `pdf/` directory at the repo root,
+  git-ignored — the chumbilical nets in §3 are read off it): chumby's
+  own file host, still serving in August 2026. No directory index (the
+  parent path 403s), so the filenames are the only way in:
+
+  | File | URL | sha256 |
+  |---|---|---|
+  | `IRONFORGE_MX21_V1_8_FINAL.pdf` | <https://files.chumby.com/hdwedocs/IRONFORGE_MX21_V1_8_FINAL.pdf> | `94e58baf…961442` |
+  | `Rev37_release.pdf` | <https://files.chumby.com/hdwedocs/Rev37_release.pdf> | `21220089…d32eb6` |
+  | `gerbers_IRONFORGE_MX21_V1_8_FINAL.zip` | <https://files.chumby.com/hdwedocs/gerbers_IRONFORGE_MX21_V1_8_FINAL.zip> | `4b8dad96…3d6a7d77` |
+
+  Verified 2026-08-12: all three fetch clean over HTTPS and hash
+  identical to the local copies. Both PDFs are 15 A1 sheets; the
+  Ironforge one was authored 2008-02-14, `Rev37_release` 2007-08-20.
+  Chumby published these under its HDK licence. Neither covers the
+  daughtercard — no daughtercard design files exist publicly.
