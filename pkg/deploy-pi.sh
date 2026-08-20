@@ -17,6 +17,13 @@ cd "$(dirname "$0")/.."
 cargo build --profile dist -p ruffle_desktop \
     --target aarch64-unknown-linux-gnu --manifest-path ruffle/Cargo.toml
 
+# Separate invocation, never merged with the one above: exporter asks
+# ruffle_core for "deterministic", and cargo unifies features across
+# packages built together, which pins the player's clock to 2001-02-03
+# (claude/issues.md #6). build-debs.sh requires this binary.
+cargo build --profile dist -p exporter \
+    --target aarch64-unknown-linux-gnu --manifest-path ruffle/Cargo.toml
+
 # A clean out/ so leftover debs from earlier versions aren't deployed too.
 rm -rf pkg/out
 pkg/build-debs.sh

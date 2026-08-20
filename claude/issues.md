@@ -378,3 +378,6 @@ Fix: the workflow builds the two binaries in separate invocations (costing
 a second `ruffle_core` build) and a preceding guard step fails the run if
 `ruffle_desktop` ever resolves `deterministic` again — the failure is
 otherwise silent, since a wrong clock is the only outward sign.
+`pkg/deploy-pi.sh` gained the missing exporter build as its own invocation
+too — it built only the player and then called `build-debs.sh`, which
+requires the exporter, so a clean tree could not deploy at all.
