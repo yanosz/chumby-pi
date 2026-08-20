@@ -50,14 +50,16 @@ jobs:
         with:
           workspaces: ruffle
 
-      - name: Build ruffle_desktop (dist profile)
+      - name: Build ruffle_desktop and exporter (dist profile)
         working-directory: ruffle
         # --target keeps the output at the path build-debs.sh expects
         # (target/aarch64-unknown-linux-gnu/dist/), same as the
         # cross-build documented in claude-docs/development.md §3.
         # There is no --features chumby: the fork always builds it.
+        # exporter rasterizes opening.swf into the Plymouth theme on the
+        # device, so the deb bundles it and build-debs.sh requires it.
         run: |
-          cargo build -p ruffle_desktop \
+          cargo build -p ruffle_desktop -p exporter \
             --profile dist --target aarch64-unknown-linux-gnu
 
       - name: Fetch controlpanel.swf from the private share
