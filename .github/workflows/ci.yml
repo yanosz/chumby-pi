@@ -50,19 +50,25 @@ jobs:
         with:
           workspaces: ruffle
 
-      - name: Guard against the mock clock reaching the player
+      - name: Guard against exporter's features reaching the player
         working-directory: ruffle
-        # exporter asks ruffle_core for "deterministic", which freezes
-        # locale::get_current_date_time() at 2001-02-03 04:05:06. Harmless
-        # for a frame rasterizer, fatal for the panel: the built-in clock
-        # renders February with no digits at all, because its seconds never
-        # change and update() runs exactly once (chumby-pi issue 3).
+        # exporter asks ruffle_core for "deterministic" and "default_font".
+        # Both are wrong for the player and neither shows up as a build
+        # failure: "deterministic" freezes get_current_date_time() at
+        # 2001-02-03 04:05:06 (the built-in clock then renders February with
+        # no digits — chumby-pi issue 6), and "default_font" embeds a
+        # fallback font the appliance is not supposed to rely on, masking a
+        # missing font package on the device.
         run: |
-          if cargo tree -e features -p ruffle_desktop -i ruffle_core \
-               | grep -q 'feature "deterministic"'; then
-            echo "::error::ruffle_desktop resolves ruffle_core with 'deterministic' — the mock clock would ship." >&2
-            exit 1
-          fi
+          leaked=0
+          for f in deterministic default_font; do
+            if cargo tree -e features -p ruffle_desktop -i ruffle_core \
+                 | grep -q "feature \"$f\""; then
+              echo "::error::ruffle_desktop resolves ruffle_core with '$f' — exporter's features have leaked into the player." >&2
+              leaked=1
+            fi
+          done
+          [ "$leaked" -eq 0 ]
 
       - name: Build ruffle_desktop (dist profile)
         working-directory: ruffle

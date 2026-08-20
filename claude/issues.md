@@ -381,3 +381,34 @@ otherwise silent, since a wrong clock is the only outward sign.
 `pkg/deploy-pi.sh` gained the missing exporter build as its own invocation
 too — it built only the player and then called `build-debs.sh`, which
 requires the exporter, so a clean tree could not deploy at all.
+
+Corrected 2026-08-20, 23:10 — the first pass here named only
+`deterministic`, which was the half of the leak that happened to be
+visible. `exporter/Cargo.toml` asks for `features = ["deterministic",
+"default_font"]` and cargo unified **both**. Full diff of the two
+resolutions (`cargo tree -e features -p ruffle_desktop [-p exporter]`,
+feature edges compared):
+
+| feature | reaches the player when merged | consequence |
+|---|---|---|
+| `deterministic` | yes | mock clock, 2001-02-03 04:05:06 |
+| `default_font` | yes | fallback font embedded in `ruffle_core` |
+
+`ruffle_core` is the only *shared* crate that changes; everything else the
+merged graph adds (`console`, `indicatif`, `rayon`, `portable-atomic`,
+`unit-prefix`, `crossbeam-utils`) is exporter's own subtree and is not
+linked into the player. The guard step now covers both names.
+
+`default_font` matters on its own, and in the opposite direction:
+**removing the leak takes a font away from the player.** Stock
+`ruffle_desktop` resolves device fonts through `fontdb`
+(`load_system_fonts()`), with the chains in `desktop/src/player.rs` ending
+in DejaVu Serif/Sans/Mono. The panel embeds fonts for 390 of its 398
+`DefineEditText` fields, but 8 use device fonts and depend on that
+resolution. `chumby-player`'s `Depends` lists `libfontconfig1` — the
+library — and **no font package**. The 5" DSI box happens to carry DejaVu
+(8 faces, from two `fonts-*` packages pulled in by something else), so it
+is fine today; a leaner image would render those 8 fields blank and nobody
+would know until they hit the screen. OPEN: whether to add a font package
+to `Depends` (`fonts-dejavu-core` is the smallest that satisfies all three
+chains). Not changed without a decision.
