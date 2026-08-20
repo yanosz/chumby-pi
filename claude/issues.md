@@ -327,3 +327,88 @@ identified, priced, or checked for a mainline-supported controller.
 Decision to make: keep 4:3 and accept the (E) plus a soldering mod, take a 3:2
 panel with clean dimming and letterbox the 4:3 content, or find a 3.5" QVGA
 panel and get aspect, fidelity and bandwidth in one part.
+
+---
+
+Number: 5
+Timestamp: 2026-08-20, 22:05
+Title: Implement backlight brightness on the 5" DSI box.
+Status: open — next session
+Description: The 5" Waveshare DSI LCD (C) (1024x600, overlay
+`dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC` appended after `[all]`) on
+the new 3B+ exposes a real kernel backlight: `/sys/class/backlight/10-0045`,
+`max_brightness` 255. Writes are accepted with no I2C errors and Jan confirmed
+visible dimming at the screen (sweep 255 -> 10 -> 255, held 8 s at the bottom).
+This is the first display in the project with working brightness, so FR16 —
+player-ready since 2026-07-13 and blocked on hardware ever since
+(requirements.md §3, and issue 4's third criterion) — can be closed on a
+device.
+Already shipped, needs verifying end to end rather than building: the deb's
+`90-chumby-backlight.rules` (chgrp video + g+w on `brightness`, re-run from
+postinst), the fork's FR16 sliders, and the `settings-brightness` ui-policy
+rule that lifts by itself once a backlight exists. Unverified on this box:
+whether the pi user really gets write access through that rule (every write in
+this session went through sudo), whether the Settings button un-dims, and how
+the panel's slider range and night mode map onto 0-255.
+
+---
+
+Number: 6
+Timestamp: 2026-08-20, 22:45
+Title: CI shipped the player with Ruffle's mock clock (deterministic feature).
+Status: closed — CI split into two cargo invocations, guarded; needs a
+rebuilt deb on the 5" DSI box to clear the symptom
+Description: `5c9b2dd` taught the workflow to cross-build the exporter the
+deb bundles, and did it in the same cargo invocation as the player:
+`cargo build -p ruffle_desktop -p exporter --profile dist --target ...`.
+`exporter/Cargo.toml` asks `ruffle_core` for `features = ["deterministic"]`,
+and cargo unifies features across packages built together, so
+`ruffle_desktop` linked a `ruffle_core` whose
+`locale::get_current_date_time()` is frozen at the test constant
+2001-02-03 04:05:06 (`core/src/locale.rs`, `MOCK_TIME`). Every `new Date()`
+in the panel returned that. Confirmed with
+`cargo tree -e features -p ruffle_desktop -i ruffle_core`: clean alone,
+`feature "deterministic"` present the moment `-p exporter` joins.
+Visible as the built-in clock reporting February with no digits (ruffle
+issue 3 — the frozen seconds make `BuiltinClock.update()` run exactly once,
+before the digit strips are class-linked, so all six park blank forever).
+The local cross-build in claude-docs/development.md §3 was always two
+separate commands, which is why this only ever appeared on a CI-built deb.
+Fix: the workflow builds the two binaries in separate invocations (costing
+a second `ruffle_core` build) and a preceding guard step fails the run if
+`ruffle_desktop` ever resolves `deterministic` again — the failure is
+otherwise silent, since a wrong clock is the only outward sign.
+`pkg/deploy-pi.sh` gained the missing exporter build as its own invocation
+too — it built only the player and then called `build-debs.sh`, which
+requires the exporter, so a clean tree could not deploy at all.
+
+Corrected 2026-08-20, 23:10 — the first pass here named only
+`deterministic`, which was the half of the leak that happened to be
+visible. `exporter/Cargo.toml` asks for `features = ["deterministic",
+"default_font"]` and cargo unified **both**. Full diff of the two
+resolutions (`cargo tree -e features -p ruffle_desktop [-p exporter]`,
+feature edges compared):
+
+| feature | reaches the player when merged | consequence |
+|---|---|---|
+| `deterministic` | yes | mock clock, 2001-02-03 04:05:06 |
+| `default_font` | yes | fallback font embedded in `ruffle_core` |
+
+`ruffle_core` is the only *shared* crate that changes; everything else the
+merged graph adds (`console`, `indicatif`, `rayon`, `portable-atomic`,
+`unit-prefix`, `crossbeam-utils`) is exporter's own subtree and is not
+linked into the player. The guard step now covers both names.
+
+`default_font` matters on its own, and in the opposite direction:
+**removing the leak takes a font away from the player.** Stock
+`ruffle_desktop` resolves device fonts through `fontdb`
+(`load_system_fonts()`), with the chains in `desktop/src/player.rs` ending
+in DejaVu Serif/Sans/Mono. The panel embeds fonts for 390 of its 398
+`DefineEditText` fields, but 8 use device fonts and depend on that
+resolution. `chumby-player`'s `Depends` lists `libfontconfig1` — the
+library — and **no font package**. The 5" DSI box happens to carry DejaVu
+(8 faces, from two `fonts-*` packages pulled in by something else), so it
+is fine today; a leaner image would render those 8 fields blank and nobody
+would know until they hit the screen. OPEN: whether to add a font package
+to `Depends` (`fonts-dejavu-core` is the smallest that satisfies all three
+chains). Not changed without a decision.
