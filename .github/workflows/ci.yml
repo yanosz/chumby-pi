@@ -50,16 +50,40 @@ jobs:
         with:
           workspaces: ruffle
 
-      - name: Build ruffle_desktop and exporter (dist profile)
+      - name: Guard against the mock clock reaching the player
+        working-directory: ruffle
+        # exporter asks ruffle_core for "deterministic", which freezes
+        # locale::get_current_date_time() at 2001-02-03 04:05:06. Harmless
+        # for a frame rasterizer, fatal for the panel: the built-in clock
+        # renders February with no digits at all, because its seconds never
+        # change and update() runs exactly once (chumby-pi issue 3).
+        run: |
+          if cargo tree -e features -p ruffle_desktop -i ruffle_core \
+               | grep -q 'feature "deterministic"'; then
+            echo "::error::ruffle_desktop resolves ruffle_core with 'deterministic' — the mock clock would ship." >&2
+            exit 1
+          fi
+
+      - name: Build ruffle_desktop (dist profile)
         working-directory: ruffle
         # --target keeps the output at the path build-debs.sh expects
         # (target/aarch64-unknown-linux-gnu/dist/), same as the
         # cross-build documented in claude-docs/development.md §3.
         # There is no --features chumby: the fork always builds it.
-        # exporter rasterizes opening.swf into the Plymouth theme on the
-        # device, so the deb bundles it and build-debs.sh requires it.
         run: |
-          cargo build -p ruffle_desktop -p exporter \
+          cargo build -p ruffle_desktop \
+            --profile dist --target aarch64-unknown-linux-gnu
+
+      - name: Build exporter (dist profile)
+        working-directory: ruffle
+        # Its own cargo invocation, never merged with the one above: cargo
+        # unifies features across packages built together, so `-p
+        # ruffle_desktop -p exporter` hands the player exporter's
+        # "deterministic" ruffle_core. Costs a second ruffle_core build;
+        # that is the price of the split. development.md §3 documents the
+        # local cross-build the same way, as two commands.
+        run: |
+          cargo build -p exporter \
             --profile dist --target aarch64-unknown-linux-gnu
 
       - name: Fetch controlpanel.swf from the private share

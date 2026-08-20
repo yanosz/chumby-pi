@@ -350,3 +350,31 @@ rule that lifts by itself once a backlight exists. Unverified on this box:
 whether the pi user really gets write access through that rule (every write in
 this session went through sudo), whether the Settings button un-dims, and how
 the panel's slider range and night mode map onto 0-255.
+
+---
+
+Number: 6
+Timestamp: 2026-08-20, 22:45
+Title: CI shipped the player with Ruffle's mock clock (deterministic feature).
+Status: closed — CI split into two cargo invocations, guarded; needs a
+rebuilt deb on the 5" DSI box to clear the symptom
+Description: `5c9b2dd` taught the workflow to cross-build the exporter the
+deb bundles, and did it in the same cargo invocation as the player:
+`cargo build -p ruffle_desktop -p exporter --profile dist --target ...`.
+`exporter/Cargo.toml` asks `ruffle_core` for `features = ["deterministic"]`,
+and cargo unifies features across packages built together, so
+`ruffle_desktop` linked a `ruffle_core` whose
+`locale::get_current_date_time()` is frozen at the test constant
+2001-02-03 04:05:06 (`core/src/locale.rs`, `MOCK_TIME`). Every `new Date()`
+in the panel returned that. Confirmed with
+`cargo tree -e features -p ruffle_desktop -i ruffle_core`: clean alone,
+`feature "deterministic"` present the moment `-p exporter` joins.
+Visible as the built-in clock reporting February with no digits (ruffle
+issue 3 — the frozen seconds make `BuiltinClock.update()` run exactly once,
+before the digit strips are class-linked, so all six park blank forever).
+The local cross-build in claude-docs/development.md §3 was always two
+separate commands, which is why this only ever appeared on a CI-built deb.
+Fix: the workflow builds the two binaries in separate invocations (costing
+a second `ruffle_core` build) and a preceding guard step fails the run if
+`ruffle_desktop` ever resolves `deterministic` again — the failure is
+otherwise silent, since a wrong clock is the only outward sign.
