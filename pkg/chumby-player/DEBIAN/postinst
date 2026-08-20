@@ -70,6 +70,24 @@ EOF
     chumby or its backup into /var/lib/chumby.
 EOF
     fi
+    # Optional: a physical power button. Can't detect wiring from software,
+    # so this is offered every install that lacks the overlay, not gated
+    # on any other check. GPIO3 is the only pin the SoC can wake a halted
+    # Pi from (firmware feature, no overlay needed for that half) — the
+    # overlay only adds the clean-shutdown-on-press side, and its default
+    # gpio_pin is already 3.
+    if ! grep -q '^dtoverlay=gpio-shutdown' /boot/firmware/config.txt 2>/dev/null; then
+        cat >&2 <<'EOF'
+
+chumby-player: optional — a button between GPIO3 (physical pin 5) and a
+  GND pin (e.g. pin 6) gives a clean shutdown/wake power button; the Pi
+  can already power back on from a GPIO3 short with no configuration,
+  but shutdown-on-press needs a line APPENDED to
+  /boot/firmware/config.txt (at the end — after [all]; inside an
+  earlier [pi*] section it silently does nothing):
+    dtoverlay=gpio-shutdown
+EOF
+    fi
     echo "" >&2
     echo "chumby-player: enabled for next boot; start now with:" >&2
     echo "  sudo systemctl start chumby-player" >&2

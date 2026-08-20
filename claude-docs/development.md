@@ -86,6 +86,16 @@ cargo build --profile dist -p ruffle_desktop \
     --target aarch64-unknown-linux-gnu --manifest-path ruffle/Cargo.toml
 ```
 
+`build-debs.sh` also needs `ruffle/exporter` cross-built the same way
+(same command, `-p exporter`) — bundled into the package as
+`ruffle-exporter`, it rasterizes `opening.swf` into the Plymouth boot
+theme's frames at download time (design.md §5, claude/issues.md #3):
+
+```sh
+cargo build --profile dist -p exporter \
+    --target aarch64-unknown-linux-gnu --manifest-path ruffle/Cargo.toml
+```
+
 The binary, the fixtures, the SWF and the two helper scripts the debs
 install all come out of `ruffle/`; `build-debs.sh` knows where.
 
@@ -191,6 +201,26 @@ stays cabled-off), with the ILI9486 480×320 SPI TFT and a USB sound card.
 An earlier
 Pi 3A+ (512 MB, wifi-only, HDMI) was used for the first bring-up; findings
 that were specific to it are not repeated here.
+
+A **second test box** (192.168.210.159, a Pi 3A+ — 512 MB, plain
+Raspbian Lite trixie, HDMI 640×480 WaveShare WS170120 USB touchscreen,
+the real chumby daughtercard's buttons wired via the chumbilical:
+reset switch → GPIO3+GND, bend switch → GPIO5+GND) joined 2026-07-19
+for the Plymouth boot-animation pass (claude/issues.md #3). Changed
+there: the 0.9.1 deb installed, `chumby-download-firmware` run in full
+(real servers), `update-initramfs -u` by hand (now the downloader's
+`-R`), cmdline.txt gained `quiet splash plymouth.ignore-serial-consoles`
+(backup `cmdline.txt.bak-plymouth-test`), config.txt gained
+`dtoverlay=gpio-shutdown` and
+`dtoverlay=gpio-key,gpio=5,keycode=102,label=chumby-bend` — both
+APPENDED after `[all]` (backup `config.txt.bak-plymouth-test`; a first
+attempt placed them before `[all]`, which put them in the `[pi5]`
+section where they silently do not load — see §7 Traps). A `--release`
+hot-replace of `ruffle_desktop` (fork dev 715a60f3c, the bend tap
+latch) is ahead of the installed deb. The chumby reset switch's
+chumbilical pair is physical 5↔6 — measured; the corrected chumbilical
+pin table lives on the pcb-ideas branch
+(hardware/chumby-hat/accelerometer.md §3, commit 3746462).
 
 **Packages installed:** `mpv`, `cage`, `grim`, `pipewire-alsa`. The last one
 is not optional — without it ALSA clients (the player's `cpal`) have no route
@@ -593,9 +623,12 @@ first tested from `/etc/udev/rules.d/` with
 `udevadm control --reload && udevadm trigger /dev/input/event*`; that copy was
 removed once the packaged rule shipped, so the device carries exactly one.
 
-**`LP_NUM_THREADS=1`** is a launcher default, not a device file. It was
-trialled through `/etc/default/chumby-player`, which was then removed — the
-device carries no local override.
+**`LP_NUM_THREADS=1`** ships as an explicit setting in
+`/etc/default/chumby-player` (a conffile, so owner edits survive upgrades),
+inherited by the player via the unit's `EnvironmentFile`. The launcher does
+**not** default it: removing or blanking the line means lavapipe falls back to
+its own thread count, never a silent 1. Raise it to trade CPU/heat for render
+throughput (NFR4).
 
 **Desktop session**: `systemctl disable --now lightdm`, with
 `loginctl enable-linger pi` set **first** so the user manager (and PipeWire)
@@ -613,11 +646,14 @@ truth. The Pi never reads it either; the SWF is copied at build time.
 170 was lavapipe's four raster worker threads. Temperature ~60 °C with the
 soft-limit sticky bit set.
 
-Things that did **not** help, recorded so nobody retries them: `--quality low`
-(MSAA is not the cost driver); rebuilding Mesa or swapping lavapipe for a GL
-path (the same llvmpipe rasterizer sits underneath); a client-side
-`set_cursor_visible` hook (the cursor is server-drawn); `wlrctl`'s virtual
-pointer under headless cage (never reaches the client).
+Things that did **not** help, recorded so nobody retries them: rebuilding
+Mesa or swapping lavapipe for a GL path (the same llvmpipe rasterizer sits
+underneath); a client-side `set_cursor_visible` hook (the cursor is
+server-drawn); `wlrctl`'s virtual pointer under headless cage (never reaches
+the client). `--quality low` used to sit in this list ("MSAA is not the cost
+driver") because CPU stayed pegged when it was tried — the 2026-07-19 entry
+below shows CPU was the wrong metric: the uncapped render loop always pegs
+its thread, and quality moves the *frame rate* instead.
 
 Version **0.9.0** (2026-07-14, desktop-verified; deployed the same evening
 on the 4th vanilla card — see 0.9.1): `chumby-download-firmware` rewritten
@@ -666,6 +702,59 @@ Incidental: the fresh card regenerated its SSH host key (known_hosts entry
 refreshed on the dev box); `grim` is dev-only and not reinstalled yet — no
 remote screenshots on this card so far.
 
+**Rendering measurements, 2026-07-19** (second test Pi: 3A+, WaveShare
+WS170120 HDMI 640×480@75, quality/threads injected via a temporary systemd
+drop-in + wrapper; fps counted as cage's `DRM_IOCTL_MODE_ATOMIC` commits
+over 6 s, thread CPU via `top -H`). The panel is render-bound: the lavapipe
+worker paints back-to-back with zero idle, so achieved fps — not CPU % — is
+the metric that responds to tuning. Stock (`high` = 4× MSAA, 1 thread):
+2.5 fps, render thread 96 %. `--quality low`: 6 fps, thread 91 % — 2.4× per
+frame, refuting the earlier "MSAA is not the cost driver" note above.
+`low` + `LP_NUM_THREADS=2`: ~11 fps (66 commits/6 s), 2 workers × 83 % —
+effectively the movie's 12 fps ceiling; shipped as the packaged defaults
+(`CHUMBY_QUALITY=low`, `LP_NUM_THREADS=2`) since 0.9.1. Resolution scaling,
+measured offscreen with the bundled `ruffle-exporter` (`opening.swf`, 132
+frames, 1 thread): 640×480 193 ms/frame, 480×320 123, 320×240 92 — ~2× for
+stage-native, not the naive 4×, fixed per-frame costs don't shrink.
+**tiny-skia replaces the software-Vulkan path, 2026-07-26** (first test Pi:
+3B+, 480×320 SPI TFT, cage on pixman; panel started as the service does, CPU
+from `/proc` over a 15 s steady-state window, fps from cage's atomic commits
+measured outside that window because strace slows what it traces). The fork's
+CPU renderer (`--renderer tiny-skia`, fork `claude/tiny-skia-backend-plan.md`)
+rasterises into a pixmap and hands it to the compositor through shared memory,
+so no Vulkan is loaded at all:
+
+| config | player CPU | whole box | RSS | fps |
+|---|---|---|---|---|
+| wgpu, shipped defaults (`low`, 2 threads) | 129 % of a core | 139 % | 252 MB | ~7 |
+| wgpu, stock (no quality/threads) | 241 % | 245 % | 296 MB | ~6 |
+| **tiny-skia** | **37 %** | **46 %** | **105 MB** | ~6 |
+
+3.5× less CPU than the shipped wgpu configuration and 2.4× less memory at the
+same frame rate — and on this panel the frame rate is **display**-capped, not
+renderer-capped: tiny-skia leaves ~90 % of a core idle and still lands at ~6 fps,
+so the SPI TFT's own update rate is the ceiling (the 11–12 fps above is the HDMI
+box's ceiling, a different one). Presenting itself is cheap: ~6 ms of whole-box
+CPU per frame, ~7 % of a core at 12 fps. Fidelity was checked with `grim` under
+both renderers — 93 % of pixels within 16 levels, the rest being the differing
+seconds digits and text anti-aliasing. Selected by `CHUMBY_RENDERER` in
+`/etc/default/chumby-player`; `LP_NUM_THREADS` and `CHUMBY_QUALITY` apply to the
+wgpu path only. The 640×480 HDMI box was offline that day and is still
+unmeasured.
+
+Dead ends, verified: a forced `video=HDMI-A-1:320x240M@60` cmdline mode is
+rejected by the kernel (`vc4-drm: User-defined mode not supported` — CVT
+needs a 6 MHz pixel clock, below the HDMI encoder's ~25 MHz floor) and that
+boot also left Plymouth without a modeset, so the token is harmful, not
+just useless; GPU rendering on any VideoCore IV Pi (Zero–3) — no Vulkan
+(v3dv starts at VC VI; rpi-vk-driver, last commit 2021, takes only its own
+QPU-assembly shader format, `vkCreateShaderModule` rejects the SPIR-V wgpu
+emits) and Mesa vc4's GLES 2.0 is below wgpu's GLES 3.0 floor, so
+`--graphics gl` lands back on llvmpipe. Open levers, both fork-sized:
+render at stage size and let the compositor upscale (~2×, would put 12 fps
+back on one thread), and a frame cap (the only lever that converts headroom
+into idle time / watts — at 12 fps the loop still never sleeps).
+
 ## 7. Traps
 
 The traps of working on the player itself — the stale `target/`, missed
@@ -682,6 +771,38 @@ These are the ones this repo owns.
 - **DRM card numbers move between boots.** Always the `by-path` name.
 - **A fixture change is not deployed** until `/var/lib/chumby/fixtures` is
   wiped and re-seeded.
+- **config.txt is sectioned.** A `dtoverlay=` line inserted "at the end,
+  before `[all]`" actually lands in whatever `[pi*]`/`[cm*]` filter block
+  precedes it and silently does not load on other models. Append after
+  `[all]` (hit 2026-07-19 with gpio-shutdown/gpio-key on the second box).
+- **cage will not start from an ssh session.** libseat finds no VT
+  (`Could not open target tty: Permission denied`), the DRM backend gives up
+  after `Timeout waiting session to become active`, and the stuck cage keeps
+  ssh's stdout open so the ssh call never returns either — even `timeout`
+  around it does not free the caller. Run graphical things from a transient
+  unit carrying the service's session setup, and log to a file rather than
+  down the ssh pipe:
+  `sudo systemd-run --unit=X --collect --property=User=pi
+  --property=PAMName=login --property=TTYPath=/dev/tty1
+  --property=StandardInput=tty-fail --property=TTYReset=yes
+  --property=TTYVHangup=yes --property=Environment=WLR_RENDERER=pixman …`
+  (found 2026-07-26 running the fork's present probe).
+- **`ondemand` hides behind low-load measurements.** The governor parks at
+  600 MHz of 1400 when a probe only uses a few percent of a core, so per-frame
+  times come out ~2× pessimistic while the real, busy player runs at full
+  clock. Pin `scaling_governor` to `performance` for any per-frame number
+  taken at low load, and restore it afterwards.
+- **The SPI TFT shows frames row by row.** tinydrm shifts a frame out
+  progressively, so during a transfer the top rows already carry the new frame
+  and the lower rows the previous one — motion looks banded. There is no
+  tear-free path on this panel and it is not a renderer artifact.
+- **A shipped default in `/etc/default` only reaches fresh installs.**
+  `deploy-pi.sh` installs with `--force-confold`, so dpkg keeps a locally
+  modified conffile and the new value never lands. Found 2026-07-26: the test
+  box was running neither `CHUMBY_QUALITY` nor `LP_NUM_THREADS` despite both
+  having shipped since 0.9.1, which made its baseline the *stock* renderer
+  configuration. Read the knobs off the running process
+  (`tr '\0' ' ' </proc/<pid>/cmdline`), never off the packaged file.
 
 ## 8. Documentation
 

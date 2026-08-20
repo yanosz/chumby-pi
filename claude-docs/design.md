@@ -204,6 +204,40 @@ the 3B+. Dropped instead: the launcher plays nothing before the intro,
 and the downloader no longer extracts `opening.swf`/`alt_opening.swf`.
 The `/psp/alt_opening` magic file is thereby out of scope too.
 
+**Boot opening animation, take two: a Plymouth theme** (prototype
+2026-07-17, first on-device pass 2026-07-19 — animation confirmed on a
+second test Pi with HDMI display; full findings and remaining
+verification in claude/issues.md #3). Plymouth's lifecycle — run during boot, get told to quit by
+something else — matches real hardware's opening.swf far better than a
+sequential Ruffle run ever could: no second software renderer, no
+window-mapped signal to invent. `opening.swf` is 320×240, 12 fps, 132
+frames (~11 s, held end frame); `ruffle/exporter --frames all` (already
+built for test fixtures) rasterizes it 1:1, no new SWF decoder needed.
+`chumby-download-firmware` now also fetches `opening.swf` (added to
+`FIRMWARE_FILES`, saved to `$STATE/opening.swf` like `intro.swf`), then
+`install_boot_theme()` runs the bundled `ruffle-exporter` binary, renames
+its zero-padded output to `frame-N.png`, and — the one step in the script
+needing root, since the destination is `/usr/share/plymouth/themes/` —
+`sudo`s the frames into `/usr/share/plymouth/themes/chumby/frames/` and
+runs `sudo plymouth-set-default-theme chumby`. The theme itself
+(`pkg/chumby-player/plymouth-theme-chumby/`) ships in the package without
+frames; it only ever gets activated once real frames exist, so a box
+that never runs the downloader keeps its stock (or absent) splash rather
+than a half-built theme. `chumby-player-run`'s `--kiosk` branch fires a
+backgrounded, non-fatal `plymouth quit` right before `exec cage` — the
+same "boot is over" role `wait_for_opening`'s external kill played on
+real hardware, though this is a proxy for "cage is about to start," not
+a true window-mapped signal. Two Lite-image findings from the first
+on-device pass (2026-07-19) are now handled in the downloader: Plymouth
+only draws with `splash` on the kernel cmdline (an ask-first
+`enable_splash()` appends `quiet splash plymouth.ignore-serial-consoles`,
+backup kept), and the theme must ride the initramfs
+(`plymouth-set-default-theme -R`; apt's own rebuild predates the frames). Audio (the original had a streamed soundtrack)
+is out of scope — Plymouth is silent, and reproducing it was judged not
+worth the added complexity, same call as the 0.9.1 drop above.
+`alt_opening.swf` (the `/psp/alt_opening` factory variant, six separate
+audio streams per `ffprobe`) is also out of scope for this pass.
+
 **Audio backend self-heal** (0.9.1, 2026-07-14): pipewire's user units
 (`pipewire.socket`, `pipewire-pulse.socket`, `wireplumber.service`)
 only arm at user-session start. On a first install pi's user manager
@@ -319,6 +353,30 @@ the player's `cpal` output both land on it with no configuration —
 wired, the remote-control path for scripted testing over SSH, and the
 intended home of the eventual `exit-player` magic key.
 
+The hardware path for that GPIO17 button — and for reviving the Chumby
+Classic daughtercard generally (its two USB-A ports, passive 4 Ω BTL
+speakers, headphone jack, and bend/reset switches) — is the
+**`hardware/chumby-hat/`** KiCad project. It bridges the daughtercard's
+"chumbilical" ribbon (Molex 71349-2011) to a Pi 3B+: USB by pigtail with
+a TPS2051 VBUS switch, buttons to GPIO17/27, speakers via a Waveshare
+USB→audio module, and headphones off the Pi's own 3.5 mm jack with
+`HP_NOTIN`→GPIO driving a software sink switch. Full net map, GPIO
+assignment and the open board-verification items live in that project's
+`README.md`. The daughtercard is mostly a breakout but not passive: it
+carries the Kionix KXP74-1050 accelerometer and the AT25080A ID EEPROM
+on SPI across the chumbilical (two chip selects), reachable from Pi
+SPI0 — no Linux driver exists for the KXP74, so PiHost would read it
+via `spidev` and answer the panel's ASnative(5,60)/(5,61) from live
+values (full chain and open probes:
+`hardware/chumby-hat/accelerometer.md`). The original
+mainboard schematics and Gerbers are `pdf/` (git-ignored), fetched from
+`files.chumby.com/hdwedocs/` — URLs and hashes in
+[`pins-in-use.md` "Provenance"](../hardware/chumby-hat/pins-in-use.md) — and no
+daughtercard-specific design files exist publicly (search closed
+2026-07-16). The chumbilical
+pin table is derived from the mainboard schematic and physical
+verification, not from any daughtercard source.
+
 The kiosk showed a mouse cursor on a device with no mouse. The cause was not
 the client: `libinput list-devices` traced the seat's only pointer capability
 to `vc4-hdmi`, the HDMI-CEC input device. wlroots drew a cursor for that
@@ -346,6 +404,14 @@ replacement: ~3.5" SPI HAT on the 2×20 header, touch, 480×320-ish, a
 **PWM-dimmable** backlight, and a mainline DRM driver so §5 and §6 carry over
 unchanged.
 
+Since 2026-07-26 there are two more criteria, and they cut across this list:
+**4:3** (the content is 320×240, while every panel below is 480×320 = 3:2) and
+**12 fps**, which the display now decides rather than the player — the CPU
+renderer leaves ~90 % of a core idle and the panel still delivers ~6–7 fps,
+because 480×320 RGB565 over 24 MHz SPI caps at ~9.8 fps before overhead. The
+candidates below were picked for dimming and driver support, never for
+throughput or aspect. The open selection is issue #4 in `claude/issues.md`.
+
 - **Adafruit PiTFT Plus 3.5" (2441)** — recommended. HX8357D + STMPE610.
   Backlight over the STMPE's spare GPIO (on/off, appears under
   `/sys/class/backlight`) or GPIO18 = hardware PWM0 for smooth dimming.
@@ -364,6 +430,34 @@ unchanged.
   soldering on the only panel we have.
 - **DPI panels** (HyperPixel and friends) consume the whole GPIO header,
   killing SPI and the bend button. Out.
+
+The purchase (2026-07-19) landed outside this list: a **Waveshare 3.5"
+HDMI LCD (E)** (EDID `WS-35-640`, 640×480 capacitive IPS), on the 3A+ test
+box. Probe results, all negative for software-only dimming:
+
+- **No kernel backlight** — `/sys/class/backlight` is empty; FR16's slider
+  mode and `90-chumby-backlight.rules` stay inert.
+- **USB vendor command ignored.** Touch is a WaveShare WS170120
+  (`0eef:0005`, `hidraw0`); its descriptor carries a vendor output report
+  (ID 4, 63 bytes), and the 7"-family brightness protocol
+  (`04 aa 01 00 00 00 <percent>`, reverse-engineered in
+  rotdrop/waveshare-ws170120-brightness) is *accepted* — clean 38- and
+  64-byte writes — but the backlight never changed across observed
+  100↔10↔0 sweeps. Not pursued further: fuzzing undocumented vendor
+  commands into the chip that also does touch is not worth the risk.
+- **No DDC/CI.** The scaler serves EDID but fails DDC communication
+  (`ddcutil detect` on `/dev/i2c-2`, i2c-dev + ddcutil left installed on
+  the box), so VCP 0x10 is unreachable.
+
+What remains, per the Waveshare wiki for the (E): the panel's own OSD
+buttons (manual only), or the **external-PWM solder-pad mod** — move a 10K
+resistor to the pad under the PWM pad, feed a Pi PWM GPIO, active low;
+afterwards OSD brightness stops working. The mod would make FR16's
+`brightness_ctl` (or a `pwm-backlight` overlay = real kernel backlight +
+sliders) viable, but hardware PWM is shared with the Pi's analog audio,
+and the breakout (issue 2) has not fixed the audio path yet. Decision —
+solder mod vs. brightness staying honestly disabled — is open with Jan;
+`settings-brightness` keeps the control disabled by itself meanwhile.
 
 ## 9. CI
 
@@ -393,3 +487,12 @@ binary natively, builds the debs, and installs them into an arm64
 dependencies are complete — then runs the movie-start check from the
 *packaged* SWF and fixtures. Only the SWF-free `chumby-player` deb is
 uploaded as an artifact.
+
+That artifact is a **handoff, not a release**: `debs` uploads it purely so
+`apt-repo` can download it into `site/apt`, and the deb's lasting home is the
+signed repo on Pages. It therefore carries `retention-days: 1` (2026-07-27).
+The 90-day default had parked 38 copies — ~340 MB — against the account's
+Actions storage allowance, none of them reachable by anything but the run
+that produced them. Build caches are unaffected: `Swatinem/rust-cache` keeps
+a ~587 MB cache that evicts on GitHub's own 7-day idle rule and counts
+against a separate per-repo limit, not the artifact allowance.

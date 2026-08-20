@@ -13,7 +13,8 @@ reads at start (`sudo systemctl restart chumby-player` to apply):
 | `CHUMBY_STATE` | `/var/lib/chumby` | writable state dir (live fixtures) |
 | `CHUMBY_CTL` | `/tmp/chumby-ctl` | control FIFO path |
 | `RUST_LOG` | `warn` | set `warn,chumby_host=info` to log all panel↔host traffic |
-| `LP_NUM_THREADS` | `1` | software-Vulkan worker threads; more threads ≈ more CPU for the same fps on a Pi 3 |
+| `LP_NUM_THREADS` | `2` | software-Vulkan worker threads; each buys frame rate for about one core of CPU |
+| `CHUMBY_QUALITY` | `low` | Flash stage quality; `low` skips anti-aliasing (~2.4× faster frames), `high` = stock Flash look |
 
 ## A different TFT / display
 
@@ -81,17 +82,30 @@ Panel audio (alarm tones, internet radio) plays through **mpv** into
 the `pi` user's PipeWire session; system sounds follow the panel's own
 volume/mute natives.
 
+There are **two** audio paths, which is why one knob is not enough: mpv
+plays music and alarm tones, while the player emits the panel's own
+sounds directly. Only the first follows `CHUMBY_AUDIO_DEVICE`; the
+player follows the PipeWire **default sink**.
+
 Two ways to route it:
 
-1. **Set the PipeWire default sink** (affects everything in the
-   session):
+1. **Choose the default sink** (affects everything — player and mpv),
+   in `/etc/default/chumby-player`:
 
    ```sh
-   wpctl status          # list sinks
-   wpctl set-default <sink-id>
+   CHUMBY_AUDIO_SINK=alsa_output.platform-3f902000.hdmi.hdmi-stereo
    ```
 
-2. **Pin mpv to a device** (affects only the panel audio), in
+   Find the name with `wpctl status` for the id, then `wpctl inspect
+   <id> | grep node.name`. The launcher applies it at every start;
+   unset leaves the default alone.
+
+   **Worth setting on an HDMI panel.** PipeWire's own pick is
+   arbitrary, and on a Pi 3A+ driving the Waveshare HDMI display it
+   chose the Pi's analog jack — so HDMI carried no audio at all and the
+   panel's speakers stayed silent, with nothing in any log to say so.
+
+2. **Pin mpv to a device** (affects only music and alarms), in
    `/etc/default/chumby-player`:
 
    ```sh
@@ -107,9 +121,10 @@ No sound at all? mpv missing = silent-stub mode (the UI still works);
 ## A different Pi
 
 - Any Pi that runs 64-bit Raspberry Pi OS should work; the deb is
-  arm64. The Pi 3B+ (4×1.4 GHz) runs the panel at roughly one busy
-  core with `LP_NUM_THREADS=1` (about two without it) — faster Pis have
-  headroom, a Pi Zero 2 W is untested but has the same architecture.
+  arm64. A Pi 3 runs the panel at its native 12 fps on just under two
+  busy cores with the shipped defaults; `LP_NUM_THREADS=1` halves that
+  to one core at ~6 fps — faster Pis have headroom, a Pi Zero 2 W is
+  untested but has the same architecture.
 - The only model-specific default is the SPI controller address in
   `WLR_DRM_DEVICES` (see above).
 - The kiosk unit assumes user `pi` exists (it runs the compositor as

@@ -134,7 +134,9 @@ script's source is now the classic **1.7.3 firmware image**
 carries intro.swf and the alarm tones, all byte-identical to Jan's
 backup — plus the `download_cp` protocol for the newest control panel.
 (The image's boot openings were extracted in 0.9.0 only; the boot
-animation was dropped in 0.9.1 — design §5.) Nothing is backup-only any more except extra
+animation was dropped in 0.9.1, then reattempted as a Plymouth theme —
+animation confirmed on-device 2026-07-19, remaining verification in
+claude/issues.md #3 — design §5.) Nothing is backup-only any more except extra
 widgets. The script embeds the image URL and the protocol endpoint;
 the *documentation* still names no file URLs. The former stock-clock
 widget download was dropped outright: a widgetless panel shows its
@@ -163,12 +165,27 @@ that line changed. `docs/hardware.md` is the user-facing version of this.
 
 ### NFR4 — It has to be quiet and cool enough
 
-The content was authored for a 350 MHz ARM9. On a Pi 3B+ at 480×320 and
-12 fps the player sits at roughly one core; the remainder is software
-rasterization, which is the floor for this renderer. Two levers got it
-there: `LP_NUM_THREADS=1` and the fat-LTO `dist` profile — measurements and
-the lavapipe explanation in [development.md](development.md) §6. A heatsink
-is recommended; the SoC brushes its soft thermal limit under sustained load.
+The content was authored for a 350 MHz ARM9, which Adobe's player served
+with a dirty-rectangle CPU rasterizer. Ruffle repaints every frame, so how
+it rasterises is the cost driver — and since 2026-07-26 the fork can do it
+the same way Adobe did. `CHUMBY_RENDERER=tiny-skia` selects a CPU
+rasteriser that hands finished frames to the compositor through shared
+memory, loading no Vulkan at all: on a 3B+ with the 480×320 SPI TFT it
+draws the panel at 37 % of a core and 105 MB, against wgpu-on-lavapipe's
+129 % and 252 MB at the same frame rate, which that panel caps anyway.
+On the wgpu path pixel count and MSAA are the drivers instead, and
+`CHUMBY_QUALITY=low` (no MSAA, ~2.4× per frame) with `LP_NUM_THREADS=2`
+pin both — measured 2026-07-19 on a Pi 3A+ at 640×480 as ~12 fps (the
+movie's own rate) on ~1.7 cores, against 2.5 fps on one core for the
+0.8.x-era defaults (`high`, 1 thread). The fat-LTO `dist` profile is the
+third lever. Full measurement chain in [development.md](development.md) §6.
+A heatsink is recommended; the SoC brushes its soft thermal limit under
+sustained load on the wgpu path. Hardware rendering stays closed on
+VideoCore IV Pis (no Vulkan driver; Mesa vc4 GLES 2.0 is below wgpu's 3.0
+floor), which is what makes the CPU path the answer rather than a
+workaround. A frame cap in the fork is the remaining open lever: with
+tiny-skia leaving ~90 % of a core idle, it is the one that would cut watts
+rather than raise fps.
 
 ### NFR5 — Every device change is written down as it happens
 
@@ -184,7 +201,7 @@ from memory or shell history.
 
 | Item | Blocked on |
 |------|-----------|
-| **Brightness + night mode** | Hardware only, since 2026-07-13. The player side shipped (fork FR16, desktop-verified) and the deb ships the backlight udev rule (design §8) — both inert on the current ILI9486 clone, whose backlight LED rail is tied straight to 3.3 V (GPIO22 is declared in the overlay but not routed; verified by watching the panel while toggling it). The `settings-brightness` ui-policy rule now lifts by itself when a backlight exists. Remaining: buy a dimmable display (candidates: design §8), then the on-device pass. |
+| **Brightness + night mode** | Hardware only, since 2026-07-13. The player side shipped (fork FR16, desktop-verified) and the deb ships the backlight udev rule (design §8) — both inert on the current ILI9486 clone, whose backlight LED rail is tied straight to 3.3 V (GPIO22 is declared in the overlay but not routed; verified by watching the panel while toggling it). The `settings-brightness` ui-policy rule now lifts by itself when a backlight exists. A display was bought (2026-07-19: Waveshare 3.5" HDMI LCD (E) on the 3A+ box) but every software-only dimming path probed dead — no backlight device, USB vendor command ignored, no DDC/CI (design §8). Remaining: Jan's decision between the panel's PWM solder-pad mod and leaving brightness disabled. |
 | **Intro on-device pass** | Wired 2026-07-12, desktop-verified only. The fork plays the INTRO button on the localCache path (its requirements §3 "Boot-time intro"); the launcher plays `intro.swf` standalone before the panel unless `/psp/disable_intro` exists — rcS `start_intro` semantics, and the tour always quits itself. Owed on the Pi with the 0.5.0 debs: tour on the TFT at boot, both flag buttons, next boot honoring the flag, INTRO button in-panel. Rides with the widget-channel pass below. |
 | **Remote channels + registration** | Deliberately the project's last feature. |
 | **Widget-channel on-device pass** | The channel, the preview picture and the disabled controls were verified on the desktop; the single combined on-device confirmation is still outstanding. Deploy a **freshly built** player — a stale binary has already produced one false "it doesn't work". |

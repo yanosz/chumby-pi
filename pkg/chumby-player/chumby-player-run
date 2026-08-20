@@ -13,7 +13,10 @@
 #                     (stock filenames — the panel hardcodes them)
 #   intro.swf         from /usr/widgets/intro.swf            optional
 # chumby-download-firmware fetches all of these from Chumby's servers
-# instead (the 1.7.3 firmware image + the download_cp protocol).
+# instead (the 1.7.3 firmware image + the download_cp protocol), and
+# also rasterizes opening.swf into a Plymouth boot theme (not consumed
+# by this script — it plays before cage/this script ever starts, and is
+# ended by the `plymouth quit` call below).
 #
 # Overrides (set in /etc/default/chumby-player for the service; the
 # last two exist so a dev box can drive this script against a staged
@@ -21,12 +24,17 @@
 #   CHUMBY_STATE         state dir      (default /var/lib/chumby)
 #   CHUMBY_SWF           control panel SWF (default: see above)
 #   CHUMBY_CTL           control FIFO   (default /tmp/chumby-ctl)
+#   CHUMBY_AUDIO_SINK    PipeWire node.name to make the default sink —
+#                        moves the player AND mpv; unset ⇒ don't touch
 #   CHUMBY_AUDIO_DEVICE  mpv audio device (default: PipeWire default sink)
 #   RUST_LOG             log filter     (default warn; use
 #                        warn,chumby_host=info,avm_trace=info to debug)
 #   CHUMBY_SHARE         installed data (default /usr/share/chumby-player)
 #   CHUMBY_RUFFLE        player binary  (default
 #                        /usr/lib/chumby-player/ruffle_desktop)
+#   LP_NUM_THREADS       lavapipe worker threads; unset ⇒ lavapipe default (NFR4)
+#   CHUMBY_QUALITY       Flash stage quality (low/medium/high); unset ⇒ player default
+#   CHUMBY_RENDERER      render backend (wgpu/tiny-skia); unset ⇒ player default
 
 set -eu
 
@@ -108,6 +116,15 @@ if [ "${1:-}" = "--kiosk" ]; then
         [ -n "${WLR_DRM_DEVICES:-}" ] || \
             echo "chumby-player: no SPI DRM device — cage chooses the display" >&2
     fi
+    # Release Plymouth's boot animation (if chumby-download-firmware
+    # installed and activated it) right as cage is about to claim the
+    # display. Backgrounded and non-fatal: cage must not wait on it, and
+    # a box without the theme (or without Plymouth at all) still boots.
+    # This is a proxy for "boot finished," not a window-mapped signal —
+    # the same gap that sank the sequential-Ruffle boot opening attempt
+    # (claude-docs/design.md §5); on-device timing is unverified
+    # (claude/issues.md #3).
+    command -v plymouth >/dev/null 2>&1 && { plymouth quit || true; } &
     exec /usr/bin/cage -- "$0"
 fi
 
@@ -184,24 +201,50 @@ fi
 systemctl --user start pipewire.socket pipewire-pulse.socket \
     wireplumber.service 2>/dev/null || true
 
+# Which output everything lands on. PipeWire's own pick is arbitrary: on
+# the 3A+/HDMI box it chose the Pi's analog jack over HDMI, so the panel
+# played to a socket nobody was listening to while the display's speakers
+# stayed silent (2026-08-06). CHUMBY_AUDIO_DEVICE cannot fix that — it
+# steers mpv only, not the player's own cpal output, which follows the
+# default sink. Setting the default sink moves both at once.
+#
+# wpctl takes object ids, not names, so the node name has to be looked
+# up; that avoids depending on pw-metadata or jq for one line. Unset
+# means don't touch the default at all.
+if [ -n "${CHUMBY_AUDIO_SINK:-}" ]; then
+    for _id in $(wpctl status 2>/dev/null |
+                 sed -n 's/^[^0-9]*\([0-9][0-9]*\)\. .*/\1/p'); do
+        if wpctl inspect "$_id" 2>/dev/null |
+               grep -q "node.name = \"$CHUMBY_AUDIO_SINK\""; then
+            wpctl set-default "$_id" 2>/dev/null && _found=1
+            break
+        fi
+    done
+    [ "${_found:-}" = 1 ] ||
+        echo "chumby-player: no sink named '$CHUMBY_AUDIO_SINK'; leaving the PipeWire default alone (wpctl status lists what is there)" >&2
+fi
+
 [ -p "$CTL" ] || mkfifo -m 600 "$CTL"
 
 export RUST_LOG="${RUST_LOG:-warn}"
 
-# lavapipe (software Vulkan) worker threads: extra workers roughly
-# double total CPU for the same 12 fps output on the Pi 3B+ —
-# measured 215% (4 threads) vs 103% (1 thread), see
-# claude-docs/requirements.md NFR4.
-export LP_NUM_THREADS="${LP_NUM_THREADS:-1}"
+# LP_NUM_THREADS (lavapipe worker cap), CHUMBY_QUALITY and CHUMBY_RENDERER
+# are deliberately NOT defaulted here: they come only from
+# /etc/default/chumby-player, so an unset value means the tool's own default,
+# not a silent constant. Rationale in requirements.md NFR4.
 
 check_swf || exit 1
 
-# The boot opening animation is deliberately NOT reproduced (Jan,
-# 2026-07-14, after the 4th vanilla-card test): opening.swf never exits
-# by itself — real hardware ran it in parallel with boot and killed it
-# when done — and any sequential stand-in needs a kill timeout that must
-# also cover ~30 s of player startup on a Pi 3B+. Either the boot gets
-# slower or the animation never shows. Not worth the complexity.
+# The boot opening animation is NOT reproduced by running opening.swf
+# sequentially here (Jan, 2026-07-14, after the 4th vanilla-card test):
+# it never exits by itself — real hardware ran it in parallel with boot
+# and killed it externally when done — and a sequential stand-in needs a
+# kill timeout that must also cover ~30 s of player startup on a Pi 3B+.
+# Either the boot gets slower or the animation never shows. Not worth
+# the complexity. Superseded by a Plymouth theme instead (the `plymouth
+# quit` call in --kiosk above): Plymouth's own "run until told to quit"
+# model matches the original external-kill behavior without a second
+# software renderer competing for the display (claude/issues.md #3).
 
 # Boot-time intro, as rcS's start_intro: the tour plays before the panel,
 # every boot until its "never show again" button writes /psp/disable_intro
@@ -221,6 +264,8 @@ if [ -f "$INTRO" ] && [ -r "$INTRO" ] && [ ! -e "$STATE/fixtures/rootfs/psp/disa
         --load-behavior blocking \
         --filesystem-access-mode allow \
         --chumby-fixtures "$STATE/fixtures" \
+        ${CHUMBY_QUALITY:+--quality "$CHUMBY_QUALITY"} \
+        ${CHUMBY_RENDERER:+--renderer "$CHUMBY_RENDERER"} \
         --fullscreen \
         "$INTRO" || true
 fi
@@ -230,6 +275,8 @@ exec "$RUFFLE" \
     --filesystem-access-mode allow \
     --chumby-fixtures "$STATE/fixtures" \
     --chumby-control "$CTL" \
+    ${CHUMBY_QUALITY:+--quality "$CHUMBY_QUALITY"} \
+    ${CHUMBY_RENDERER:+--renderer "$CHUMBY_RENDERER"} \
     --fullscreen \
     -PlocalCache=1 \
     "$SWF"

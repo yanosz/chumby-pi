@@ -15,8 +15,40 @@
 # (HDMI/DSI) could drop this.
 #WLR_RENDERER=pixman
 
+# Render backend: tiny-skia rasterises on the CPU and hands finished
+# frames to the compositor through shared memory, so no Vulkan is loaded
+# at all; wgpu goes through software Vulkan (lavapipe) here and is the
+# player's own default. Measured on a 3B+ with the 480×320 SPI TFT, same
+# panel and same achieved frame rate: tiny-skia 37 % of a core and 105 MB,
+# wgpu 129 % and 252 MB. Both are display-capped at ~6-7 fps on that panel.
+CHUMBY_RENDERER=tiny-skia
+
+# lavapipe (software Vulkan) worker threads; trades CPU/heat for render
+# throughput (NFR4). Applies to CHUMBY_RENDERER=wgpu only — tiny-skia
+# never loads lavapipe. Measured on a Pi 3A+ at 640×480 with
+# CHUMBY_QUALITY=low: 1 thread ≈ 6 fps on one core, 2 ≈ the movie's
+# 12 fps on ~1.7 cores.
+LP_NUM_THREADS=2
+
+# Flash stage quality (low/medium/high). low skips MSAA — ~2.4× faster
+# per frame on software rendering, and the movie was authored for a
+# 320×240 LCD. Unset means the player's own default (high). Also wgpu
+# only: tiny-skia has no MSAA to skip.
+CHUMBY_QUALITY=low
+
+# Which output everything plays on, by making one sink the PipeWire
+# default. PipeWire's own pick is arbitrary and has chosen wrong: on a
+# 3A+ driving the HDMI panel it took the Pi's analog jack, so HDMI
+# carried no audio at all and the display's speakers stayed silent.
+# Unset leaves the default alone. List the names with:
+#   wpctl status                    # descriptions and ids
+#   wpctl inspect <id> | grep node.name
+#CHUMBY_AUDIO_SINK=alsa_output.platform-3f902000.hdmi.hdmi-stereo
+
 # Send music and alarms to a specific output instead of the PipeWire
-# default sink. Names as mpv prints them: mpv --audio-device=help
+# default sink. Narrower than CHUMBY_AUDIO_SINK: this steers mpv only,
+# and the player's own audio still follows the default sink.
+# Names as mpv prints them: mpv --audio-device=help
 #CHUMBY_AUDIO_DEVICE=alsa/plughw:CARD=Headphones
 
 # Player log filter (output lands in journalctl -u chumby-player).
