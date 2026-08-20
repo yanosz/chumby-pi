@@ -327,3 +327,26 @@ identified, priced, or checked for a mainline-supported controller.
 Decision to make: keep 4:3 and accept the (E) plus a soldering mod, take a 3:2
 panel with clean dimming and letterbox the 4:3 content, or find a 3.5" QVGA
 panel and get aspect, fidelity and bandwidth in one part.
+
+---
+
+Number: 5
+Timestamp: 2026-08-20, 22:05
+Title: Implement backlight brightness on the 5" DSI box.
+Status: open — next session
+Description: The 5" Waveshare DSI LCD (C) (1024x600, overlay
+`dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC` appended after `[all]`) on
+the new 3B+ exposes a real kernel backlight: `/sys/class/backlight/10-0045`,
+`max_brightness` 255. Writes are accepted with no I2C errors and Jan confirmed
+visible dimming at the screen (sweep 255 -> 10 -> 255, held 8 s at the bottom).
+This is the first display in the project with working brightness, so FR16 —
+player-ready since 2026-07-13 and blocked on hardware ever since
+(requirements.md §3, and issue 4's third criterion) — can be closed on a
+device.
+Already shipped, needs verifying end to end rather than building: the deb's
+`90-chumby-backlight.rules` (chgrp video + g+w on `brightness`, re-run from
+postinst), the fork's FR16 sliders, and the `settings-brightness` ui-policy
+rule that lifts by itself once a backlight exists. Unverified on this box:
+whether the pi user really gets write access through that rule (every write in
+this session went through sudo), whether the Settings button un-dims, and how
+the panel's slider range and night mode map onto 0-255.
