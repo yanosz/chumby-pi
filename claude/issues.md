@@ -399,16 +399,13 @@ merged graph adds (`console`, `indicatif`, `rayon`, `portable-atomic`,
 `unit-prefix`, `crossbeam-utils`) is exporter's own subtree and is not
 linked into the player. The guard step now covers both names.
 
-`default_font` matters on its own, and in the opposite direction:
-**removing the leak takes a font away from the player.** Stock
-`ruffle_desktop` resolves device fonts through `fontdb`
-(`load_system_fonts()`), with the chains in `desktop/src/player.rs` ending
-in DejaVu Serif/Sans/Mono. The panel embeds fonts for 390 of its 398
-`DefineEditText` fields, but 8 use device fonts and depend on that
-resolution. `chumby-player`'s `Depends` lists `libfontconfig1` — the
-library — and **no font package**. The 5" DSI box happens to carry DejaVu
-(8 faces, from two `fonts-*` packages pulled in by something else), so it
-is fine today; a leaner image would render those 8 fields blank and nobody
-would know until they hit the screen. OPEN: whether to add a font package
-to `Depends` (`fonts-dejavu-core` is the smallest that satisfies all three
-chains). Not changed without a decision.
+`default_font` caused nothing. It crossed on the same bad invocation, but
+it has no symptom and no consequence, and an earlier revision of this entry
+was wrong to raise one: it claimed that dropping the leak *takes a fallback
+font away from the player*. It does not. Every build before `66cd1db` — so
+every release the project ever shipped — ran `cargo build -p ruffle_desktop`
+alone, with no exporter and therefore no `default_font`. The split restores
+that exact configuration. The only build that ever carried the feature is
+the broken one from 2026-08-20 18:06, which is not a baseline. Nothing about
+fonts or `Depends` is open; the guard covers the second name only so the
+leak cannot reopen unnoticed.
