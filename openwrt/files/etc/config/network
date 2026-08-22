@@ -1,0 +1,31 @@
+config interface 'loopback'
+	option device 'lo'
+	option proto 'static'
+	option ipaddr '127.0.0.1'
+	option netmask '255.0.0.0'
+
+config globals 'globals'
+
+# The chumby's NIC. The address hangs on a bridge rather than on the gadget
+# netdev directly: the kernel logs the gadget as "gadget.0" and never prints
+# the netdev name, so "usb0" is an assumption. bridge_empty keeps br-lan up
+# with its address even when no port matched, which turns a wrong guess into
+# a diagnosable box instead of an unreachable one.
+config device
+	option name 'br-lan'
+	option type 'bridge'
+	option bridge_empty '1'
+	list ports 'usb0'
+
+config interface 'lan'
+	option device 'br-lan'
+	option proto 'static'
+	option ipaddr '192.168.7.1'
+	option netmask '255.255.255.0'
+
+# Empty scaffolding for the wifi client, configured on the device: attach the
+# radio to this interface and it lands in the wan firewall zone. No wwan6
+# counterpart on purpose — the wan zone accepts all input, and a global IPv6
+# address would extend that past the local network.
+config interface 'wwan'
+	option proto 'dhcp'

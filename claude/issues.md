@@ -409,3 +409,41 @@ that exact configuration. The only build that ever carried the feature is
 the broken one from 2026-08-20 18:06, which is not a baseline. Nothing about
 fonts or `Depends` is open; the guard covers the second name only so the
 leak cannot reopen unnoticed.
+
+---
+
+Number: 7
+Timestamp: 2026-08-22, 23:45
+Title: A Pi reboot orphans the chumby's gadget link.
+Status: open — known behaviour, no fix attempted
+Description: When the Pi reboots, its USB gadget re-enumerates, which
+destroys and recreates the netdev on the chumby side; any DHCP client the
+chumby had running dies with it. Observed directly after a Pi reboot:
+`usb0` on the Pi shows `RX: 0 bytes, 0 packets` against `TX: 7916` with
+carrier up — the chumby is on the wire and silent. Nothing on the chumby
+re-establishes the link outside its own boot path (mountmon's USB add event
+plus `/psp/rfs1/userhook1`), so the chumby needs rebooting after the Pi does.
+Fine in the intended steady state, where the Pi outlives the chumby. Fixing
+it properly means a client on the chumby that reacts to the interface being
+recreated, not just to boot; an earlier attempt at a polling watchdog was
+rejected as too hacky, and the vendor path (`udhcpc -R -n`, one shot, skipped
+whenever another `eth*` is RUNNING) cannot do it. See
+claude/pi-as-chumby-nic.md.
+
+---
+
+Number: 8
+Timestamp: 2026-08-22, 23:45
+Title: The control panel blocks forever on a no-timeout wget.
+Status: open — hazard, not yet triggered by anything we control
+Description: `/usr/chumby/scripts/network_status.sh` runs
+`wget -q -O - http://www.chumby.com/crossdomain…` with no timeout. If the
+chumby has a route whose gateway silently drops traffic, that fetch never
+returns and the control panel never finishes starting — the screen sits
+there looking like a boot hang, while `ps` shows `chumbyflashplayer.x`
+running and a `wget` parked behind it. This is how the missing-NAT bug
+presented, and it is worse than having no route at all: with no route the
+fetch fails fast, which is why the box booted normally on a USB dongle and
+only wedged once the Pi was its only NIC. Any future blackhole on that link
+reproduces it. chumby.com itself is currently answering (232 bytes,
+~1.2 MB/s), so this is latent rather than active.

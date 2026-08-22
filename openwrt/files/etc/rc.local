@@ -1,0 +1,18 @@
+# The OTG port belongs to the gadget, so this box has no keyboard and its
+# console cannot be activated. Dump the state that would otherwise need a
+# shell straight to the console at the end of boot.
+#
+# Ordered so the decisive part lands last: the verbose ubus JSON would
+# otherwise scroll the interface list off a screen nobody can page back on.
+{
+	echo "=== dnsmasq ==="
+	pgrep -a dnsmasq || echo "dnsmasq not running"
+	echo "=== lan ==="
+	ubus call network.interface.lan status
+	echo "=== links ==="
+	ip -br link
+	echo "=== addresses ==="
+	ip -br addr
+} > /dev/console 2>&1
+
+exit 0

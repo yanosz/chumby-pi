@@ -25,3 +25,9 @@ pdf/
 
 # KiCad generation tryout, not part of the record
 /hardware/breakout-tryout/
+
+# OpenWrt image build for the Pi Zero W firewall: wifi credentials and
+# the Image Builder tree (large, re-downloadable).
+/openwrt/local.mk
+/openwrt/build/
+/openwrt/local.authorized_keys

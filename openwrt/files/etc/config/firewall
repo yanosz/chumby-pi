@@ -1,0 +1,28 @@
+config defaults
+	option syn_flood '1'
+	option input 'REJECT'
+	option output 'ACCEPT'
+	option forward 'REJECT'
+
+config zone
+	option name 'lan'
+	list network 'lan'
+	option input 'ACCEPT'
+	option output 'ACCEPT'
+	option forward 'ACCEPT'
+
+# input ACCEPT is deliberate: ssh and LuCI over the house wifi are the way in
+# once the box is out on a shelf. The exposure stays inside the local network
+# because the wan side is IPv4-only (see network.wwan).
+config zone
+	option name 'wan'
+	list network 'wwan'
+	option input 'ACCEPT'
+	option output 'ACCEPT'
+	option forward 'DROP'
+	option masq '1'
+	option mtu_fix '1'
+
+config forwarding
+	option src 'lan'
+	option dest 'wan'

@@ -1,0 +1,3 @@
+# The stock 52-usb-gadget-eth autoloads only usb_f_ecm, which creates no
+# interface on its own.
+g_ether
