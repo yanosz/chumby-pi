@@ -447,3 +447,28 @@ fetch fails fast, which is why the box booted normally on a USB dongle and
 only wedged once the Pi was its only NIC. Any future blackhole on that link
 reproduces it. chumby.com itself is currently answering (232 bytes,
 ~1.2 MB/s), so this is latent rather than active.
+
+---
+
+Number: 9
+Timestamp: 2026-08-23, 00:15
+Title: Direct stream entries in /psp/url_streams need mimetype="audio/mpeg".
+Status: fixed 2026-08-23 — SWR3 plays
+Description: The standalone "SWR3" entry in `/psp/url_streams` carried
+`mimetype="audio/x-mpegurl"` — the *playlist* type — while its `url` pointed
+straight at an MP3 stream, so the player fetched it expecting an m3u and got
+raw MP3 frames. Nothing played. The URL was never wrong: it is byte-identical
+to the one in `/psp/list.m3u`, and the chumby pulled 1.52 MB from it in six
+seconds over plain HTTP (no TLS, no redirect — an earlier theory that the 2006
+player could not reach a modern endpoint was wrong).
+
+The rule: `audio/mpeg` for a direct stream, `audio/x-mpegurl` only when the
+`url` really is a playlist. Every working station on the list (1live, wdr-2,
+wdr-3, wdr-5, NRK P3 Jazz, Radio Norge) uses `audio/mpeg`; the sole correct
+`x-mpegurl` entry is "Birds + SWR3", which points at `file:////psp/list.m3u`.
+The broken entry looks copy-pasted from that one with the mimetype left
+behind — which is also why the playlist version played while the direct one
+did not, a confusing pair of symptoms worth remembering when adding stations.
+
+Fix: one attribute. Backup kept at `/psp/url_streams.bak-swr3`; `/psp` is
+jffs2, so it persists.
