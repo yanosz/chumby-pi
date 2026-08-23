@@ -9,7 +9,7 @@ echo "options g_ether dev_addr=$DEV_ADDR host_addr=$HOST_ADDR" \
 	> /etc/modprobe.d/usb-gadget-mac.conf
 modprobe -r g_ether 2>/dev/null || true
 modprobe g_ether
-
+# https://github.com/raspberrypi/trixie-feedback/issues/62
 cat > /etc/nftables.conf <<EOF
 #!/usr/sbin/nft -f
 

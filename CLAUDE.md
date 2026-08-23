@@ -12,13 +12,6 @@ Both repositories contain a folder called claude-docs. These are internal docume
 the project was active and had not reached maintenance mode, yet. This notes can be helpful for understanding design 
 decisions but are not changed any longer.
 
-Active spike: `ruffle` branch `renderer/tiny-skia-spike` is prototyping a
-CPU-only `tiny-skia` `RenderBackend`, to test whether it beats the current
-wgpu-on-lavapipe (software Vulkan) render path on CPU load — hardware
-acceleration is a closed door on VideoCore IV Pis (Zero–3), so this targets
-the software path itself. Plan and checkpoints:
-`ruffle/claude/tiny-skia-render-backend-plan.md`.
-
 When being tasked to fix a bug or do a feature, create a plan with steps / checkpoints first.
 
 Non-negotiable rules:
@@ -44,6 +37,6 @@ Non-negotiable rules:
 - /home/jan/chumby_backup is read-only ground truth. Never write there.
 - Work on ONE step at a time. Do not look ahead or start the next step's
   work while the current step is unfinished.
-- - Keep code comments brief. Code should speak for itself; comment only
+- Keep code comments brief. Code should speak for itself; comment only
   what cannot be read from the code — the why, a non-obvious constraint, a
   reference. Do not narrate what the code plainly does.

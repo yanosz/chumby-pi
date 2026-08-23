@@ -428,7 +428,7 @@ it properly means a client on the chumby that reacts to the interface being
 recreated, not just to boot; an earlier attempt at a polling watchdog was
 rejected as too hacky, and the vendor path (`udhcpc -R -n`, one shot, skipped
 whenever another `eth*` is RUNNING) cannot do it. See
-claude/pi-as-chumby-nic.md.
+pi.nic/README.md.
 
 ---
 

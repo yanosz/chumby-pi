@@ -1,0 +1,31 @@
+#!/bin/sh
+
+if [ ! -f /etc/mountmon/usbnet-cdc_ether.moddef ]; then
+	mkdir -p /tmp/mountmon
+	cp /etc/mountmon/* /tmp/mountmon/
+	cat > /tmp/mountmon/usbnet-cdc_ether.moddef <<"MODDEF"
+2e8a:0013	# Raspberry Pi OS gadget (CDC-ECM) - the one in use
+0525:a4a1	# legacy g_ether, CDC-ECM
+0525:a4a2	# legacy g_ether, RNDIS / subset
+049f:505a	# legacy g_ether, CDC subset
+MODDEF
+	mount -o bind /tmp/mountmon /etc/mountmon
+fi
+
+nic_on_bus() {
+	for f in /sys/bus/usb/devices/*/idVendor; do
+		[ -f "$f" ] || continue
+		v=$(cat "$f" 2>/dev/null)
+		p=$(cat "$(dirname "$f")/idProduct" 2>/dev/null)
+		[ -n "$v" ] && [ -n "$p" ] || continue
+		grep -qi "^$v:$p" /etc/mountmon/usbnet-*.moddef 2>/dev/null && return 0
+	done
+	return 1
+}
+
+timeout=240
+while [ $timeout -gt 0 ]; do
+	nic_on_bus && break
+	sleep 2
+	timeout=$((timeout - 2))
+done
