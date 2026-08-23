@@ -66,65 +66,60 @@ sudo modprobe -r g_ether && sudo modprobe g_ether
 values adjacent to the Pi's own `wlan0` keeps them traceable. **Write down
 `host_addr`** — Part 2 needs it.
 
-### 3. Give the link to systemd-networkd, not NetworkManager
+### 3. Add the NAT that NetworkManager forgets
 
-NetworkManager's `ipv4.method=shared` is unreliable here: it reports the
-connection activated while silently skipping its nftables stage at boot, so
-there is no NAT until you re-activate the profile by hand. That is a
-long-standing cross-distro bug, still present in NM 1.52.1 — see
-`claude/pi-as-chumby-nic.md` for the reports. Use networkd instead, which
-applies a static file at link-up:
+The stock `USB Gadget (shared)` profile already assigns the address and runs
+dnsmasq for DHCP and DNS, and both work. Its one defect is that it does not
+install its nftables NAT at boot: on a clean flash the address is there and
+`nft list tables` is empty. Re-activating the profile by hand creates
+`table ip nm-shared-usb0`, which is no help unattended. Long-standing
+cross-distro bug, still present in NM 1.52.1 — see
+`claude/pi-as-chumby-nic.md` for the reports.
+
+So leave the profile alone and declare the NAT yourself:
 
 ```
-sudo tee /etc/systemd/network/10-usb0.network >/dev/null <<'EOF'
-[Match]
-Name=usb0
-
-[Link]
-# Never let boot block on the chumby being plugged in.
-RequiredForOnline=no
-
-[Network]
-Address=10.12.194.1/28
-IPMasquerade=ipv4
-IPv4Forwarding=yes
-DHCPServer=yes
-
-[DHCPServer]
-PoolOffset=2
-PoolSize=12
-EmitDNS=yes
-DNS=8.8.8.8
+sudo mkdir -p /etc/nftables.d
+sudo tee /etc/nftables.d/chumby-nat.nft >/dev/null <<'EOF'
+table ip chumby_nat {
+	chain postrouting {
+		type nat hook postrouting priority srcnat; policy accept;
+		ip saddr 10.12.194.0/28 oifname != "usb0" masquerade
+	}
+}
 EOF
-
-sudo tee /etc/NetworkManager/conf.d/99-unmanaged-usb0.conf >/dev/null <<'EOF'
-[keyfile]
-unmanaged-devices=interface-name:usb0
-EOF
-
-# The stock ICS switcher only makes sense while NM owns usb0.
-sudo systemctl disable --now rpi-usb-gadget-ics.service
-sudo nmcli general reload conf
-sudo systemctl enable --now systemd-networkd
-# Enabling networkd pulls in wait-online, which then fails: the only managed
-# link is deliberately RequiredForOnline=no. NM-wait-online covers wlan0.
-sudo systemctl disable --now systemd-networkd-wait-online
+grep -qF 'include "/etc/nftables.d/*.nft"' /etc/nftables.conf \
+	|| printf '\ninclude "/etc/nftables.d/*.nft"\n' | sudo tee -a /etc/nftables.conf
+echo 'net.ipv4.ip_forward = 1' | sudo tee /etc/sysctl.d/99-chumby-forward.conf
+sudo sysctl -q -w net.ipv4.ip_forward=1
+sudo nft -f /etc/nftables.conf
+sudo systemctl enable nftables.service
 ```
 
-`IPMasquerade=ipv4` writes the NAT itself and `DHCPServer=yes` replaces
-dnsmasq, so networkd covers address, DHCP and NAT in one file.
+`nftables.service` applies this at boot, independently of NetworkManager's
+firewall stage. `init_pi.sh` in the repo root does exactly this plus step 2,
+and is the quickest way to redo a reflashed Pi.
+
+**Do not** reach for `systemd-networkd` here. It can do address, DHCP and NAT
+in one file and it worked, but on this image NetworkManager owns *both*
+`wlan0` and `usb0` (networkd ships inactive and disabled), so enabling it
+introduces a second manager for the link that keeps the Pi reachable — and
+doing that once cost us the box: it dropped off wifi and needed a reflash.
+Nothing here should start, stop, enable or disable a network manager.
 
 ### 4. Verify the Pi
 
 ```
-nmcli -t -f DEVICE,STATE device status | grep usb0   # -> usb0:unmanaged
-ip -br addr show usb0                                # -> 10.12.194.1/28
-sudo nft list tables                                 # -> table ip io.systemd.nat
-networkctl status usb0                               # -> routable (configured)
+cat /sys/module/g_ether/parameters/host_addr   # -> b8:27:eb:5c:f7:9e
+ip -br addr show usb0                          # -> 10.12.194.1/28
+sudo nft list table ip chumby_nat              # -> the masquerade rule
+systemctl is-enabled nftables.service          # -> enabled
+pgrep -af dnsmasq                              # -> serving usb0
 ```
 
-Reboot and check `nft list tables` again — that the NAT is present with no
-manual step is the whole point of using networkd.
+Reboot and check `nft list table ip chumby_nat` again: the NAT surviving a
+reboot with no manual step is the whole point of putting it in
+`nftables.service` instead of relying on NetworkManager.
 
 ## Part 2 — the chumby
 
@@ -263,7 +258,7 @@ and syntax-check them on the device (`sh -n /psp/rfs1/userhook0`).
 lsmod | grep cdc_ether        # loaded, via the moddef
 ifconfig -a                   # the gadget appears as eth<n>, not usb0
 route -n | grep ^0            # default route via 10.12.194.1
-cat /etc/resolv.conf          # nameserver 8.8.8.8
+cat /etc/resolv.conf          # nameserver 10.12.194.1 (the Pi's dnsmasq)
 ping -c 2 8.8.8.8
 wget -T 10 -O /dev/null http://www.chumby.com/crossdomain.xml
 date                          # clock set by sync_time.sh
@@ -276,8 +271,8 @@ take — check `cat /sys/module/g_ether/parameters/host_addr` on the Pi.
 
 - **MACs**: any pair with the `0x02` bit clear. `host_addr` and the chumby's
   `GADGET_MAC` must match.
-- **Subnet/DNS**: `10.12.194.1/28` and `8.8.8.8` are arbitrary; change both
-  in `10-usb0.network`. The `/28` gives twelve leases, plenty for one chumby.
+- **Subnet**: `10.12.194.0/28` comes from the stock NM profile; if you change
+  it there, change the NAT rule to match.
 - **Gadget id**: verify it rather than trusting `2e8a:0013`; a different Pi
   OS release or a legacy `g_ether` build presents different ids.
 
