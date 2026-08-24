@@ -265,6 +265,18 @@ was fetched too, then deleted again, see claude/issues.md #11. A copy of the liv
 `claude-docs/private/psp-backup/` — the two differ only where the 2006 player
 demands it (`file:////psp/list.m3u` and http rather than https).
 
+**Probing a station is not always an HTTP request.** jungletrain is a
+SHOUTcast v1.9.8 server: it answers `ICY 200 OK` instead of an HTTP status
+line, so `curl` reports failure ("Received HTTP/0.9 when not allowed") on a
+perfectly healthy stream — `curl --http0.9` or mpv is the valid test, and
+`curl --http0.9 <url> | strings | grep icy-` reads the station's own
+`icy-name`/`icy-br` metadata. Its 128 kbps mirrors live on **port 8064**
+(`stream5`, `stream1`, `stream3`); port 8000 carries a single 256 kbps feed,
+which is the only one the homepage's player embeds. radio-browser.info is the
+better source for a current URL than a station's own page — it is what fixed
+Radio Norge — but its liveness flag comes from a checker elsewhere, so
+confirm from the device that will play it.
+
 **Audio gains, 2026-08-24.** A USB adapter (Jieli UACDemoV1.0, card 1) was
 plugged in during the session and PipeWire made it the default sink. Both
 sinks sat at 0.40 and the output was audibly weak, so both were raised to
