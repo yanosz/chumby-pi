@@ -333,7 +333,8 @@ panel and get aspect, fidelity and bandwidth in one part.
 Number: 5
 Timestamp: 2026-08-20, 22:05
 Title: Implement backlight brightness on the 5" DSI box.
-Status: open — next session
+Status: closed — brightness confirmed working 2026-08-24; the udev rule
+verified on a plain install
 Description: The 5" Waveshare DSI LCD (C) (1024x600, overlay
 `dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC` appended after `[all]`) on
 the new 3B+ exposes a real kernel backlight: `/sys/class/backlight/10-0045`,
@@ -351,13 +352,22 @@ whether the pi user really gets write access through that rule (every write in
 this session went through sudo), whether the Settings button un-dims, and how
 the panel's slider range and night mode map onto 0-255.
 
+Closed 2026-08-24 on the reflashed box (development.md §6, third test box):
+Jan confirms brightness works. The write-access question is answered
+independently — after a bare `apt install chumby-player` and a reboot,
+`/sys/class/backlight/10-0045/brightness` is `root:video 0664` and `pi` can
+write it with no sudo, so the shipped `90-chumby-backlight.rules` does fire on
+a real install. `brightness_ctl` stays unset, so the player takes the
+auto-detect path and `10-0045` is the lone backlight it finds. FR16 is
+satisfied on hardware.
+
 ---
 
 Number: 6
 Timestamp: 2026-08-20, 22:45
 Title: CI shipped the player with Ruffle's mock clock (deterministic feature).
-Status: closed — CI split into two cargo invocations, guarded; needs a
-rebuilt deb on the 5" DSI box to clear the symptom
+Status: closed — CI split into two cargo invocations, guarded; verified on
+the DSI box 2026-08-24
 Description: `5c9b2dd` taught the workflow to cross-build the exporter the
 deb bundles, and did it in the same cargo invocation as the player:
 `cargo build -p ruffle_desktop -p exporter --profile dist --target ...`.
@@ -409,6 +419,13 @@ that exact configuration. The only build that ever carried the feature is
 the broken one from 2026-08-20 18:06, which is not a baseline. Nothing about
 fonts or `Depends` is open; the guard covers the second name only so the
 leak cannot reopen unnoticed.
+
+Verified on a device 2026-08-24: the apt repo's `chumby-player_0.9.3` — built
+by CI run 32510824744 (main, 2026-08-21), whose "Guard against exporter's
+features reaching the player" step passed and whose player and exporter built
+in separate invocations — installed on a freshly bootstrapped 3B+ with the 5"
+DSI panel. Jan confirmed at the screen that the built-in clock loads correctly:
+no February 2001, all digit strips drawn. Nothing left open here.
 
 ---
 
@@ -472,3 +489,67 @@ did not, a confusing pair of symptoms worth remembering when adding stations.
 
 Fix: one attribute. Backup kept at `/psp/url_streams.bak-swr3`; `/psp` is
 jffs2, so it persists.
+
+---
+
+Number: 10
+Timestamp: 2026-08-24, 13:40
+Title: Playlist entries in an m3u must be absolute chumby paths, not relative.
+Status: fixed 2026-08-24 — birds.mp3 plays on the Pi
+Description: The "Birds + SWR3" stream entry (`mimetype="audio/x-mpegurl"`,
+issue 9) points at a local playlist. The panel — not the host — fetches and
+parses that m3u and hands the host ONE chosen entry: `pgrep -a mpv` showed
+mpv launched straight with the SWR3 URL, so a first line reading `birds.mp3`
+had been discarded silently. Rewriting that line as the chumby's own absolute
+form `/psp/birds.mp3` makes it play, birds first, then SWR3.
+
+So relative entries are dropped and absolute chumby paths survive; the host's
+`resolve_url` (fork `core/src/chumby/audio.rs`) then maps the leading `/`
+through the virtual rootfs to
+`/var/lib/chumby/fixtures/rootfs/psp/birds.mp3`. A real chumby's `list.m3u`
+therefore needs no editing to work on the Pi — copy it verbatim, and copy the
+media it names into the same fixtures `psp/` directory.
+
+Ruled out on the way: mpv's unsafe-playlist filter. `mpv --load-unsafe-playlists`
+changes nothing here, and mpv given the playlist directly resolves and plays
+the relative entry fine — the filtering is the panel's, above the host.
+
+---
+
+Number: 11
+Timestamp: 2026-08-24, 13:45
+Title: The Tagesschau widget's video source is gone (502, not our stack).
+Status: closed — external; widget deleted from the box 2026-08-24
+Description: The widget (5.4 KB, fetched from chumby.com's guide, GUID
+5D9DAB9E-D7E3-11DF-9EC6-0021288E6F90) hardcodes a single endpoint played
+through `NetStream`: `http://welttheorie.de/tagesschau.flv` — a fan-made
+widget pointing at a private server. The domain still resolves (IPv6 only,
+2a00:17d8:100:1::1361) and the Pi reaches it, but the server answers 502 for
+that file and for its root, so pressing "Wiedergabe" has nothing to play.
+Untested, and now moot: whether our player decodes FLV video through
+`NetStream` at all, and what that would cost on a 3B+.
+
+---
+
+Number: 12
+Timestamp: 2026-08-24, 13:50
+Title: Black bars around a widget on the 1024x600 DSI panel — accepted.
+Status: closed — Jan chose to leave the scaling alone (2026-08-24)
+Description: On the 5" DSI box, RoboClock reads as framed in black on all
+four sides. Two independent causes, measured rather than guessed:
+- The widget's own artwork. Rasterizing frame 0 with the shipped
+  `ruffle-exporter` gives 15 px of black at the top and 14 px at the bottom
+  of its 320x240 stage; the content band is 211 px tall. All four widgets
+  fetched this session are exactly 320x240, the panel's native stage, so
+  nothing is being letterboxed *into* the widget area.
+- Our fit. 320x240 on 1024x600 under the default show-all scales 2.5x to
+  800x600, leaving 112 px black to the left and right.
+
+Options put to Jan: (A) `--scale no-border --force-scale`, which fills the
+screen but crops 26 stage px off the top and bottom of *everything* — the
+control-panel bar and clock edges included; (B) a fractional zoom lever in
+the fork, tunable to crop just the ~15 px, which `StageScaleMode` cannot
+express and would therefore be player work; (C) leave it. **Jan chose C.**
+4:3 content on this panel letterboxes somewhere regardless; a 4:3 display
+(issue 4) would remove the side bars but never the widget's own artwork.
+

@@ -222,6 +222,85 @@ chumbilical pair is physical 5↔6 — measured; the corrected chumbilical
 pin table lives on the pcb-ideas branch
 (hardware/chumby-hat/accelerometer.md §3, commit 3746462).
 
+A **third test box** — the 5" DSI hardware, reflashed 2026-08-24 and
+bootstrapped from scratch: hostname `chumby-pi-3`, a Pi 3B+ Rev 1.4 on
+**wired eth0** (192.168.210.147, DHCP), Raspberry Pi OS Lite arm64 trixie
+(kernel 6.18.34), no USB sound card — only the bcm2835 headphone jack. The
+5" Waveshare DSI LCD (C) needs its overlay declared, contrary to the
+"HDMI and DSI need nothing" rule in [setup.md](../docs/setup.md):
+`dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC`, appended after `[all]`
+(backup `config.txt.bak-pre-dsi`). Before it, DRM had only
+`card0-HDMI-A-1: disconnected` and the screen stayed dark; after the reboot
+`card0-DSI-1: connected 1024x600` and the backlight `10-0045` (max 255)
+appear, and the boot console draws on the panel.
+
+Bootstrapped along the documented owner path rather than a local build:
+the Pages apt repo (`chumby-player` 0.9.3, published by CI run
+32510824744) plus `chumby-download-firmware`, which fetched intro.swf,
+opening.swf, the seven alarm tones and control panel **2.8.87b3** from the
+live servers. This box is where issue 6's mock-clock fix was verified.
+
+**Trap on a current image: the `pi` user has no passwordless sudo.**
+rpi-imager's card carried no `/etc/sudoers.d/010_pi-nopasswd`, so every
+privileged step — the overlay edit, `apt install`, the downloader's
+internal sudo for the Plymouth theme, and all of `pkg/deploy-pi.sh` — fails
+over a non-interactive SSH with "a password is required". Jan added the
+drop-in by hand. Any fresh card needs that before an unattended deploy.
+
+Owner state put on this box 2026-08-24, all of it under
+`/var/lib/chumby/fixtures/rootfs/psp/` (backups `url_streams.bak-seed`):
+eight stations in `url_streams` (SWR3, 1live, wdr-2/3/5, NRK P3 Jazz, Radio
+Norge, and "Birds + SWR3" pointing at `/psp/list.m3u`), plus `list.m3u` and
+`birds.mp3` copied off the real chumby. Radio Norge's old edge host
+(`ads-e-bauerse-fm-05-gos2.sharp-stream.com`) no longer connects at all;
+radio-browser.info's current URL for the station,
+`https://live-bauerno.sharp-stream.com/radionorge_no_mp3`, serves audio/mpeg
+over both HTTP and HTTPS and replaced it (backup `url_streams.bak-norge`).
+Widgets: RoboClock, Space Clock and Chumby Analog Clock (white) — Tagesschau
+was fetched too, then deleted again, see claude/issues.md #11.
+
+**Audio gains, 2026-08-24.** A USB adapter (Jieli UACDemoV1.0, card 1) was
+plugged in during the session and PipeWire made it the default sink. Both
+sinks sat at 0.40 and the output was audibly weak, so both were raised to
+1.00 with `wpctl set-volume`; the USB card's hardware PCM followed from 40 %
+(-17.37 dB) to 100 % (-0.94 dB), roughly +16 dB of real output. WirePlumber
+persists this in `~/.local/state/wireplumber/default-routes`
+(`channelVolumes: [1.0, 1.0]`), verified by restarting `wireplumber` and
+`pipewire` and reading both back unchanged. `CHUMBY_AUDIO_DEVICE` and
+`CHUMBY_AUDIO_SINK` stay unset, so the player follows whatever PipeWire calls
+default — pin them if the box must not follow a newly plugged card.
+
+Note the division of labour this exposes: the sink is where "how loud is
+loud" is set once, and the panel's slider scales only mpv on top of it — the
+player's own SWF audio is not scaled at all (fork claude/issues.md #6) — see claude/issues.md #9 for the
+mimetype rule and #10 for why playlist entries must be absolute paths.
+`widget_shuffle` is `0`.
+
+**Where widget SWFs come from.** chumby.com's guide still serves them, no
+account needed. The guide page for a widget embeds its movie under an
+opaque id — `embedSWF("/xml/moviefile?id=<opaque>", …)` — so the recipe is:
+search `http://www.chumby.com/guide/search?query=<name>` for the widget's
+GUID, fetch `http://www.chumby.com/guide/<GUID>/widget`, pull the
+`moviefile?id=` value out of it, and download
+`http://www.chumby.com/xml/moviefile?id=<opaque>`. The preview image comes
+from `http://www.chumby.com/xml/<GUID>/thumbnails`, which returns a plain
+JPEG. Save the pair as `<Widget Name>.swf` / `.jpg` in
+`/var/lib/chumby/widgets` — the filename becomes the widget name — and run
+`chumby-local-widgets`. Fetched this way on 2026-08-24: RoboClock
+(E2357306-BE6C-11DD-97AA-001E681DF646), Space Clock
+(E1FDC24C-88F4-11DD-B9A5-001B24F07EF4), Tagesschau
+(5D9DAB9E-D7E3-11DF-9EC6-0021288E6F90), Chumby Analog Clock (white)
+(59E82B76-AC29-11DB-8062-0030485A78AA). The SWFs are chumby content and
+never enter this repo.
+
+**No auto-rotation, by construction.** `chumby-local-widgets` writes
+`<mode mode="timeout" time="86400" />` on both the widget and the instance,
+so a local channel holds each widget for a day — the panel's next/previous
+navigation is the only thing that advances it, which is exactly the
+manual-selection behavior an owner asking for "no rotation" wants. Nothing
+to configure; `widget_shuffle` only decides the order in which advancing
+picks the next one.
+
 **Packages installed:** `mpv`, `cage`, `grim`, `pipewire-alsa`. The last one
 is not optional — without it ALSA clients (the player's `cpal`) have no route
 into PipeWire and audio-device creation fails. mpv talks to PipeWire natively
