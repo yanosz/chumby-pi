@@ -260,7 +260,10 @@ radio-browser.info's current URL for the station,
 `https://live-bauerno.sharp-stream.com/radionorge_no_mp3`, serves audio/mpeg
 over both HTTP and HTTPS and replaced it (backup `url_streams.bak-norge`).
 Widgets: RoboClock, Space Clock and Chumby Analog Clock (white) — Tagesschau
-was fetched too, then deleted again, see claude/issues.md #11.
+was fetched too, then deleted again, see claude/issues.md #11. A copy of the live
+`url_streams` from this box and from the real chumby is kept, git-ignored, in
+`claude-docs/private/psp-backup/` — the two differ only where the 2006 player
+demands it (`file:////psp/list.m3u` and http rather than https).
 
 **Audio gains, 2026-08-24.** A USB adapter (Jieli UACDemoV1.0, card 1) was
 plugged in during the session and PipeWire made it the default sink. Both
