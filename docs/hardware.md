@@ -24,9 +24,13 @@ cage (a Wayland compositor), not the legacy fbdev/fbtft framebuffer.
 1. **Pick the overlay for your panel** in `/boot/firmware/config.txt`.
    For SPI panels use the vendor's DRM-mode overlay (e.g.
    `dtoverlay=piscreen,...,drm` for ILI9486 types; PiTFT/ILI9341
-   panels have `mipi-dbi`/tinydrm overlays). An HDMI/DSI display needs
-   no overlay at all — the standard `vc4-kms-v3d` KMS driver is the
-   DRM device.
+   panels have `mipi-dbi`/tinydrm overlays). An HDMI display needs no
+   overlay at all — the standard `vc4-kms-v3d` KMS driver is the DRM
+   device. DSI panels vary: the official Touch Display is detected by
+   the firmware, while third-party ones need their own overlay on top
+   of `vc4-kms-v3d` (e.g.
+   `dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC` for the Waveshare
+   5″/7″ DSI LCD (C)) and stay dark without it.
 2. **Rotation gotcha:** DRM's base orientation is landscape. If you
    are porting settings from an fbtft setup, fbtft's `rotate=90`
    corresponds to DRM `rotate=0`.

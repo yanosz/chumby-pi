@@ -226,8 +226,11 @@ A **third test box** — the 5" DSI hardware, reflashed 2026-08-24 and
 bootstrapped from scratch: hostname `chumby-pi-3`, a Pi 3B+ Rev 1.4 on
 **wired eth0** (192.168.210.147, DHCP), Raspberry Pi OS Lite arm64 trixie
 (kernel 6.18.34), no USB sound card — only the bcm2835 headphone jack. The
-5" Waveshare DSI LCD (C) needs its overlay declared, contrary to the
-"HDMI and DSI need nothing" rule in [setup.md](../docs/setup.md):
+5" Waveshare DSI LCD (C) needs its overlay declared, which
+[setup.md](../docs/setup.md) denied until this session — it claimed "HDMI
+and DSI displays need nothing"; both it and hardware.md now say HDMI needs
+nothing, the official Touch Display is auto-detected, and a third-party DSI
+panel needs its own overlay:
 `dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC`, appended after `[all]`
 (backup `config.txt.bak-pre-dsi`). Before it, DRM had only
 `card0-HDMI-A-1: disconnected` and the screen stayed dark; after the reboot

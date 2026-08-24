@@ -17,17 +17,51 @@ Reference hardware:
 No build environment is needed — everything installs from a package
 repository.
 
+Every step below uses `sudo` and will ask for your password. Current
+Raspberry Pi OS images no longer give the first user passwordless sudo,
+which matters only if you drive the install **non-interactively** — a
+script over SSH, or `pkg/deploy-pi.sh` from the source repo — because
+those cannot answer the prompt. For that case, grant it once:
+
+```sh
+echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/010-nopasswd-$USER
+sudo chmod 440 /etc/sudoers.d/010-nopasswd-$USER
+```
+
 ## 1. Configure the display
 
-**HDMI and DSI displays need nothing** — skip to step 2.
+**HDMI needs nothing** — skip to step 2. **DSI depends on the panel:**
+the official Raspberry Pi Touch Display is detected by the firmware,
+but a third-party DSI panel must be declared, e.g. the Waveshare 5″ DSI
+LCD (C):
 
-An SPI TFT cannot be auto-detected, so it must be declared once. Append
-to `/boot/firmware/config.txt` and reboot:
+```
+dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC
+```
+
+An SPI TFT cannot be auto-detected either. Declare it once:
 
 ```
 dtparam=spi=on
 dtoverlay=piscreen,speed=24000000,rotate=0,drm,swapxy=on,invy=on
 ```
+
+Append your lines to `/boot/firmware/config.txt` **at the very end,
+after any `[all]`** — inside an earlier `[pi4]`/`[pi5]` section they
+silently do nothing — then reboot. Afterwards the panel should show the
+kernel boot console, and the kernel should agree:
+
+```sh
+for c in /sys/class/drm/card*-*; do
+  echo "$(basename "$c") $(cat "$c/status")"
+done
+# card0-DSI-1 connected      ← the panel was found
+# card0-HDMI-A-1 disconnected
+```
+
+A screen that stays dark with no `connected` connector means the
+overlay is missing or wrong for that panel, not that the panel is
+broken.
 
 - **Skip the display vendor's driver instructions.** Overlays like
   `waveshare35b-v2` use the legacy fbtft framebuffer driver, which the
@@ -37,9 +71,8 @@ dtoverlay=piscreen,speed=24000000,rotate=0,drm,swapxy=on,invy=on
   touch axes at this rotation ([hardware.md](hardware.md) if yours
   differs).
 
-After the reboot the kernel boot console appears on the TFT. The kiosk
-finds the panel by itself on any Pi model — there is nothing to
-configure on the software side.
+The kiosk finds whichever panel you configured by itself, on any Pi
+model — there is nothing to configure on the software side.
 
 ## 2. Install the package
 
