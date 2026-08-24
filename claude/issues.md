@@ -55,7 +55,8 @@ daughtercard itself (unassessed).
 Number: 3
 Timestamp: 2026-07-17, 02:00 (updated 2026-07-17, 17:00)
 Title: Plymouth boot animation, replacing the dropped Ruffle boot-opening.
-Status: open — prototype built, on-device verification outstanding
+Status: open — boot animation confirmed on both boxes; only the
+black-gap/handoff quality and the alt_opening audio question remain
 Description: The 0.9.1 attempt to reproduce real hardware's opening.swf via
 a sequential Ruffle run was dropped (design.md §5, "not worth the
 complexity") because the animation never exits itself and a kill-timeout
@@ -118,6 +119,22 @@ reset button GPIO3+GND, bend button GPIO5+GND):
   count check passed) → ruffle-exporter rasterized 132 frames on the
   Pi → sudo install → Theme=chumby active → initramfs carries all
   frames after -u.
+- Same install repeated on the 5" DSI box 2026-08-24 (development.md §6,
+  third test box) with nothing left to fix by hand: 132 frames rasterized
+  on the Pi, theme activated (`/etc/plymouth/plymouthd.conf` →
+  `Theme=chumby`), both initramfs images rebuilt (v8 and 2712 —
+  `lsinitramfs` counts 132 frame files), and `enable_splash()` appended
+  `quiet splash plymouth.ignore-serial-consoles` (backup
+  `cmdline.txt.bak-chumby`). Watched the same day and it works: Jan
+  confirmed the animation on the DSI panel ("animation loads"), and the
+  handoff left no trace of trouble — `chumby-player` active 28.2 s into a
+  30.9 s boot, with no DRM, cage or plymouth complaint in the journal. The
+  animation runs ~11 s (132 frames at 12 fps), so Plymouth holds its end
+  frame until the launcher's `plymouth quit`; the proxy signal is early
+  enough in practice on this hardware. The initramfs hook's
+  `label-pango.so` warning does not apply — `chumby.script` uses only
+  Image/Sprite/SetRefreshRate, so `plymouth-themes` is not a missing
+  dependency.
 - BOOT ANIMATION CONFIRMED BY JAN AT THE SCREEN ("I saw plymouth
   showing the chumby"). Touch confirmed too (he tapped through the
   intro tour). Handoff-quality (black gap?), bend-button and
