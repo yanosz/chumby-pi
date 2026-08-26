@@ -55,7 +55,8 @@ daughtercard itself (unassessed).
 Number: 3
 Timestamp: 2026-07-17, 02:00 (updated 2026-07-17, 17:00)
 Title: Plymouth boot animation, replacing the dropped Ruffle boot-opening.
-Status: open — prototype built, on-device verification outstanding
+Status: open — boot animation confirmed on both boxes; only the
+black-gap/handoff quality and the alt_opening audio question remain
 Description: The 0.9.1 attempt to reproduce real hardware's opening.swf via
 a sequential Ruffle run was dropped (design.md §5, "not worth the
 complexity") because the animation never exits itself and a kill-timeout
@@ -118,6 +119,22 @@ reset button GPIO3+GND, bend button GPIO5+GND):
   count check passed) → ruffle-exporter rasterized 132 frames on the
   Pi → sudo install → Theme=chumby active → initramfs carries all
   frames after -u.
+- Same install repeated on the 5" DSI box 2026-08-24 (development.md §6,
+  third test box) with nothing left to fix by hand: 132 frames rasterized
+  on the Pi, theme activated (`/etc/plymouth/plymouthd.conf` →
+  `Theme=chumby`), both initramfs images rebuilt (v8 and 2712 —
+  `lsinitramfs` counts 132 frame files), and `enable_splash()` appended
+  `quiet splash plymouth.ignore-serial-consoles` (backup
+  `cmdline.txt.bak-chumby`). Watched the same day and it works: Jan
+  confirmed the animation on the DSI panel ("animation loads"), and the
+  handoff left no trace of trouble — `chumby-player` active 28.2 s into a
+  30.9 s boot, with no DRM, cage or plymouth complaint in the journal. The
+  animation runs ~11 s (132 frames at 12 fps), so Plymouth holds its end
+  frame until the launcher's `plymouth quit`; the proxy signal is early
+  enough in practice on this hardware. The initramfs hook's
+  `label-pango.so` warning does not apply — `chumby.script` uses only
+  Image/Sprite/SetRefreshRate, so `plymouth-themes` is not a missing
+  dependency.
 - BOOT ANIMATION CONFIRMED BY JAN AT THE SCREEN ("I saw plymouth
   showing the chumby"). Touch confirmed too (he tapped through the
   intro tour). Handoff-quality (black gap?), bend-button and
@@ -333,7 +350,8 @@ panel and get aspect, fidelity and bandwidth in one part.
 Number: 5
 Timestamp: 2026-08-20, 22:05
 Title: Implement backlight brightness on the 5" DSI box.
-Status: open — next session
+Status: closed — brightness confirmed working 2026-08-24; the udev rule
+verified on a plain install
 Description: The 5" Waveshare DSI LCD (C) (1024x600, overlay
 `dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC` appended after `[all]`) on
 the new 3B+ exposes a real kernel backlight: `/sys/class/backlight/10-0045`,
@@ -351,13 +369,22 @@ whether the pi user really gets write access through that rule (every write in
 this session went through sudo), whether the Settings button un-dims, and how
 the panel's slider range and night mode map onto 0-255.
 
+Closed 2026-08-24 on the reflashed box (development.md §6, third test box):
+Jan confirms brightness works. The write-access question is answered
+independently — after a bare `apt install chumby-player` and a reboot,
+`/sys/class/backlight/10-0045/brightness` is `root:video 0664` and `pi` can
+write it with no sudo, so the shipped `90-chumby-backlight.rules` does fire on
+a real install. `brightness_ctl` stays unset, so the player takes the
+auto-detect path and `10-0045` is the lone backlight it finds. FR16 is
+satisfied on hardware.
+
 ---
 
 Number: 6
 Timestamp: 2026-08-20, 22:45
 Title: CI shipped the player with Ruffle's mock clock (deterministic feature).
-Status: closed — CI split into two cargo invocations, guarded; needs a
-rebuilt deb on the 5" DSI box to clear the symptom
+Status: closed — CI split into two cargo invocations, guarded; verified on
+the DSI box 2026-08-24
 Description: `5c9b2dd` taught the workflow to cross-build the exporter the
 deb bundles, and did it in the same cargo invocation as the player:
 `cargo build -p ruffle_desktop -p exporter --profile dist --target ...`.
@@ -409,3 +436,137 @@ that exact configuration. The only build that ever carried the feature is
 the broken one from 2026-08-20 18:06, which is not a baseline. Nothing about
 fonts or `Depends` is open; the guard covers the second name only so the
 leak cannot reopen unnoticed.
+
+Verified on a device 2026-08-24: the apt repo's `chumby-player_0.9.3` — built
+by CI run 32510824744 (main, 2026-08-21), whose "Guard against exporter's
+features reaching the player" step passed and whose player and exporter built
+in separate invocations — installed on a freshly bootstrapped 3B+ with the 5"
+DSI panel. Jan confirmed at the screen that the built-in clock loads correctly:
+no February 2001, all digit strips drawn. Nothing left open here.
+
+---
+
+Number: 7
+Timestamp: 2026-08-22, 23:45
+Title: A Pi reboot orphans the chumby's gadget link.
+Status: open — known behaviour, no fix attempted
+Description: When the Pi reboots, its USB gadget re-enumerates, which
+destroys and recreates the netdev on the chumby side; any DHCP client the
+chumby had running dies with it. Observed directly after a Pi reboot:
+`usb0` on the Pi shows `RX: 0 bytes, 0 packets` against `TX: 7916` with
+carrier up — the chumby is on the wire and silent. Nothing on the chumby
+re-establishes the link outside its own boot path (mountmon's USB add event
+plus `/psp/rfs1/userhook1`), so the chumby needs rebooting after the Pi does.
+Fine in the intended steady state, where the Pi outlives the chumby. Fixing
+it properly means a client on the chumby that reacts to the interface being
+recreated, not just to boot; an earlier attempt at a polling watchdog was
+rejected as too hacky, and the vendor path (`udhcpc -R -n`, one shot, skipped
+whenever another `eth*` is RUNNING) cannot do it. See
+pi.nic/README.md.
+
+---
+
+Number: 8
+Timestamp: 2026-08-22, 23:45
+Title: The control panel blocks forever on a no-timeout wget.
+Status: open — hazard, not yet triggered by anything we control
+Description: `/usr/chumby/scripts/network_status.sh` runs
+`wget -q -O - http://www.chumby.com/crossdomain…` with no timeout. If the
+chumby has a route whose gateway silently drops traffic, that fetch never
+returns and the control panel never finishes starting — the screen sits
+there looking like a boot hang, while `ps` shows `chumbyflashplayer.x`
+running and a `wget` parked behind it. This is how the missing-NAT bug
+presented, and it is worse than having no route at all: with no route the
+fetch fails fast, which is why the box booted normally on a USB dongle and
+only wedged once the Pi was its only NIC. Any future blackhole on that link
+reproduces it. chumby.com itself is currently answering (232 bytes,
+~1.2 MB/s), so this is latent rather than active.
+
+---
+
+Number: 9
+Timestamp: 2026-08-23, 00:15
+Title: Direct stream entries in /psp/url_streams need mimetype="audio/mpeg".
+Status: fixed 2026-08-23 — SWR3 plays
+Description: The standalone "SWR3" entry in `/psp/url_streams` carried
+`mimetype="audio/x-mpegurl"` — the *playlist* type — while its `url` pointed
+straight at an MP3 stream, so the player fetched it expecting an m3u and got
+raw MP3 frames. Nothing played. The URL was never wrong: it is byte-identical
+to the one in `/psp/list.m3u`, and the chumby pulled 1.52 MB from it in six
+seconds over plain HTTP (no TLS, no redirect — an earlier theory that the 2006
+player could not reach a modern endpoint was wrong).
+
+The rule: `audio/mpeg` for a direct stream, `audio/x-mpegurl` only when the
+`url` really is a playlist. Every working station on the list (1live, wdr-2,
+wdr-3, wdr-5, NRK P3 Jazz, Radio Norge) uses `audio/mpeg`; the sole correct
+`x-mpegurl` entry is "Birds + SWR3", which points at `file:////psp/list.m3u`.
+The broken entry looks copy-pasted from that one with the mimetype left
+behind — which is also why the playlist version played while the direct one
+did not, a confusing pair of symptoms worth remembering when adding stations.
+
+Fix: one attribute. Backup kept at `/psp/url_streams.bak-swr3`; `/psp` is
+jffs2, so it persists.
+
+---
+
+Number: 10
+Timestamp: 2026-08-24, 13:40
+Title: Playlist entries in an m3u must be absolute chumby paths, not relative.
+Status: fixed 2026-08-24 — birds.mp3 plays on the Pi
+Description: The "Birds + SWR3" stream entry (`mimetype="audio/x-mpegurl"`,
+issue 9) points at a local playlist. The panel — not the host — fetches and
+parses that m3u and hands the host ONE chosen entry: `pgrep -a mpv` showed
+mpv launched straight with the SWR3 URL, so a first line reading `birds.mp3`
+had been discarded silently. Rewriting that line as the chumby's own absolute
+form `/psp/birds.mp3` makes it play, birds first, then SWR3.
+
+So relative entries are dropped and absolute chumby paths survive; the host's
+`resolve_url` (fork `core/src/chumby/audio.rs`) then maps the leading `/`
+through the virtual rootfs to
+`/var/lib/chumby/fixtures/rootfs/psp/birds.mp3`. A real chumby's `list.m3u`
+therefore needs no editing to work on the Pi — copy it verbatim, and copy the
+media it names into the same fixtures `psp/` directory.
+
+Ruled out on the way: mpv's unsafe-playlist filter. `mpv --load-unsafe-playlists`
+changes nothing here, and mpv given the playlist directly resolves and plays
+the relative entry fine — the filtering is the panel's, above the host.
+
+---
+
+Number: 11
+Timestamp: 2026-08-24, 13:45
+Title: The Tagesschau widget's video source is gone (502, not our stack).
+Status: closed — external; widget deleted from the box 2026-08-24
+Description: The widget (5.4 KB, fetched from chumby.com's guide, GUID
+5D9DAB9E-D7E3-11DF-9EC6-0021288E6F90) hardcodes a single endpoint played
+through `NetStream`: `http://welttheorie.de/tagesschau.flv` — a fan-made
+widget pointing at a private server. The domain still resolves (IPv6 only,
+2a00:17d8:100:1::1361) and the Pi reaches it, but the server answers 502 for
+that file and for its root, so pressing "Wiedergabe" has nothing to play.
+Untested, and now moot: whether our player decodes FLV video through
+`NetStream` at all, and what that would cost on a 3B+.
+
+---
+
+Number: 12
+Timestamp: 2026-08-24, 13:50
+Title: Black bars around a widget on the 1024x600 DSI panel — accepted.
+Status: closed — Jan chose to leave the scaling alone (2026-08-24)
+Description: On the 5" DSI box, RoboClock reads as framed in black on all
+four sides. Two independent causes, measured rather than guessed:
+- The widget's own artwork. Rasterizing frame 0 with the shipped
+  `ruffle-exporter` gives 15 px of black at the top and 14 px at the bottom
+  of its 320x240 stage; the content band is 211 px tall. All four widgets
+  fetched this session are exactly 320x240, the panel's native stage, so
+  nothing is being letterboxed *into* the widget area.
+- Our fit. 320x240 on 1024x600 under the default show-all scales 2.5x to
+  800x600, leaving 112 px black to the left and right.
+
+Options put to Jan: (A) `--scale no-border --force-scale`, which fills the
+screen but crops 26 stage px off the top and bottom of *everything* — the
+control-panel bar and clock edges included; (B) a fractional zoom lever in
+the fork, tunable to crop just the ~15 px, which `StageScaleMode` cannot
+express and would therefore be player work; (C) leave it. **Jan chose C.**
+4:3 content on this panel letterboxes somewhere regardless; a 4:3 display
+(issue 4) would remove the side bars but never the widget's own artwork.
+

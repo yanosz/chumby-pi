@@ -12,13 +12,6 @@ Both repositories contain a folder called claude-docs. These are internal docume
 the project was active and had not reached maintenance mode, yet. This notes can be helpful for understanding design 
 decisions but are not changed any longer.
 
-Active spike: `ruffle` branch `renderer/tiny-skia-spike` is prototyping a
-CPU-only `tiny-skia` `RenderBackend`, to test whether it beats the current
-wgpu-on-lavapipe (software Vulkan) render path on CPU load — hardware
-acceleration is a closed door on VideoCore IV Pis (Zero–3), so this targets
-the software path itself. Plan and checkpoints:
-`ruffle/claude/tiny-skia-render-backend-plan.md`.
-
 When being tasked to fix a bug or do a feature, create a plan with steps / checkpoints first.
 
 Non-negotiable rules:
@@ -40,10 +33,17 @@ Non-negotiable rules:
 - **Player work happens in `ruffle/`, not here.** If the task is about
   the panel, the natives, the fixtures or the UI policy, work from that
   repo and read its `claude/` engineering record first.
+- On fixing and diagnosing errors, read the full patch-set first. This is
+  our fact-base. Base your statements on these facts — the patch-set is a
+  closed world (`git diff chumby~2..chumby` in the fork, plus this repo's
+  own tree), so a claim about it is checkable, not a matter of judgement.
+  No statement about the code without the `file:line` that shows it; if it
+  has not been read, say "unverified" and name the command that would
+  settle it.
 - Never modify controlpanel.swf or any extracted SWF.
 - /home/jan/chumby_backup is read-only ground truth. Never write there.
 - Work on ONE step at a time. Do not look ahead or start the next step's
   work while the current step is unfinished.
-- - Keep code comments brief. Code should speak for itself; comment only
+- Keep code comments brief. Code should speak for itself; comment only
   what cannot be read from the code — the why, a non-obvious constraint, a
   reference. Do not narrate what the code plainly does.

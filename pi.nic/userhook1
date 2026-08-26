@@ -1,0 +1,37 @@
+#!/bin/sh
+
+GADGET_MAC=B8:27:EB:5C:F7:9E
+
+gadget_if() {
+	for n in $(ifconfig -a 2>/dev/null | sed -n "s/^\([^ ]*\) .*Link encap.*/\1/p"); do
+		if ifconfig "$n" 2>/dev/null | grep -qi "HWaddr $GADGET_MAC"; then
+			echo "$n"
+			return 0
+		fi
+	done
+	return 1
+}
+
+has_addr() { ifconfig "$1" 2>/dev/null | grep -q "inet addr"; }
+have_default() { route -n 2>/dev/null | grep -q "^0\.0\.0\.0"; }
+
+/usr/chumby/scripts/start_network
+
+# Note: fallback, udhcp run in case of multiple adapters
+# and: run in background until pi has booted completly
+IF=$(gadget_if)
+if [ -n "$IF" ]; then
+	ifconfig "$IF" up
+
+	if ! has_addr "$IF" && ! have_default; then
+		udhcpc -R -b -p /var/run/udhcpc."$IF".pid -i "$IF" &
+		timeout=90
+		while [ $timeout -gt 0 ]; do
+			has_addr "$IF" && break
+			sleep 2
+			timeout=$((timeout - 2))
+		done
+	fi
+fi
+
+/usr/chumby/scripts/sync_time.sh -b &
