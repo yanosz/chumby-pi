@@ -34,12 +34,12 @@ Non-negotiable rules:
   the panel, the natives, the fixtures or the UI policy, work from that
   repo and read its `claude/` engineering record first.
 - On fixing and diagnosing errors, read the full patch-set first. This is
-  our fact-base. Base your statements on these facts — the patch-set is a
-  closed world (`git diff chumby~2..chumby` in the fork, plus this repo's
-  own tree), so a claim about it is checkable, not a matter of judgement.
-  No statement about the code without the `file:line` that shows it; if it
-  has not been read, say "unverified" and name the command that would
-  settle it.
+  our fact-base. Base your statements on these facts.
+- Before changing a value, fixture or touchpoint, grep for every consumer of
+  it — this repo, the fork, and the panel decompile
+  (chumby-pi-internal/docs/reference/appendix/controlpanel-2.8.87b3) — and
+  list them with a verdict each. No consumer list, no change. No file:line,
+  no claim.
 - Never modify controlpanel.swf or any extracted SWF.
 - /home/jan/chumby_backup is read-only ground truth. Never write there.
 - Work on ONE step at a time. Do not look ahead or start the next step's
