@@ -570,3 +570,84 @@ express and would therefore be player work; (C) leave it. **Jan chose C.**
 4:3 content on this panel letterboxes somewhere regardless; a 4:3 display
 (issue 4) would remove the side bars but never the widget's own artwork.
 
+
+---
+
+Number: 13
+Timestamp: 2026-08-28, 12:30
+Title: A "Birds + SWR3" alarm went silent about 100 s in and stayed silent.
+Status: open — cause not identified; verbose logging armed on chumby-pi-3 to
+catch the next occurrence
+Description: Jan set a one-shot alarm on the "Birds + SWR3" My Streams entry
+(the m3u of device issue 10) for 07:59 and left it to ring. The birds played,
+SWR3 took over, and after roughly a minute and a quarter the sound stopped.
+He did not snooze and did not dismiss — he wanted the radio. Nothing played
+again until he started the same entry by hand at 08:09:35, which worked
+normally. Box: chumby-pi-3 (192.168.42.24), 0.9.4, wlan0.
+
+No player log exists for it. `chumby-player-run:229` defaults `RUST_LOG=warn`
+and every trace that would settle this is at info, so the unit's journal holds
+four systemd lines for the whole boot.
+
+What the box does record, from rtkit's RT-thread grants — each new pid that
+gets an RT audio thread is one mpv spawn:
+
+    07:59:01  pid 2129        alarm rings, birds.mp3 (30.07 s, measured)
+    07:59:33  pid 2148  +32 s SWR3 takes over
+    08:00:48  pid 2168  +75 s
+    08:00:53  pid 2186  +5 s
+      (8 m 42 s with no mpv at all)
+    08:09:35  pid 2208        Jan's manual replay: birds.mp3
+    08:10:07  pid 2227  +32 s   and SWR3
+
+**This evidence has a hole that matters:** an mpv that spawns but never opens
+an audio device asks rtkit for nothing and leaves no line here. There may have
+been further mpv processes in the silent stretch that this timeline cannot
+show.
+
+Read against the panel, the first four fit exactly. `/psp/list.m3u` ends with
+a newline, so `M3U` (F2:15009, which pushes every line whose first character
+is not `#`) yields **three** tracks — birds, SWR3, and an empty string. birds
+ends at 30 s and is correctly treated as finished; SWR3 ends at 75 s, likewise;
+the empty third track is spawned at 08:00:48, dies at once, and
+`DirectURLPlayer.doStepTrack` (F2:15579) removes it under THRESHOLD = 5000 ms
+and wraps the list — so 08:00:53 is birds starting over. The trailing newline
+is the trap already recorded in fork issue 5; here it costs one dead spawn and
+about five seconds, and is **not** why SWR3 stopped (without it the list would
+have wrapped to birds anyway).
+
+Two questions remain, and they are separate:
+
+1. **Why did mpv exit 75 s into SWR3?** Not the panel's 2 s liveness gate:
+   `poll_state` (fork `core/src/chumby/audio.rs:165`) reports Stopped only
+   once the mpv *process* has exited, so a slow start reads as PLAYING here.
+   Not the network either — no wpa_supplicant, dhcp, carrier or resolver event
+   anywhere between 07:30 and 08:30. And not the stream: replayed from the
+   same box at 12:15 with `--ao=null`, it ran the full 150 s asked of it with
+   ICY titles updating, exiting only on our own `--length`. Our own spawn
+   (`audio.rs:82`) sets no length, cache or timeout. The exit status is logged
+   at info (`audio.rs:170`) and was therefore discarded.
+
+2. **Why did nothing play for the next 8 m 42 s,** on an alarm with
+   `duration="15"` and no dismissal? Leading hypothesis, unverified: birds
+   replayed to its end at ~08:01:23, the panel advanced to SWR3 again, and
+   that mpv stayed alive without ever producing audio — which our `poll_state`
+   reports as PLAYING for as long as the process lives, so the panel's track
+   supervision never fires and the alarm sits silent with the panel believing
+   it is playing. That shape matches an eight-minute silence, and it would be
+   ours, not the panel's. It also explains the missing rtkit line. Nothing
+   confirms it yet.
+
+Armed 2026-08-28 for the next occurrence: `RUST_LOG` set as an active line in
+`/etc/default/chumby-player` (previous file kept at
+`/etc/default/chumby-player.bak-preverbose`) to
+`warn,chumby_host=info,chumby_audio=info,avm_trace=info`, and the box upgraded
+to 0.9.5 and restarted. That captures `mpv pid=… url=…`, `mpv exited: …`,
+`doStepTrack(): track ended at N secs`, `track dead, removing` and
+`setTracks(): got N tracks` — between them enough to answer both questions.
+Journald is at its defaults here (≈5.9 GB cap on a 59 G card, 2.9 MB used), so
+the volume is safe; revert the line once this is closed.
+
+Not fixed, deliberately: the trailing newline in `/psp/list.m3u`. It is a
+one-byte change on a live box and would move the evidence under our feet
+before the next ring is captured.
