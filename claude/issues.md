@@ -651,3 +651,64 @@ the volume is safe; revert the line once this is closed.
 Not fixed, deliberately: the trailing newline in `/psp/list.m3u`. It is a
 one-byte change on a live box and would move the evidence under our feet
 before the next ring is captured.
+
+Update 2026-08-28, 18:30 — a control run, and the experiment it sets up.
+
+With `RUST_LOG` raised and 0.9.5 installed, the identical alarm was armed for
+18:10, deliberately far from the three enabled daily alarms (00:00, 08:00,
+23:00). Every field but time and name was copied from the failing one — same
+stream param, `duration="15"`, `snooze="5"`, `auto_dismiss="1"`,
+`action="nightmode"`. It ran clean:
+
+    18:10:00  playAsAlarm(): <stream url="/psp/list.m3u" … name="Birds + SWR3"/>
+    18:10:00  TrackedPlayer.setTracks(): got 3 tracks
+    18:10:00  mpv pid=3684 url="/psp/birds.mp3" vol=0 loops=1
+    18:10:01  WARN IPC socket not ready — volume control limited to spawn-time
+    18:10:01  IPC socket connected late
+    18:10:31  mpv exited: exit status: 0
+    18:10:31  doStepTrack(): track ended at 30.835 secs
+    18:10:31  mpv pid=3714 url="http://liveradio.swr.de/…/play.mp3" vol=44
+
+SWR3 then played unbroken from 18:10:31 until the service was stopped by hand
+at 18:16:56 — 6 min 25 s, no `doStepTrack` intervention, no track death, no
+`stopAlarmsExcept`. **Away from 08:00 this alarm does not fail**, which is the
+first hard evidence that the morning's failure is not intrinsic to playing
+this stream as an alarm.
+
+Confirmed on the device, no longer inferred: `setTracks(): got 3 tracks` —
+the trailing newline in `/psp/list.m3u` really does yield the phantom empty
+third track.
+
+Eliminated since the first pass:
+- **The station.** Jan restarted the same entry by hand minutes after the
+  failure and SWR3 played on. Same URL, same box, same build.
+- **The periodic alarm reload.** `AlarmSet.step` (F2:12030) reloads
+  `/psp/alarms` on a timer and calls `stopAlarmsExcept(undefined)` first,
+  which would stop every ringing alarm — but the interval is
+  `_root.alarmReloadInterval * ONE_MINUTE` **or `ONE_YEAR` when the FlashVar
+  is absent** (F2:11784), and our launcher passes only `-PlocalCache=1`. Inert
+  for us.
+
+Leading hypothesis, Jan's: **the 08:00 nightmode alarm stopped it.**
+`Alarm.ringAlarm` (F2:11182) opens with `_alarmSet.stopAlarmsExcept(this)`,
+and `stopAlarmsExcept` (F2:12039) calls `stopAlarm(true)` on every *other*
+ringing alarm. `"Daily at 8:00"` (`time="480"`, daily, enabled, `type="none"`,
+`action="nightmode" action_param="off"`) would do exactly that to an alarm
+still ringing from 07:59 — two alarms one minute apart. Unexplained detail,
+recorded rather than argued away: `Alarm.step` (F2:10910) rings only when
+`now - alarmTime` is within `RING_WINDOW = 15000` ms (F2:10186) and
+`AlarmSet.step` takes a fresh `new Date()` every frame, so that alarm fired
+between 08:00:00 and 08:00:15 or not at all — while SWR3's mpv was still alive
+until ~08:00:47. The ~32 s gap is close to birds.mp3's length (30.07 s), which
+may mean the spawn-to-track mapping is off by one somewhere. Not resolved.
+
+Armed for 2026-08-29 07:59: the same one-shot alarm, with `"Daily at 8:00"`
+still enabled, so the two ring a minute apart exactly as they did. The panel
+traces `AlarmSet.stopAlarmsExcept(): cancelling <alarm>` (F2:12049) whenever
+that path fires, so the outcome is binary — either that line appears at ~08:00
+and settles it, or mpv's own exit status is captured at the moment of death.
+
+Box state left behind on chumby-pi-3: 0.9.5, `RUST_LOG` active in
+`/etc/default/chumby-player`, the 07:59 alarm armed, `/psp/alarms` backed up
+at `/psp/alarms.bak-20260828`, `/psp/list.m3u` still carrying its trailing
+newline on purpose.
