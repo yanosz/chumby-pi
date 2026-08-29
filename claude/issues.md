@@ -712,3 +712,51 @@ Box state left behind on chumby-pi-3: 0.9.5, `RUST_LOG` active in
 `/etc/default/chumby-player`, the 07:59 alarm armed, `/psp/alarms` backed up
 at `/psp/alarms.bak-20260828`, `/psp/list.m3u` still carrying its trailing
 newline on purpose.
+
+Update 2026-08-29, 16:00 — session closed, retry moved to Monday
+2026-08-31. Jan deleted the 07:59 test alarm before it could ring, so the
+experiment did not run; the entry is gone from `/psp/alarms` (not merely
+disabled) and Monday needs a fresh one. Its exact XML is preserved in the
+backup `/psp/alarms.bak-20260828` and in the first block of this issue.
+
+One measurement did come out of the morning, from a run where the test alarm
+was not armed at all:
+
+    Aug 29 08:00:00.065  avm_trace: Alarm.step(): ringing Daily at 8:00
+
+The nightmode alarm fires within 65 ms of 08:00:00, on the device, exactly as
+`RING_WINDOW` (F2:10186) predicts. **This strains the leading hypothesis
+rather than supporting it.** `stopAlarm(true)` → `stopAlarmSoundContinuous`
+→ `MusicPlayer.stopMusic(false)` reaches our `stop()` with no delay, so had
+`stopAlarmsExcept` killed the 07:59 alarm on 2026-08-28 it would have died at
+08:00:00, not at ~08:00:47. The 47 s is now measured to be unexplained, not
+merely assumed to be. The hypothesis is not dead — nothing else found so far
+stops a ringing alarm from outside — but it no longer accounts for the
+timeline on its own.
+
+To resume on Monday:
+1. Re-arm the alarm for 07:59 with `"Daily at 8:00"` left enabled. `time` for
+   a `when="once"` alarm is **minutes since the Unix epoch, local time**
+   (verified: 29798279 = 2026-08-28 07:59 CEST); copy every other attribute
+   from the block at the head of this issue. The panel reads `/psp/alarms`
+   only at start, so restart `chumby-player` after writing it.
+2. Confirm it is scheduled: the log prints
+   `Alarm heartbeat <name> rings in N seconds, at:<time>` for each alarm.
+3. After the ring, pull `journalctl --since "<date> 07:55:00"` and grep for
+   `chumby_audio`, `setTracks`, `doStepTrack`, `stopAlarmsExcept`,
+   `Alarm.step(): ringing`. Expect `got 3 tracks` — the phantom empty track
+   is normal here and is not the failure.
+4. Note journalctl on this box rejects relative timestamps ("today",
+   "-1 min"); use absolute ones, and query without `-u chumby-player`, since
+   the player's lines carry the `chumby-player-run` identifier.
+
+Left armed on chumby-pi-3 for Monday: 0.9.5, `RUST_LOG` active in
+`/etc/default/chumby-player`, `/psp/list.m3u` still ending in a newline on
+purpose. Revert the `RUST_LOG` line once this issue closes.
+
+Also seen and deliberately not pursued, worth its own issue later: the alarm
+fade spawns mpv at `vol=0` and ramps over IPC, and on 2026-08-28 the socket
+was not ready at spawn ("IPC socket not ready", then "connected late" 160 ms
+after). It won the race that time. It is the same race behind the 2026-07-06
+"alarm fade-in muted forever" note in `audio.rs:228`, and losing it means a
+silent alarm.
