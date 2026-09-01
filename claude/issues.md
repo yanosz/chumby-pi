@@ -858,3 +858,46 @@ active in `/etc/default/chumby-player`, `/psp/list.m3u` still ending in a
 newline (`setTracks(): got 3 tracks` again today — the phantom empty track is
 present and is *not* implicated in the failure). Nothing was written to the
 device. Revert the `RUST_LOG` line once a remedy is settled.
+
+Update 2026-09-01, 09:55 — remedy CHOSEN (option B), fix deferred to the next
+session for a clean context. Handoff:
+
+**The fix.** One-shot AVM prototype surgery, same pattern as
+`empty_channel.rs`/`intro.rs`. Recommended hook site: **`Alarm.ringAlarm`**
+(F2:11178). Wrap it so that when `this._type == Alarm.TYPE_NONE` (F2:10170,
+value `"none"`) it does **not** run the opening `_alarmSet.stopAlarmsExcept(this)`
+(F2:11182) — a silent nightmode/none alarm then does its night-mode side
+effect without silencing a sounding alarm. Keep every other effect of the
+TYPE_NONE branch intact (autoDismiss → doPreAction → stopAlarm,
+F2:11184-11191); only that one cancel line is skipped. This site is preferred
+over guarding `stopAlarmsExcept` itself because the canceller's identity is
+not passed to it (`anAlarm` is the survivor), and because `ringAlarm`/F2:11182
+is the single reachable caller — the other three `stopAlarmsExcept` callers
+(F2:12033, 12238, 12244) pass `undefined` and are unreachable on our stack
+(`ExtendedEvents.AlarmPlayer` drives none of them, and the periodic reload's
+interval is ONE_YEAR without the `alarmReloadInterval` FlashVar).
+
+**Where it goes.** New file in the fork under `core/src/chumby/` (e.g.
+`alarm_guard.rs`), wired in `mod.rs`, one-shot retry until frame 2 defines
+`Alarm.prototype.ringAlarm` — mirror `empty_channel.rs`. Before coding, grep
+every consumer of `ringAlarm`, `stopAlarmsExcept` and `TYPE_NONE` and list
+them with a verdict (CLAUDE.md consumer-list rule). It is a deliberate
+deviation from stock alarm behaviour, so record it in the fork's
+requirements.md (amendment near FR13) and design.md (the alarm chain / §9),
+per the docs-split rules.
+
+**Verify.** Desktop first: two alarms one minute apart — the later
+`type="none" action="nightmode"`, the earlier an audio stream — the audio must
+survive the silent alarm's ring. Then on chumby-pi-3, the real 07:59+08:00
+pairing this issue reproduced. Success signal: **no** `AlarmSet.stopAlarmsExcept():
+cancelling` at ~08:00 while the audio alarm keeps its mpv alive.
+
+**Recorded, not part of this fix:** the cancel also runs `restoreSoundSettings()`
+(volume 44→16 on 2026-09-01), so a manual resume after any cancel plays quiet.
+Moot once the cancel no longer fires for a silent alarm.
+
+Box left for the next session: chumby-pi-3 (192.168.42.24), 0.9.5, verbose
+`RUST_LOG` active in `/etc/default/chumby-player`
+(backup `.bak-preverbose`), `/psp/list.m3u` still ends in a newline. When the
+fix lands and is verified on the device, revert the `RUST_LOG` line and close
+this issue.
