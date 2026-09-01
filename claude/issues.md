@@ -579,7 +579,8 @@ Title: A "Birds + SWR3" alarm went silent about 100 s in and stayed silent.
 Status: cause identified on the device 2026-09-01 — the 08:00 nightmode alarm
 cancels the still-ringing 07:59 alarm through the panel's own
 `stopAlarmsExcept`. Nothing in the player, the stream or the network is
-involved. No remedy chosen yet; see the options at the end.
+involved. Option B built and desktop-verified 2026-09-01 (fork issue 10);
+device verification outstanding.
 Description: Jan set a one-shot alarm on the "Birds + SWR3" My Streams entry
 (the m3u of device issue 10) for 07:59 and left it to ring. The birds played,
 SWR3 took over, and after roughly a minute and a quarter the sound stopped.
@@ -901,3 +902,52 @@ Box left for the next session: chumby-pi-3 (192.168.42.24), 0.9.5, verbose
 (backup `.bak-preverbose`), `/psp/list.m3u` still ends in a newline. When the
 fix lands and is verified on the device, revert the `RUST_LOG` line and close
 this issue.
+
+Update 2026-09-01, 11:10 — option B built and verified on the desktop; the
+device run is what remains.
+
+Jan confirmed option B this session. The fix is fork commit 75f3acf28,
+`core/src/chumby/alarm_guard.rs`: a one-shot wrapper on
+`AlarmSet.prototype.stopAlarmsExcept` (F2:12039) that returns without
+cancelling when the argument's `_type` is `Alarm.TYPE_NONE` (F2:10170), and
+delegates to the parked original otherwise. Full rationale, consumer list and
+evidence are in the fork's `claude/issues.md` #10 — the player record, not
+repeated here.
+
+Two decisions differ from the 09:55 handoff, both deliberate:
+
+- **Hook site.** The handoff recommended wrapping `Alarm.ringAlarm` because
+  "the canceller's identity is not passed to `stopAlarmsExcept`". That is
+  wrong: at F2:11182 the argument is `this`, the ringing alarm, so canceller
+  and survivor are the same object on the only reachable path. Wrapping
+  `stopAlarmsExcept` is stateless; wrapping `ringAlarm` would require either
+  reimplementing its 50-line body or shadowing `stopAlarmsExcept` with a
+  no-op and restoring it, where a missed restore disables cancelling for every
+  alarm. Jan chose the `stopAlarmsExcept` site.
+- **Where it is documented.** The handoff said to amend the fork's
+  `requirements.md` (FR13) and `design.md` (§9). Those live in
+  `claude-docs/`, which fork commit 85d3447bc froze: *"claude-docs/ is the
+  frozen historical record. Live notes go in claude/."* The deviation is
+  recorded in the fork's `claude/issues.md` #10 instead.
+
+Desktop verification, same binary with the guard compiled out and in, two
+`when="once"` alarms a minute apart — earlier `type="beep" auto_dismiss="0"`,
+later `type="none" action="nightmode" auto_dismiss="1"`, the shape of the
+device failure. Guard off reproduced it off-device for the first time
+(`stopAlarmsExcept(): cancelling`, `isCancel:true`, `restoreSoundSettings():
+volume:60`); guard on shows none of those, the surviving alarm is never
+mentioned again after it rings, and the silent alarm still does its own work
+(`night mode off`, widget mode, `post_alarm_action` probes, `saveAlarms`).
+
+Still to do, and the reason this issue stays open:
+1. Build and deploy to chumby-pi-3 (192.168.42.24), gitlink bumped to
+   75f3acf28 on this repo's dev.
+2. Re-run the real pairing: a `when="once"` audio alarm at 07:59 with
+   `"Daily at 8:00"` enabled. Success signal: `silent alarm "Daily at 8:00"
+   rang — not cancelling ringing alarms` at 08:00, **no**
+   `stopAlarmsExcept(): cancelling`, and mpv still alive afterwards.
+3. Then revert the `RUST_LOG` line in `/etc/default/chumby-player` (backup at
+   `.bak-preverbose`) and close this issue.
+
+Box state unchanged: 0.9.5, verbose `RUST_LOG` active, `/psp/list.m3u` still
+ends in a newline.
