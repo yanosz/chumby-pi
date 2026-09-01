@@ -576,8 +576,10 @@ express and would therefore be player work; (C) leave it. **Jan chose C.**
 Number: 13
 Timestamp: 2026-08-28, 12:30
 Title: A "Birds + SWR3" alarm went silent about 100 s in and stayed silent.
-Status: open — cause not identified; verbose logging armed on chumby-pi-3 to
-catch the next occurrence
+Status: cause identified on the device 2026-09-01 — the 08:00 nightmode alarm
+cancels the still-ringing 07:59 alarm through the panel's own
+`stopAlarmsExcept`. Nothing in the player, the stream or the network is
+involved. No remedy chosen yet; see the options at the end.
 Description: Jan set a one-shot alarm on the "Birds + SWR3" My Streams entry
 (the m3u of device issue 10) for 07:59 and left it to ring. The birds played,
 SWR3 took over, and after roughly a minute and a quarter the sound stopped.
@@ -760,3 +762,99 @@ was not ready at spawn ("IPC socket not ready", then "connected late" 160 ms
 after). It won the race that time. It is the same race behind the 2026-07-06
 "alarm fade-in muted forever" note in `audio.rs:228`, and losing it means a
 silent alarm.
+
+Update 2026-09-01, 09:15 — **reproduced and fully traced. Jan's hypothesis
+was right.** The alarm rang again at 07:59 and went silent as the 8 o'clock
+news started; this time the box was still on 0.9.5 with `RUST_LOG` raised and
+the player process running unbroken since 2026-08-28 18:17:20, so the whole
+morning is in the journal. The decisive lines, verbatim:
+
+    07:59:00.063  Alarm.step(): ringing Sep 01 2026,  7:59
+    07:59:00.077  DirectURLPlayer.playAsAlarm(): <stream url="/psp/list.m3u" …/>
+    07:59:00.091  TrackedPlayer.setTracks(): got 3 tracks
+    07:59:00.094  mpv pid=9282 url="/psp/birds.mp3" vol=0 loops=1
+    07:59:31.686  mpv exited: exit status: 0
+    07:59:31.686  doStepTrack(): track ended at 30.69 secs
+    07:59:31.689  mpv pid=9300 url="http://liveradio.swr.de/…/play.mp3" vol=44
+    08:00:00.083  Alarm.step(): ringing Daily at 8:00
+    08:00:00.084  Alarm.ringAlarm() Daily at 8:00
+    08:00:00.085  AlarmSet.stopAlarmsExcept(): cancelling Sep 01 2026,  7:59
+    08:00:00.086  Alarm.stopAlarm() Sep 01 2026,  7:59 isCancel:true
+    08:00:00.087  Alarm.stopAlarmSoundContinuous(): Sep 01 2026,  7:59
+    08:00:00.087  MusicPlayer.stopMusic() → doStopTrack → mpv killed
+    08:00:00.108  Alarm.restoreSoundSettings(): restoring volume:16 mute:false
+
+The chain is entirely the panel's own, and it is faithful to the original
+firmware: `Alarm.ringAlarm` (F2:11182) opens with
+`_alarmSet.stopAlarmsExcept(this)`, and `stopAlarmsExcept` (F2:12039) calls
+`stopAlarm(true)` on every *other* ringing alarm. `"Daily at 8:00"` is
+`type="none" arg="None" action="nightmode" action_param="off"
+auto_dismiss="1" enabled="1" time="480"` — a **silent** alarm whose only job
+is to leave night mode. It makes no sound of its own (its ringAlarm branch is
+autoDismiss + TYPE_NONE → `doPreAction` → `stopAlarm`, F2:11184-11191), yet it
+still runs `stopAlarmsExcept` first and so kills the audio alarm that has been
+ringing since 07:59. Two alarms one minute apart, and the silent one wins.
+
+Latency measured, no longer inferred: the cancel lands **85 ms** after
+08:00:00.000, exactly as `RING_WINDOW` (F2:10186) predicts.
+
+**Both open questions from the previous blocks dissolve.**
+
+1. *Why did mpv exit 75 s into SWR3?* It did not exit — it was killed, at
+   08:00:00.087, by our own `stop()` under `doStopTrack`. The 2026-08-28
+   "+75 s" was reconstructed from rtkit RT-thread grants, and that
+   reconstruction's own recorded hole (an mpv that never opens an audio device
+   leaves no line) is what made it look like a 47 s discrepancy. Nothing was
+   wrong with the exit.
+2. *Why did nothing play for the next 8 m 42 s?* Because the alarm had been
+   cancelled and nothing was supposed to play. There is no stuck-but-silent
+   mpv and no missed track supervision; the leading hypothesis recorded on
+   2026-08-28 (a live mpv that our `poll_state` reports as PLAYING forever) is
+   **refuted** — it never happened.
+
+Also settled, and both exonerated:
+
+- **The stream and the 8 o'clock news are innocent.** After Jan restarted the
+  entry by hand, SWR3 played unbroken from 08:00:51 to 08:17:15 — 16 min 24 s
+  straight through the entire news bulletin, no `doStepTrack` intervention, no
+  track death, ending only when he stopped it.
+- **The 08:00:19 "replay" is Jan's own.** `_bent() -> 1` at 08:00:14
+  (`BendTapper.onBend`), the control panel opens, Music, and at 08:00:19
+  `MusicPlayer.resume(): resuming from <stream …Birds + SWR3/>`. Nothing
+  restarted itself.
+
+Side finding, same trace, worth knowing: the cancel runs
+`Alarm.restoreSoundSettings()`, which puts the system volume back to its
+pre-alarm value — 44 → 16 here. So the manual resume at 08:00:19 played at
+volume 16 while the alarm had been at 44, which is why a restart after a
+cancelled alarm sounds quiet.
+
+The full consumer list for `stopAlarmsExcept`, since any remedy touches it:
+
+| site | caller | argument | reachable on our stack |
+|------|--------|----------|------------------------|
+| F2:11182 | `Alarm.ringAlarm` | `this` | **yes — this is the path that bites** |
+| F2:12033 | `AlarmSet.step`, periodic reload | `undefined` | no — the interval is `ONE_YEAR` without the `alarmReloadInterval` FlashVar (F2:11784) and our launcher passes only `-PlocalCache=1` |
+| F2:12238 | `AlarmSet.gotEvent("reload")` | `undefined` | fed by `ExtendedEvents.AlarmPlayer` (F2:12182); we drive no such event |
+| F2:12244 | `AlarmSet.gotEvent("load")` | `undefined` | same |
+
+Options for a remedy, none chosen (Jan's call):
+
+- **A — configuration only, no code.** Move `"Daily at 8:00"` out of the way
+  (before the wake alarm, or after its `duration="20"` window ends at 08:19),
+  or disable it. Zero risk, faithful, but the owner has to remember the
+  collision every time a wake alarm is set near a nightmode alarm.
+- **B — fork fix: a silent alarm must not cancel a sounding one.** Prototype
+  surgery on `AlarmSet.stopAlarmsExcept` (or on the `ringAlarm` call site) so
+  an alarm whose `_type == Alarm.TYPE_NONE` (F2:10170) skips the cancel. The
+  guard exists to keep two *sounding* alarms from overlapping; an alarm that
+  makes no sound has nothing to protect. Same class of one-shot VM surgery as
+  `empty_channel.rs` and `intro.rs`, and it is a deliberate deviation from
+  stock behaviour around alarms, so it needs saying out loud in the docs.
+- **C — leave it.** It is what a real chumby did.
+
+Box state unchanged by this session: chumby-pi-3, 0.9.5, `RUST_LOG` still
+active in `/etc/default/chumby-player`, `/psp/list.m3u` still ending in a
+newline (`setTracks(): got 3 tracks` again today — the phantom empty track is
+present and is *not* implicated in the failure). Nothing was written to the
+device. Revert the `RUST_LOG` line once a remedy is settled.
