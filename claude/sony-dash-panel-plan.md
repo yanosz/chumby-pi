@@ -328,9 +328,10 @@ is the first item.
   `file://` and draws its widget rectangle. The Dash got its own fixture
   tree (`ruffle/fixtures-dash/`, `run-dash.sh`) because the classic tree's
   tracked `/tmp/nightmode` boots the Dash into night mode and the two
-  panels disagree on `/psp/alarms`. Second half, the widget area through
-  the XAPI fixtures, waits on a scope call: does the Dash need a widget
-  when the theme is the clock?
+  panels disagree on `/psp/alarms`. Second half done the same evening
+  (Jan: "do the XAPI channel"): four XAPI fixtures plus a `_` wildcard
+  for the GUID segment in the fixture host; the theme shows the channel
+  and names the clock widget. Drawing it is item 14.
 
 ### Step 5 — themes for the user, and panel selection
 
