@@ -1,6 +1,8 @@
 # A VNC viewer on the real chumby, beside the control panel
 
-Draft 2026-09-09. Idea stage — **nothing measured on the device yet.**
+Draft 2026-09-09, approved. Idea stage — **nothing measured on the device
+yet.** Step 1 waits for the chumby, offline as of 2026-09-09 and back in a few
+days; the step order stands as written.
 Sources: `chumby_backup` (read-only), the chumby wiki, `pi.nic/README.md`.
 
 ## Goal
