@@ -364,6 +364,18 @@ is the first item.
   18: all 2 331 are `ActionPop` discards on an empty stack from the AS2
   class preamble, nothing reads them. No code change; a `RUST_LOG` filter
   silences them, recorded with the other recipes.
+- **Item 19 (classic-shaped subsystems) — done 2026-09-09**, fork issue 19:
+  six verdicts. The four prototype hooks never bind on the Dash and the UI
+  policy matches nothing there, both correct; audio, volume and the overlay
+  stubs hold up; screen size falls back to the real stage. Two real gaps
+  split off as fork issues **20** (the Dash drives brightness through a
+  native the fork does not honour — needs the DSI box) and **21** (the
+  silent-alarm cancel guard cannot bind on the Dash's alarm classes).
+
+**Step 4 is complete**: items 11-19 are done and committed. What is left
+before step 5 is the two new fork issues, both of which want the box, and
+the appliance list (issues 14-17 here), which is where the packaging,
+`CHUMBY_PANEL` and the theme seeding live.
 
 ### Step 5 — themes for the user, and panel selection
 
