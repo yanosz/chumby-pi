@@ -357,6 +357,9 @@ is the first item.
 - **Item 17 (six unbound natives) — done 2026-09-09**, fork issue 17: all
   six named, the three the panel calls answered (unflipped, no logo LED, no
   second widget player). Small and self-contained.
+- **Item 15 (`sys://`) — done 2026-09-09**, fork issue 15: one more scheme
+  in the navigator's local-path mapping, unit-tested; a live exercise waits
+  on photos, which stay out of scope.
 
 ### Step 5 — themes for the user, and panel selection
 
