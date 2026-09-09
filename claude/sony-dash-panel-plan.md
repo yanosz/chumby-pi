@@ -345,6 +345,15 @@ is the first item.
   issue 14: one prototype surgery (`dash_widget.rs`) makes the sequencer
   take its own proxy branch; the built-in clock draws inside the Space
   Theme's widget area. Classic unaffected.
+- **Item 16 (chumby.com surface) — done 2026-09-09**, fork issue 16: the
+  panel self-updater and the music manifest are answered by fixtures so
+  neither can reach chumby.com, and the **theme catalog is generated from
+  the rootfs themes directory** — the picker offers any theme dropped in,
+  with no server, and installing one runs the panel's own
+  `download_theme` / `cp` sequence, interpreted in Rust. Verified by
+  driving the real UI to the Theme Selector and installing. Two lessons for
+  the appliance side: seed `/psp/theme.swf` as a copy, never a link, and
+  seed it at all — without a theme the Dash has no home screen.
 
 ### Step 5 — themes for the user, and panel selection
 

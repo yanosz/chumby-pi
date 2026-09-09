@@ -958,7 +958,15 @@ Number: 14
 Timestamp: 2026-09-09, 19:10
 Title: Dash: obtain and unpack the package into $STATE.
 Status: open — step 3 item (sony-dash-panel-plan.md)
-Description: `chumby-download-firmware` fetches the classic from
+Description: **The downloader must also register the shipped theme for
+later use** (Jan, 2026-09-09): besides extracting the panel it places
+`default_theme.swf` in the themes directory the picker's catalog is
+generated from (fork issue 16), and seeds `/psp/theme.swf` — **a copy, not
+a symlink**, the panel writes that path when a theme is installed — plus
+`/psp/theme_name.txt`. Without a seeded theme the Dash has no home screen
+at all, and without a registered one the picker has nothing to offer.
+
+`chumby-download-firmware` fetches the classic from
 `www.chumby.com/xml/controlpanel`; that endpoint never serves the Dash panel
 (internal `01-invocations.md`, 2026-09-09 addendum). The Dash package is one
 zip, `files.chumby.com/dash/chumby/chumby-hidc10-1.0.0.zip` (1 431 349 bytes,
@@ -1009,6 +1017,17 @@ the fork as `files.chumby.com/dash/production/themes/themes.xml` (fork issue
 launch, the fork serves it. (3) also needs the copy-to-`/psp` exec strings
 (fork issue 13). Recommend (1)+(2) first, (3) after the fork side. Size: S
 for (1)+(2), M for (3).
+
+UPDATE 2026-09-09, fork issue 16 done: route (3) is **already reachable
+without a server** — the fork generates `themes.xml` from the panel's own
+`/psp/themes` directory, so the appliance only has to place theme SWFs
+there and the in-panel picker offers them; installing one is handled in
+Rust. So the appliance work shrinks to: seed `$STATE`'s Dash tree with
+`/psp/theme.swf` (**a copy, never a symlink** — the panel writes that path
+on install) and `/psp/theme_name.txt` from the package, expose a themes
+directory the owner can drop SWFs into, and keep the USB `theme.swf` link.
+Note also that **without a seeded theme the Dash has no home screen at
+all**, so the seeding is not optional.
 
 ---
 
