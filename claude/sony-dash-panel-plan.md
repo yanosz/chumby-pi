@@ -332,6 +332,15 @@ is the first item.
   (Jan: "do the XAPI channel"): four XAPI fixtures plus a `_` wildcard
   for the GUID segment in the fixture host; the theme shows the channel
   and names the clock widget. Drawing it is item 14.
+- **Item 13 (exec touchpoints) — done 2026-09-09** for everything the
+  panel issues today, fork issue 13: `tzdump` from the system tzdata (the
+  world clocks were three hours off without it), `list_mounts` from the
+  rootfs, the slave-memory poll answered empty, `chumbthumb` stubbed; plus
+  percent-decoding of `exec://` commands and `nice -n` stripping in front
+  of every handler; and the platform name became a per-tree fixture file
+  (`yume` for the Dash), without which the Dash ignores the transitions.
+  World clocks verified against the system. Appliance notes: the deb must
+  depend on `tzdata`, and ship `platform` with each tree.
 
 ### Step 5 — themes for the user, and panel selection
 
