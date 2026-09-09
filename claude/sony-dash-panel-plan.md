@@ -318,7 +318,10 @@ is the first item.
   theme's 56 per-frame masks (one per text field) each cost a full-frame
   clear and intersect in the tiny-skia backend; masks off, the theme
   renders 3x faster on the box (179 → 60 ms). Script is 5 ms. Proposal:
-  bounded masks in the fork's own renderer crate, S–M. Waiting for the go.
+  bounded masks in the fork's own renderer crate, S–M. **Implemented the
+  same evening** (fork, uncommitted at the time of writing): theme render on
+  the box 179 → 63 ms, 72 frames pixel-identical, classic unchanged. Kiosk
+  fps still to be read after a deploy.
 
 ### Step 5 — themes for the user, and panel selection
 
