@@ -341,6 +341,10 @@ is the first item.
   (`yume` for the Dash), without which the Dash ignores the transitions.
   World clocks verified against the system. Appliance notes: the deb must
   depend on `tzdata`, and ship `platform` with each tree.
+- **Item 14 (widget in the theme's rectangle) — done 2026-09-09**, fork
+  issue 14: one prototype surgery (`dash_widget.rs`) makes the sequencer
+  take its own proxy branch; the built-in clock draws inside the Space
+  Theme's widget area. Classic unaffected.
 
 ### Step 5 — themes for the user, and panel selection
 
