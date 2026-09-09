@@ -122,6 +122,64 @@ theme `.sig` is even the same kind of file. Step 2 finds out.
   fps ceiling (`claude/issues.md` #4, ~6-7 fps) and this is 5.4x the classic's
   pixel area.
 
+## Step 1 result — done 2026-09-09
+
+**Parked.** `chumby-pi-internal/resources/dash-chumby-hidc10-1.0.0/` holds the
+zip verbatim (sha256 `236397c7e3cf…`) and `package/`, its unpacked contents,
+with a README carrying provenance, the forum thread, per-SWF hashes and the
+inventory of all 34 files. Read-only ground truth, the way `chumby_backup` is
+for the classic.
+
+**Exported.** ffdec v26.2.1 into
+`docs/reference/appendix/controlpanel-dash-1.0.0/` (12 MB — 1 447 `.as`, of
+which **777 are AS2 class bodies** under `__Packages/`, plus `frames/`,
+`texts/`, `tag-dump.txt`) and `.../companions-dash-1.0.0/` (2.3 MB —
+`default_theme`, `movie`, `factorytest`, `default_opening`). Exact commands
+appended to the appendix README; images/shapes/sprites deliberately skipped
+(1 877 sprites at 860x480).
+
+**Registered.** `docs/reference/01-invocations.md` gained a dated addendum
+listing the five Dash SWFs with hash, size, stage and SWF version — as
+variants D-H, alongside the classic's A-C. I appended rather than edited: that
+document is the 2026-06-12 classic survey and is left as it was.
+
+### What the export shows about the theme mechanism
+
+It is not a setting, it is a subsystem, and it is all here:
+
+- `com/blueocty/themes/ITheme.as` and `IThemeCallbacks.as` — **the interface a
+  theme SWF implements.** This is the contract a theme of our own would have
+  to satisfy.
+- `com/chumby/controlpanel/dash/themes/` — `ThemeLoader`, `ThemeCallbacks`,
+  and `themenetwork/{ThemeCatalog, ThemeCatalogService, ThemeCatalogItem,
+  ThemeCatalogItemLayout}`.
+- `com/chumby/controlpanel/settings/themes/` — a whole UI: `ThemesPanel`,
+  `ThemeSelectorDialog`, `ThemesPanelChooseTheme`, `ThemesPanelShowTheme`,
+  `ThemesPanelLoadingTheme(s)`, `ThemesPanelUpdateTheme`, plus a
+  `ThemeWizard` (`ChooseBackground`, `ChooseLayout`, `ChooseChannel`,
+  `EnterName`, `TextEntry`) — so the panel can *build* a theme, not only pick
+  one.
+- `com/chumby/controlpanel/startup/StartupPanelUpdateTheme.as` and
+  `com/chumby/controlpanel/dash/ThemePhotos.as`.
+
+Reading these is step 2's first job; nothing above is a claim about behaviour,
+only about what exists in the export.
+
+### Other packages present
+
+`com/chumby/` carries `accelerometer`, `alarm`, `browser`, `display`, `gui`,
+`i18n`, `image`, `ipod`, `keyboard`, `music`, `network`, `photos`, `time`,
+`usb`, `util`, `weather`, plus `ChumbyNative.as`, `ScreenDimensions.as`,
+`BendSensor.as`, `BendTapper.as`, `DaughterCardID.as`. Third-party packages
+too: `com/weather`, `com/accuweather`, `gov/noaa`, `com/adelavoice`,
+`com/blueocty`, `mx/transitions`.
+
+### Not done
+
+The internal archive's changes are **uncommitted** — that repo's HEAD is the
+July big-cleanup checkpoint and it is a frozen local archive, so I left the
+commit decision to you.
+
 ## Steps
 
 Each step ends with the engineering record updated, and **stops** at its
