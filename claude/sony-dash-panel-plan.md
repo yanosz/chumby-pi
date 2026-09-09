@@ -27,7 +27,7 @@ along as the packaging that makes it reachable, but it is not the headline.
 | Question | Answer |
 |---|---|
 | A Dash to test on? | **No device.** Verify on the desktop against fixtures, then on the Pi. |
-| Target display | **1024x600 DSI** (chumby-pi-5). The 480x320 and 640x480 panels are out of scope here. |
+| Target display | **1024x600 DSI** (the box reports hostname `chumby-pi-3`, 192.168.42.24 on 2026-09-09; read it off the device, it moves). The 480x320 and 640x480 panels are out of scope here. |
 | Sony's 1.7.1526 firmware | **Deferred.** Not needed to start; ask again if step 2 gets stuck. Buying a Dash stays on the table. |
 | Artefacts | **`chumby-pi-internal`**, following the precedent below. |
 | Themes | **The point.** Ahead of panel selection, including the USB `externalthemes.xml` route. |
@@ -112,7 +112,7 @@ theme `.sig` is even the same kind of file. Step 2 finds out.
 
 ## What we do not know
 
-- Which of the 34 package files the panel reads at runtime, and which
+- Which of the 32 package files the panel reads at runtime, and which
   `exec://` strings it issues. The scripts are right there — step 2.
 - Whether the theme catalog is served from anywhere that still answers, and
   the `externalthemes.xml` schema.
@@ -157,8 +157,8 @@ It is not a setting, it is a subsystem, and it is all here:
   `ThemeSelectorDialog`, `ThemesPanelChooseTheme`, `ThemesPanelShowTheme`,
   `ThemesPanelLoadingTheme(s)`, `ThemesPanelUpdateTheme`, plus a
   `ThemeWizard` (`ChooseBackground`, `ChooseLayout`, `ChooseChannel`,
-  `EnterName`, `TextEntry`) — so the panel can *build* a theme, not only pick
-  one.
+  `EnterName`, `TextEntry`) — which step 2 found to be a stub: every page
+  only calls `next()`, nothing is written.
 - `com/chumby/controlpanel/startup/StartupPanelUpdateTheme.as` and
   `com/chumby/controlpanel/dash/ThemePhotos.as`.
 
@@ -174,11 +174,13 @@ only about what exists in the export.
 too: `com/weather`, `com/accuweather`, `gov/noaa`, `com/adelavoice`,
 `com/blueocty`, `mx/transitions`.
 
-### Not done
+### Archive commit
 
-The internal archive's changes are **uncommitted** — that repo's HEAD is the
-July big-cleanup checkpoint and it is a frozen local archive, so I left the
-commit decision to you.
+Jan committed the archive side as `chumby-pi-internal` `ff8d798ea` the same
+day. Step 2 verified the parked package (md5/sha256 as above, `package/`
+equals the zip byte for byte) and the export counts, and corrected one
+number: the zip holds **32 files** in two directories (`unzip -l` reports
+34 entries because it lists the directories).
 
 ## Steps
 
@@ -217,6 +219,42 @@ Also in this step, because it can invalidate everything after it: **measure
 
 **CHECKPOINT 2** — the theme mechanism explained, the feature table, the fps
 number.
+
+#### Step 2 result — 2026-09-09
+
+Record: `ruffle/claude/dash-panel-survey.md` (theme mechanism §1, feature
+diff §2, desktop first contact §3, DSI box §4). The short version:
+
+- **No signing needed.** `ThemeLoader` loads the first existing of
+  `/tmp/theme.swf`, `/mnt/usb/theme.swf`, `/tmp/alttheme.swf`,
+  `/psp/theme.swf`, `/usr/widgets/theme.swf` with no check at all
+  (`ThemeLoader.as:12,61-89`). The `/usr/bin/verify … /etc/sony.pub` call
+  exists at two sites, but the startup one is unreachable (no
+  `gotoState(CHECK_THEME_STATE)` anywhere) and the other only fires from a
+  scheduler event, and only for a theme whose md5 matches a catalog entry.
+- A theme is an 860x480 AVM1 SWF whose frame 1 runs
+  `Theme.main(<subclass>, this)`; the base class and the 35-handler
+  contract are in the Space Theme export. The panel hands it a callbacks
+  object (~60 methods) and the theme decides where the widget rectangle is.
+- `externalthemes.xml` on the stick (present at panel start) replaces the
+  `files.chumby.com` catalog; its `url` entries are `file:///…` paths that
+  get `cp`'d to `/psp/theme.swf`. Only needed for picking from a list.
+- The theme "wizard" writes nothing; the catalog host is not archived and
+  did not answer one probe.
+- Fork facts: 141 of the Dash's 147 native ids are already dispatched; the
+  six missing are flip/LED/backlight and `_getWidgetNumber`. `file://`
+  loads already resolve against the rootfs (`navigator.rs:47-67`). New
+  semantics: widget-in-a-rectangle, `sys://` scheme, `chumbthumb`,
+  `imgtool`, `list_mounts`, the panel self-updater to intercept.
+- Desktop: the Dash panel runs 45 s without a panic under the July release
+  binary and stops in the network wizard (`ap_scan`,
+  `network_adapter_list.sh` missing); 2 267 AVM1 stack-underflow warnings
+  in that time, undiagnosed.
+- DSI box (survey §4): classic panel 11.8 fps / 82 % of a core; **Dash
+  panel 12.0 fps / 53 %**; **Space Theme standalone 9.5 fps / 105 %**. The
+  860x480 stage is not the problem — the theme's own per-frame work is, and
+  that is what step 3 has to size first. Box restored to the classic panel
+  afterwards (72 commits/6 s).
 
 ### Step 3 — two change lists
 
