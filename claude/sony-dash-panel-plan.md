@@ -360,6 +360,10 @@ is the first item.
 - **Item 15 (`sys://`) — done 2026-09-09**, fork issue 15: one more scheme
   in the navigator's local-path mapping, unit-tested; a live exercise waits
   on photos, which stay out of scope.
+- **Item 18 (stack-underflow warnings) — diagnosed 2026-09-09**, fork issue
+  18: all 2 331 are `ActionPop` discards on an empty stack from the AS2
+  class preamble, nothing reads them. No code change; a `RUST_LOG` filter
+  silences them, recorded with the other recipes.
 
 ### Step 5 — themes for the user, and panel selection
 
