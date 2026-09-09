@@ -12,6 +12,9 @@ Both repositories contain a folder called claude-docs. These are internal docume
 the project was active and had not reached maintenance mode, yet. This notes can be helpful for understanding design 
 decisions but are not changed any longer.
 
+Chumby is a historic, hackerfriendly, open-hardware and open-source device. Many
+resources are available online, still. Ask Jan, if they are needed and cannot be found.
+
 When being tasked to fix a bug or do a feature, create a plan with steps / checkpoints first.
 
 Non-negotiable rules:
