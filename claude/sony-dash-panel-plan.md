@@ -354,6 +354,9 @@ is the first item.
   driving the real UI to the Theme Selector and installing. Two lessons for
   the appliance side: seed `/psp/theme.swf` as a copy, never a link, and
   seed it at all — without a theme the Dash has no home screen.
+- **Item 17 (six unbound natives) — done 2026-09-09**, fork issue 17: all
+  six named, the three the panel calls answered (unflipped, no logo LED, no
+  second widget player). Small and self-contained.
 
 ### Step 5 — themes for the user, and panel selection
 
