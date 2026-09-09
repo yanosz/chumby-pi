@@ -322,6 +322,15 @@ is the first item.
   same evening** (fork, uncommitted at the time of writing): theme render on
   the box 179 → 63 ms, 72 frames pixel-identical, classic unchanged. Kiosk
   fps still to be read after a deploy.
+- **Item 12 (home screen offline) — first half done 2026-09-09**, fork
+  issue 12: fixtures only, no code. Two `/psp` files keep the wizard
+  away, the classic `authorize` answer passes, the theme loads over
+  `file://` and draws its widget rectangle. The Dash got its own fixture
+  tree (`ruffle/fixtures-dash/`, `run-dash.sh`) because the classic tree's
+  tracked `/tmp/nightmode` boots the Dash into night mode and the two
+  panels disagree on `/psp/alarms`. Second half, the widget area through
+  the XAPI fixtures, waits on a scope call: does the Dash need a widget
+  when the theme is the clock?
 
 ### Step 5 — themes for the user, and panel selection
 
