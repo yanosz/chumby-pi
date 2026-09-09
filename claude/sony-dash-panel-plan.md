@@ -273,6 +273,36 @@ Fork items into `ruffle/claude/issues.md`, appliance items into
 
 **CHECKPOINT 3** — you pick scope and order.
 
+#### Step 3 result — 2026-09-09
+
+Two lists, one issue per item, each sized and placed on the patch surface.
+
+**Fork** (`ruffle/claude/issues.md` 11–19): 11 the Space Theme costs a full
+core on the DSI box (M, investigate first — it can invalidate the rest);
+12 reach the home screen offline: `builtin=1` quits on the Dash, the live
+route needs `securityQuestion`/`securityAnswer`, `/xml/authorize`, and the
+new **XAPI** endpoint family that replaces `/xml/profiles` (L, the big one);
+13 exec touchpoints, `tzdump` (the clock's DST source) and `list_mounts`
+first, the theme copy strings in Rust like the widget cache (M); 14 widgets
+composed inside a theme-chosen rectangle via the panel's own proxy branch
+(M); 15 the `sys://` scheme (S); 16 `files.chumby.com` fixtures — the
+self-updater to block, `themes.xml` as a local catalog (S–M); 17 six
+unbound natives (S); 18 the stack-underflow warnings (S to diagnose);
+19 classic-shaped subsystems to re-verify: alarm hooks, ui-policy, audio,
+display stubs (M).
+
+**Appliance** (`claude/issues.md` 14–17): 14 fetch and unpack the package
+into `$STATE/dash/` (M); 15 `CHUMBY_PANEL` in `/etc/default`, a fixture tree
+per panel (M); 16 theme supply — seeded `/psp/theme.swf`, USB `theme.swf`
+through the existing mount link, then the picker via a generated local
+catalog (S then M); 17 docs, packaging, CI, boot theme unchanged (S).
+
+Proposed order for step 4: fork 11 → 12 → 13 (`tzdump`, `list_mounts`) →
+14 → 16 → 17 → 15 → 18 → 19, with appliance 14–16 interleaved once the
+panel reaches its home screen on the desktop. Everything sits in the
+additions commit except a possible core fix from 18 and a render-scale knob
+from 11.
+
 ### Step 4 — implement the fork side
 
 Work the approved list one item at a time, in `ruffle/` on branch `dev`,

@@ -951,3 +951,76 @@ Still to do, and the reason this issue stays open:
 
 Box state unchanged: 0.9.5, verbose `RUST_LOG` active, `/psp/list.m3u` still
 ends in a newline.
+
+---
+
+Number: 14
+Timestamp: 2026-09-09, 19:10
+Title: Dash: obtain and unpack the package into $STATE.
+Status: open — step 3 item (sony-dash-panel-plan.md)
+Description: `chumby-download-firmware` fetches the classic from
+`www.chumby.com/xml/controlpanel`; that endpoint never serves the Dash panel
+(internal `01-invocations.md`, 2026-09-09 addendum). The Dash package is one
+zip, `files.chumby.com/dash/chumby/chumby-hidc10-1.0.0.zip` (1 431 349 bytes,
+md5 `4fd7b88a993125a0c3d82aca8fe5673c`, also on the Wayback Machine at
+`web.archive.org/web/20190612153336id_/…`). The downloader gains a second
+source that verifies the md5 and extracts `controlpanel.swf`,
+`default_theme.swf` and `default_theme_name.txt` ("Space Theme") into
+`$STATE/dash/`, mirroring the package's own `install_chumby.sh:3-8` (which
+seeds `/psp/theme.swf` and `/psp/theme_name.txt`). Nothing else from the zip
+is needed by the player. Size: M (shell in the downloader, as it is today).
+
+---
+
+Number: 15
+Timestamp: 2026-09-09, 19:10
+Title: Dash: panel selection in the launcher and /etc/default.
+Status: open — step 3 item
+Description: An explicit, active `CHUMBY_PANEL=classic` line in
+`/etc/default/chumby-player` (no silent fallback — the no-silent-defaults
+rule), read by `chumby-player-run` to pick `$STATE/controlpanel.swf` or
+`$STATE/dash/controlpanel.swf`. The two panels must not share one virtual
+rootfs: the Dash writes its own `/psp/alarms` schema, `/psp/clock_locations`,
+`/psp/weatherType`, `/psp/brightness_high` at first start (fork survey §3),
+and the classic's `firsttime`/`nooverlay`/`profile.xml` mean nothing to it —
+so a fixture tree per panel (`$STATE/fixtures` and `$STATE/fixtures-dash`,
+seeded from a per-panel share tree), each with its own `ui-policy` file
+(fork issue 19b). FlashVars differ too: the classic gets `-PlocalCache=1`,
+the Dash none of that. Size: M (launcher, packaging, seed trees, CI
+install-test for both values).
+
+---
+
+Number: 16
+Timestamp: 2026-09-09, 19:10
+Title: Dash: how a theme reaches the panel, and how the user supplies one.
+Status: open — step 3 item, the headline of the plan
+Description: Fork survey §1.7: no signing, no server. Routes, cheapest
+first: (1) `$STATE/fixtures-dash/rootfs/psp/theme.swf` seeded from the
+package (issue 14) — the default; (2) a USB stick with `theme.swf` — beats
+`/psp/theme.swf` in `ThemeLoader.DEFAULT_PATHS`; reachable today through the
+launcher's `USB_LINK` (`chumby-player-run:146`, `fixtures/rootfs/mnt/usb` →
+the mount from `chumby-usb-mount@.service`), so this is a documentation item
+plus a check that the link is in the Dash tree; (3) the in-panel picker,
+which needs a catalog: either `externalthemes.xml` on the stick (schema in
+survey §1.5, `url` = `file:///…`) or a generated local catalog answered by
+the fork as `files.chumby.com/dash/production/themes/themes.xml` (fork issue
+16) listing `$STATE/themes/*.swf` — the appliance generates the XML at
+launch, the fork serves it. (3) also needs the copy-to-`/psp` exec strings
+(fork issue 13). Recommend (1)+(2) first, (3) after the fork side. Size: S
+for (1)+(2), M for (3).
+
+---
+
+Number: 17
+Timestamp: 2026-09-09, 19:10
+Title: Dash: docs, packaging, boot theme.
+Status: open — step 3 item
+Description: `docs/setup.md` gains the panel choice and the theme routes;
+the debs ship the Dash share tree and the second downloader source; CI's
+install test runs once per `CHUMBY_PANEL` value. The boot animation is
+unaffected: the boot opening was dropped in 0.9.1 and the Plymouth theme is
+built from the classic's `opening.swf`; the Dash's `default_opening.swf`
+(320x240, 174 frames) stays unused. Display: on the 1024x600 DSI the Dash
+scales to 1024x571 with 14 px bars (`showAll`), the classic to 800x600
+pillarboxed — no launcher change. Size: S.
