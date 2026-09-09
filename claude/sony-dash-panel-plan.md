@@ -312,6 +312,14 @@ is the first item.
 
 **CHECKPOINT 4** — per item, not just at the end.
 
+#### Step 4 progress
+
+- **Item 11 (theme cost) — diagnosed 2026-09-09**, fork issue 11: the
+  theme's 56 per-frame masks (one per text field) each cost a full-frame
+  clear and intersect in the tiny-skia backend; masks off, the theme
+  renders 3x faster on the box (179 → 60 ms). Script is 5 ms. Proposal:
+  bounded masks in the fork's own renderer crate, S–M. Waiting for the go.
+
 ### Step 5 — themes for the user, and panel selection
 
 - The user-supplied theme route, whichever step 2 shows to be real: a seeded
