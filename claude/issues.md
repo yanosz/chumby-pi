@@ -951,3 +951,30 @@ Still to do, and the reason this issue stays open:
 
 Box state unchanged: 0.9.5, verbose `RUST_LOG` active, `/psp/list.m3u` still
 ends in a newline.
+
+---
+
+Number: 18
+Timestamp: 2026-09-10, 19:57
+Title: Sony Dash panel support — parked on the sony-dash branch.
+Status: parked — steps 1-4 done, step 5 not started
+Description: The Dash work is on branch `sony-dash`, tip `6f0439a` (pushed to
+origin), whose gitlink is the fork's `sony-dash` tip `0ea50a70b`. dev was
+rewound to `e7aa3ee` so the Pi appliance work continues without the Dash tree
+in the way. Everything Dash lives on that branch and nowhere else:
+`claude/sony-dash-panel-plan.md` (steps 1-4 with their records) and appliance
+issues 14-17 — package into `$STATE`, panel selection in the launcher and
+`/etc/default`, how a theme reaches the panel, docs/packaging/boot theme — so
+numbers 14-17 are reserved here and must not be reused on dev. Player side:
+fork issues 11-21 on the fork's `sony-dash` branch, with the fork's dev
+rewound to `75f3acf28` — its counterpart pointer is fork issue 22.
+Next there, gated by CHECKPOINT 5: step 5, themes for the user and panel
+selection (seeded `/psp/theme.swf`, the `/mnt/usb/externalthemes.xml` stick,
+`chumby-download-firmware` fetching panel and theme apart under `$STATE`, an
+explicit active setting naming panel and theme, docs and the Dash's
+`default_opening.swf` boot theme against Plymouth's classic 132 frames).
+Two step-4 findings want the DSI box before step 5: fork issue 20 (brightness
+via native 5,22 never reaches the backlight on platform `yume`) and fork issue
+21 (the silent-alarm cancel is probably unguarded on the Dash).
+Untracked and in git nowhere, left in the fork worktree:
+`ruffle/fixtures-dash/rootfs/psp/guid` and `.../theme.swf`.
