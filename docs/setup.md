@@ -152,7 +152,10 @@ the player.
 
 Two files, both surviving upgrades:
 
-- **`/etc/chumby-player/player.toml`** — owner policy: volume cap,
+- **`/etc/chumby-player/player.toml`** — owner policy: `volume_cap`
+  (what the panel's 100 % volume reaches — 50 by default, since every
+  other stage in the chain runs at unity and the slider is the only
+  fader),
   `brightness_cap` (how much of your display's backlight range the
   panel's 100 % reaches — 25 by default, because most panels are far too
   bright at full duty and the interesting settings crowd into the bottom
