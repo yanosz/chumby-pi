@@ -982,3 +982,26 @@ via native 5,22 never reaches the backlight on platform `yume`) and fork issue
 21 (the silent-alarm cancel is probably unguarded on the Dash).
 Untracked and in git nowhere, left in the fork worktree:
 `ruffle/fixtures-dash/rootfs/psp/guid` and `.../theme.swf`.
+
+---
+
+Number: 19
+Timestamp: 2026-09-10, 21:45
+Title: 0.9.6 — the backlight cap on chumby-pi-3.
+Status: open — the 25 % value is Jan's call, sliders being set now
+Description: Fork issue 23 caps the backlight: `brightness_cap` in
+`player.toml`, shipped active at 25, so the panel's 0-100 spreads over a
+quarter of `max_brightness` instead of all of it. Appliance side: version
+0.9.6 (`build-debs.sh:21` — a conffile template change forces the bump),
+`docs/setup.md` §5 and design §8.
+Deployed to chumby-pi-3 (192.168.42.24) 2026-09-10 21:38 via
+`pkg/deploy-pi.sh`. The box's `player.toml` was unmodified, so dpkg took the
+new default outright — no `.dpkg-dist`, `brightness_cap = 25` active, the
+other four keys unchanged. Verified: `sense1/brightness` 65535 →
+`/sys/class/backlight/10-0045/brightness` **64** (= 25 % of 255), unit
+`NRestarts=0`, `ruffle_desktop` up.
+To let Jan find his level, both panel settings were put at the top of the new
+scale: `/psp/daymode_brightness` and `nightmode_brightness` = 100 (old day
+value 7.2222 kept as `daymode_brightness.bak-precap`; old night value was
+1.5). Night must come back down once he has picked — at 100 the idle dim
+does not dim.
