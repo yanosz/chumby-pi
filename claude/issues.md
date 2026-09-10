@@ -1005,3 +1005,25 @@ scale: `/psp/daymode_brightness` and `nightmode_brightness` = 100 (old day
 value 7.2222 kept as `daymode_brightness.bak-precap`; old night value was
 1.5). Night must come back down once he has picked — at 100 the idle dim
 does not dim.
+
+---
+
+Number: 20
+Timestamp: 2026-09-10, 22:25
+Title: 0.9.7 — one volume ceiling on chumby-pi-3, no exemptions.
+Status: open — the 50 % value and the Klaxon's loudness are Jan's to judge
+Description: Fork issue 24: `volume_cap` shipped at 50 instead of 100, and the
+backup-alarm Klaxon brought under it (the FR13 exemption reversed). Appliance
+side: version 0.9.7 (`build-debs.sh:21`, forced by the conffile template
+change) and `docs/setup.md` §5.
+Deployed to chumby-pi-3 2026-09-10 22:20. The conffile carries
+`volume_cap = 50` and `brightness_cap = 25`, again with no `.dpkg-dist` —
+the box's copy still matched what 0.9.6 shipped.
+Everything below the slider was already at unity and stays untouched: ALSA
+`PCM` 100 % on both cards, PipeWire sinks `vol: 1.00`, the SWF mixer at the
+CLI default 1, `/psp/backup_alarm_volume` absent (knob default 100, now × 50).
+Set to the top of the new scale for Jan to dial in: `/psp/volume` 32 → 100,
+`/psp/alarm_volume` 44 → 100. Player restarted, unit active, backlight still
+64 of 255.
+The one thing this makes worse: the never-done on-device Klaxon loudness check
+now applies to a tone at half scale.
