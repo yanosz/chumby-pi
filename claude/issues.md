@@ -949,8 +949,12 @@ Still to do, and the reason this issue stays open:
 3. Then revert the `RUST_LOG` line in `/etc/default/chumby-player` (backup at
    `.bak-preverbose`) and close this issue.
 
-Box state unchanged: 0.9.5, verbose `RUST_LOG` active, `/psp/list.m3u` still
-ends in a newline.
+Box state, read off chumby-pi-3 on 2026-09-10, 19:58 (192.168.42.24, wired):
+`chumby-player` 0.9.5, so the fix is still undeployed; unit enabled and
+running since 2026-09-09 19:15 with `ruffle_desktop` at 82 % of a core;
+`/etc/default/chumby-player` (Aug 28 12:23) still carries the verbose
+`RUST_LOG`, backup `.bak-preverbose` beside it; `card0-DSI-1: connected`,
+backlight `10-0045` at 4/255.
 
 ---
 
