@@ -342,16 +342,20 @@ decision with time injected — clock trigger, network trigger, chumby.com
 trigger, 5-min spacing, re-evaluation against the state at player start,
 crash backoff, probe cadence; `child.rs` the process group; `nm.rs`
 NetworkManager over D-Bus (zbus, polled every 5 s); `probe.rs` the chumby.com
-GET; `main.rs` the event loop. 15 unit tests pass, no warnings. Deps: libc,
+GET; `main.rs` the event loop. 14 unit tests pass, no warnings. Deps: libc,
 toml (the fork's major, same `access_chumby_com` parsing as `config.rs`),
-zbus — 89 crates in `Cargo.lock`.
+zbus, ureq.
 
 Two implementation choices against the design text:
 - D5: the clock is read as (realtime − monotonic) on every 1 s tick instead
   of a `timerfd` with `TFD_TIMER_CANCEL_ON_SET`. The loop ticks anyway; a
   step is seen within 1 s, with no extra fd or unsafe code.
-- D7: a bare HTTP/1.1 GET; wget's redirect following is not reproduced
-  (the URL answers 200 without a redirect, checked 2026-09-24).
+- D7: the probe follows redirects like wget (up to 20, HTTPS included) —
+  Jan, 2026-09-24, replacing a first bare HTTP GET. `ureq` 3 with rustls
+  (no gzip); `Cargo.lock` grows from 89 to 122 crates. Network tests,
+  `#[ignore]`d so CI never runs them (`cargo test -- --ignored`): chumby.com
+  answers; `http://github.com/` (301 → https) is followed to success; a
+  404 fails.
 
 Desktop smoke run of the binary with a stand-in player (`sh -c 'sleep …
 & sleep 2; exit N'`): crash spacing 3/6/12/24/48 s; NM read as `full`;

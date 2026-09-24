@@ -8,4 +8,5 @@ description = "Owns the chumby player process and restarts it when the world cha
 [dependencies]
 libc = "0.2"
 toml = "1.0.6"
+ureq = { version = "3", default-features = false, features = ["rustls"] }
 zbus = "5"
