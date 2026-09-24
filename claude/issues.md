@@ -1027,3 +1027,94 @@ Set to the top of the new scale for Jan to dial in: `/psp/volume` 32 → 100,
 64 of 255.
 The one thing this makes worse: the never-done on-device Klaxon loudness check
 now applies to a tone at half scale.
+
+---
+
+Number: 21
+Timestamp: 2026-09-24, 10:15
+Title: After a cold boot the nightmode alarms never ring — the panel scheduled them against a clock 5½ days slow.
+Status: documented, fix deferred (Jan, 2026-09-24) — no remedy chosen; player side is fork issue 25
+Description: Jan: chumby-pi-3 did not run the "Daily at 8:00" nightmode-off
+alarm after it was booted on Monday. Read off the box 2026-09-24 10:02
+(192.168.42.24, 0.9.7, verbose `RUST_LOG` from issue 13 still active):
+
+    (Alarm heartbeat Daily at 8:00 rings in -544945 seconds, at:Thu Sep 17 08:00:00 GMT+0200 2026)
+    (Alarm heartbeat Daily at 23:00 rings in -577345 seconds, at:Wed Sep 16 23:00:00 GMT+0200 2026)
+
+Both enabled daily alarms point at times days in the past, and have since
+boot. The cause is the wall clock at player start:
+
+- Boot (`btime` 1790028539) was 2026-09-22 00:08:59 CEST; `ruffle_desktop`
+  pid 1143 started 00:09:30.
+- systemd stamped the unit `active since Wed 2026-09-16 08:53:04` at monotonic
+  30.4 s — so 30 s after boot the clock read Sep 16 08:53, **5 d 15 h 16 min
+  behind**. The Pi has no RTC (`RTC time: n/a`), no fake-hwclock; timesyncd
+  restores the last saved time and steps it forward only once NTP answers.
+  A step, not a slew: timesyncd (pid 306; no ntpd or chrony installed)
+  slews only offsets below `NTP_MAX_ADJUST = 0.4` s and sets larger ones
+  with `ADJ_SETOFFSET` (systemd v257 `timesyncd-manager.c:52,247-272`), and
+  the kernel's 500 ppm slew limit would cover at most ~104 s over this
+  uptime, not 5 d 15 h.
+- `chumby-player.service` orders only `After=systemd-user-sessions.service
+  getty@tty1.service`; `time-sync.target` was never reached (monotonic 0)
+  and `systemd-time-wait-sync.service` is disabled.
+
+The panel computed each alarm's next time once, from Sep 16 08:53:
+`computeNextAlarmTimeDaily` (F2:10805) gives 23:00 → Sep 16 23:00 and
+08:00 → Sep 17 08:00, exactly the two times logged. `Alarm.step` (F2:10897)
+rings only while `now - _alarmTime` is within `RING_WINDOW = 15000` ms
+(F2:10186, test at F2:10910), and a new time is computed only after a ring.
+After the forward step every enabled alarm sits outside its window for good;
+nothing in the panel notices a clock step. The 23:00 nightmode-on alarm is
+dead for the same reason. Any enabled alarm — audio ones included — is
+affected after a boot with a stale clock, until the player restarts.
+
+Not related to issue 13 / fork `alarm_guard.rs`: no alarm reaches
+`ringAlarm`, so the guard never runs.
+
+Side finding, not pursued: the journal is volatile (files under
+`/run/log/journal`, `/var/log/journal` empty), 17 MB, and with the verbose
+`RUST_LOG` it reaches back only to 2026-09-23 15:22 — the boot and the NTP
+step are already rotated out. The issue-13 note of a ≈5.9 GB persistent cap
+does not describe this box as it is now.
+
+Remedy options, none chosen:
+- **A — appliance: start the player after the clock is set.** Order the unit
+  after `time-sync.target` with `systemd-time-wait-sync` enabled. That unit
+  is `TimeoutStartSec=infinity`, so offline the panel would never start; it
+  needs a bounded wait. Does not help a clock that is stepped later (network
+  arrives after the timeout).
+- **B — player: re-arm alarms on a wall-clock step.** Compare wall-clock
+  against monotonic time; on a step beyond a threshold, recompute every
+  enabled alarm's `_alarmTime`. Covers late syncs and manual clock changes
+  too. Fork work, consumer list first.
+- **C — both.**
+
+---
+
+Number: 22
+Timestamp: 2026-09-24, 10:50
+Title: The panel showed WLAN as good while the WLAN was not usable.
+Status: documented, cause unknown — no evidence left on the box
+Description: Jan, 2026-09-24: roughly 1-2 weeks ago the panel's WLAN
+information looked good, but the WLAN could not be used. No log exists for
+it: the journal on chumby-pi-3 is volatile and reaches back only to
+2026-09-23 15:22 (issue 21, side finding). What the panel's WLAN display is
+able to show, from the code — player side in fork issue 26:
+
+- **Link quality** is signal strength, nothing more: `/proc/net/wireless`
+  `link` (0-70, cfg80211's signal + 110 dBm, clamped) rescaled to percent.
+  `connected="1"` means only "the default route is on a wireless interface
+  and `/proc/net/wireless` has a line for it". Association status,
+  gateway and DNS reachability are not consulted. Polled live: the dashboard
+  meter every 60 frames, the Info screen on each open.
+- **IP, netmask, gateway, DNS, SSID** on the Info screen are read once, in
+  the panel's boot chain, and never refreshed.
+
+So a strong signal with a dead link, or a network that changed after player
+start, both render as "good". Same family as issue 21: the panel samples the
+system once, or through a proxy, and does not notice it changing.
+
+Next time it happens, before anything is restarted: `ip addr`, `ip route`,
+`cat /proc/net/wireless`, `iw dev wlan0 link`, `ping` the gateway and a name,
+and `journalctl --since "<absolute time>"` while the lines still exist.
