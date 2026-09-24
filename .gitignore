@@ -25,3 +25,6 @@ pdf/
 
 # KiCad generation tryout, not part of the record
 /hardware/breakout-tryout/
+
+# chumby-supervisor build output
+/supervisor/target/

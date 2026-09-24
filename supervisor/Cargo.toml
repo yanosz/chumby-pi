@@ -1,0 +1,11 @@
+[package]
+name = "chumby-supervisor"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Owns the chumby player process and restarts it when the world changes under it"
+
+[dependencies]
+libc = "0.2"
+toml = "1.0.6"
+zbus = "5"

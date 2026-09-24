@@ -334,3 +334,28 @@ alarm flags are half-updated (`snoozeAlarm`, F2:10973-10980), which made
 the first alarm run quit at the snooze. Desktop-verified: idle quit,
 press hold + cancel, ring → snooze → re-ring → turn-off → quit 60 s after
 the press.
+
+## Step 3c — result, 2026-09-24
+
+`supervisor/` (crate `chumby-supervisor`): `policy.rs` holds every
+decision with time injected — clock trigger, network trigger, chumby.com
+trigger, 5-min spacing, re-evaluation against the state at player start,
+crash backoff, probe cadence; `child.rs` the process group; `nm.rs`
+NetworkManager over D-Bus (zbus, polled every 5 s); `probe.rs` the chumby.com
+GET; `main.rs` the event loop. 15 unit tests pass, no warnings. Deps: libc,
+toml (the fork's major, same `access_chumby_com` parsing as `config.rs`),
+zbus — 89 crates in `Cargo.lock`.
+
+Two implementation choices against the design text:
+- D5: the clock is read as (realtime − monotonic) on every 1 s tick instead
+  of a `timerfd` with `TFD_TIMER_CANCEL_ON_SET`. The loop ticks anyway; a
+  step is seen within 1 s, with no extra fd or unsafe code.
+- D7: a bare HTTP/1.1 GET; wget's redirect following is not reproduced
+  (the URL answers 200 without a redirect, checked 2026-09-24).
+
+Desktop smoke run of the binary with a stand-in player (`sh -c 'sleep …
+& sleep 2; exit N'`): crash spacing 3/6/12/24/48 s; NM read as `full`;
+chumby.com probed 60 s after `full` (probe on via a scratch player.toml) →
+reachable; after the leader exits its orphan child in the same group is
+gone; SIGTERM → "signal 15 — stopping the player", player group stopped,
+nothing left. Clock and network triggers against a real player are 3e.
