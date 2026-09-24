@@ -191,7 +191,7 @@ fn main() {
             match child::spawn(&args.player, tx.clone()) {
                 Ok(p) => {
                     log!("player started, pid {}", p.pid());
-                    policy.player_started(clock_offset_ms());
+                    policy.player_started(now, clock_offset_ms());
                     sent = false;
                     player = Some(p);
                 }
@@ -258,7 +258,7 @@ fn main() {
                 log!("NetworkManager connectivity: {}", state.map(nm::name).unwrap_or("unreadable"));
                 nm_state = state;
                 let full = state.map(|c| c == nm::FULL);
-                policy.set_nm(full);
+                policy.set_nm(Instant::now(), full);
                 schedule.set_full(Instant::now(), full == Some(true));
             }
             Ok(Event::Probe(result)) => {

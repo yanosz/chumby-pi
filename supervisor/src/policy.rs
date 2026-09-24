@@ -12,6 +12,10 @@ use std::time::{Duration, Instant};
 pub const CLOCK_STEP_MS: i64 = 15_000;
 /// At most one triggered restart per this interval.
 pub const TRIGGER_SPACING: Duration = Duration::from_secs(300);
+/// After the first player start NM needs a few seconds for its first
+/// connectivity check (`none` at start, `full` 5 s later on chumby-pi-3);
+/// reaching full inside this window is its starting state, not a recovery.
+pub const NM_SETTLE: Duration = Duration::from_secs(30);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Reason {
@@ -39,6 +43,7 @@ pub struct Policy {
     /// `None`: NetworkManager unavailable — the network trigger is off.
     nm_full: Option<bool>,
     seen_not_full: bool,
+    settle_until: Option<Instant>,
     chumby: Option<bool>,
     pending: bool,
     wants_restart: bool,
@@ -54,6 +59,7 @@ impl Policy {
             offset_ms,
             nm_full: None,
             seen_not_full: false,
+            settle_until: None,
             chumby: None,
             pending: false,
             wants_restart: false,
@@ -61,7 +67,10 @@ impl Policy {
         }
     }
 
-    pub fn player_started(&mut self, offset_ms: i64) {
+    pub fn player_started(&mut self, now: Instant, offset_ms: i64) {
+        if self.settle_until.is_none() {
+            self.settle_until = Some(now + NM_SETTLE);
+        }
         self.base_offset_ms = offset_ms;
         self.offset_ms = offset_ms;
         self.base_chumby = self.chumby;
@@ -86,9 +95,13 @@ impl Policy {
         self.offset_ms = offset_ms;
     }
 
-    pub fn set_nm(&mut self, full: Option<bool>) {
-        if full == Some(false) {
-            self.seen_not_full = true;
+    pub fn set_nm(&mut self, now: Instant, full: Option<bool>) {
+        match full {
+            Some(false) => self.seen_not_full = true,
+            Some(true) if self.settle_until.is_some_and(|t| now < t) => {
+                self.seen_not_full = false;
+            }
+            _ => {}
         }
         self.nm_full = full;
     }
@@ -235,10 +248,12 @@ impl ProbeSchedule {
 mod tests {
     use super::*;
 
+    /// A player started long enough ago that NM has settled.
     fn started(chumby_com: bool, nm: Option<bool>) -> Policy {
         let mut p = Policy::new(chumby_com, 1_000);
-        p.set_nm(nm);
-        p.player_started(1_000);
+        let long_ago = Instant::now() - 2 * NM_SETTLE;
+        p.set_nm(long_ago, nm);
+        p.player_started(long_ago, 1_000);
         p
     }
 
@@ -268,9 +283,9 @@ mod tests {
     fn test_network_drop_ignored_recovery_requests() {
         let t = Instant::now();
         let mut p = started(false, Some(true));
-        p.set_nm(Some(false));
+        p.set_nm(t, Some(false));
         assert_eq!(p.tick(t), None, "a drop alone never restarts");
-        p.set_nm(Some(true));
+        p.set_nm(t, Some(true));
         assert_eq!(p.tick(t), Some(Change::Requested(vec![Reason::Network])));
     }
 
@@ -278,7 +293,7 @@ mod tests {
     fn test_network_not_full_at_start_then_full_requests() {
         let t = Instant::now();
         let mut p = started(false, Some(false));
-        p.set_nm(Some(true));
+        p.set_nm(t, Some(true));
         assert_eq!(p.tick(t), Some(Change::Requested(vec![Reason::Network])));
     }
 
@@ -286,9 +301,9 @@ mod tests {
     fn test_network_drop_again_before_restart_withdraws() {
         let t = Instant::now();
         let mut p = started(false, Some(false));
-        p.set_nm(Some(true));
+        p.set_nm(t, Some(true));
         assert!(matches!(p.tick(t), Some(Change::Requested(_))));
-        p.set_nm(Some(false));
+        p.set_nm(t, Some(false));
         assert_eq!(p.tick(t), Some(Change::Dropped { was_requested: true }));
     }
 
@@ -296,7 +311,7 @@ mod tests {
     fn test_no_network_manager_no_network_trigger() {
         let t = Instant::now();
         let mut p = started(false, None);
-        p.set_nm(None);
+        p.set_nm(t, None);
         assert_eq!(p.tick(t), None);
     }
 
@@ -304,10 +319,10 @@ mod tests {
     fn test_spacing_and_drop_inside_window() {
         let t0 = Instant::now();
         let mut p = started(false, Some(false));
-        p.set_nm(Some(true));
+        p.set_nm(t0, Some(true));
         assert!(matches!(p.tick(t0), Some(Change::Requested(_))));
         assert!(p.player_exited(t0), "exit after a request is the requested one");
-        p.player_started(1_000);
+        p.player_started(t0, 1_000);
 
         let t1 = t0 + Duration::from_secs(60);
         p.set_offset(100_000);
@@ -334,6 +349,34 @@ mod tests {
     }
 
     #[test]
+    fn test_nm_reaching_full_while_settling_is_the_start_state() {
+        let t0 = Instant::now();
+        let mut p = Policy::new(false, 1_000);
+        p.player_started(t0, 1_000);
+        p.set_nm(t0, Some(false));
+        p.set_nm(t0 + Duration::from_secs(5), Some(true));
+        assert_eq!(p.tick(t0 + Duration::from_secs(5)), None, "boot: NM's first check");
+        p.set_nm(t0 + NM_SETTLE, Some(false));
+        p.set_nm(t0 + NM_SETTLE + Duration::from_secs(1), Some(true));
+        let t = t0 + NM_SETTLE + Duration::from_secs(1);
+        assert_eq!(p.tick(t), Some(Change::Requested(vec![Reason::Network])));
+    }
+
+    #[test]
+    fn test_settling_is_only_after_the_first_start() {
+        let t0 = Instant::now();
+        let mut p = Policy::new(false, 1_000);
+        p.player_started(t0, 1_000);
+        p.set_nm(t0 + NM_SETTLE, Some(true));
+        assert!(!p.player_exited(t0 + NM_SETTLE));
+        let t1 = t0 + NM_SETTLE + Duration::from_secs(1);
+        p.set_nm(t1, Some(false));
+        p.player_started(t1, 1_000);
+        p.set_nm(t1 + Duration::from_secs(2), Some(true));
+        assert_eq!(p.tick(t1 + Duration::from_secs(2)), Some(Change::Requested(vec![Reason::Network])));
+    }
+
+    #[test]
     fn test_crash_is_not_a_requested_exit() {
         let mut p = started(false, Some(true));
         assert!(!p.player_exited(Instant::now()));
@@ -357,7 +400,7 @@ mod tests {
         p.set_chumby(false);
         assert_eq!(p.tick(t), Some(Change::Requested(vec![Reason::ChumbyCom])));
         assert!(p.player_exited(t));
-        p.player_started(1_000);
+        p.player_started(t, 1_000);
         let later = t + TRIGGER_SPACING;
         assert_eq!(p.tick(later), None, "started while down: down is the baseline");
         p.set_chumby(true);

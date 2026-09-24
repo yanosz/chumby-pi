@@ -57,7 +57,11 @@ From `/home/jan/chumby_backup`:
   starting and restarting the control panel. (2026-09-24)
 - R3. Network: record the state at panel start; a change to NetworkManager
   connectivity `full` restarts the panel; connection drops are ignored.
-  (2026-09-24)
+  (2026-09-24) Amended after test 1 (Jan, 2026-09-24): NM reaching `full`
+  within 30 s of the *first* player start is its starting state, not a
+  recovery — at boot NM reports `none` until its first check, `full` 5 s
+  later on chumby-pi-3, which restarted the panel on every boot
+  (`policy::NM_SETTLE`).
 - R4. With `access_chumby_com` enabled, after a change to `full`, the
   supervisor probes chumby.com itself, the chumby way (the original's
   `wget` of `www.chumby.com/crossdomain.xml`, F2:9696). A loss of chumby.com
