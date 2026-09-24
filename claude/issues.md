@@ -576,8 +576,8 @@ express and would therefore be player work; (C) leave it. **Jan chose C.**
 Number: 13
 Timestamp: 2026-08-28, 12:30
 Title: A "Birds + SWR3" alarm went silent about 100 s in and stayed silent.
-Status: fixed and device-verified 2026-09-24 (fork issue 10, `alarm_guard.rs`);
-only the revert of the verbose `RUST_LOG` on chumby-pi-3 is left before closing.
+Status: closed 2026-09-24 — fixed and device-verified (fork issue 10,
+`alarm_guard.rs`); the verbose `RUST_LOG` on chumby-pi-3 is reverted.
 Cause (2026-09-01): the 08:00 nightmode alarm cancels the still-ringing 07:59
 alarm through the panel's own `stopAlarmsExcept`.
 Description: Jan set a one-shot alarm on the "Birds + SWR3" My Streams entry
@@ -988,6 +988,18 @@ inert: `_alarmRefCount` is only written and traced (F2:11783,
 
 `/psp/alarms` restored (`cmp` identical), panel restarted to reload it,
 backup removed.
+
+Update 2026-09-24, 20:17 — closed. `/etc/default/chumby-player` restored
+from `.bak-preverbose` (the two differed only in line 55; the backup is
+byte-identical to the 0.9.8 template), backup removed, service restarted
+(`Result=success`); the player now runs with `RUST_LOG=warn`, the
+launcher default. Why now (Jan asked whether the verbose log is a
+problem): not for stability — the journal is volatile and capped near
+18 MB (10 % of the 182 MB `/run`), journald rotates it and used 5 s CPU in
+1 h 40 min — but the panel's periodic trace (~30 lines, 4.4 KB/min) filled
+that cap in under a day, so rare events aged out before anyone looked.
+Steady state afterwards: 7 journal lines in 2 min, none from the player;
+the supervisor logs regardless of `RUST_LOG`.
 
 ---
 
