@@ -576,11 +576,10 @@ express and would therefore be player work; (C) leave it. **Jan chose C.**
 Number: 13
 Timestamp: 2026-08-28, 12:30
 Title: A "Birds + SWR3" alarm went silent about 100 s in and stayed silent.
-Status: cause identified on the device 2026-09-01 — the 08:00 nightmode alarm
-cancels the still-ringing 07:59 alarm through the panel's own
-`stopAlarmsExcept`. Nothing in the player, the stream or the network is
-involved. Option B built and desktop-verified 2026-09-01 (fork issue 10);
-device verification outstanding.
+Status: fixed and device-verified 2026-09-24 (fork issue 10, `alarm_guard.rs`);
+only the revert of the verbose `RUST_LOG` on chumby-pi-3 is left before closing.
+Cause (2026-09-01): the 08:00 nightmode alarm cancels the still-ringing 07:59
+alarm through the panel's own `stopAlarmsExcept`.
 Description: Jan set a one-shot alarm on the "Birds + SWR3" My Streams entry
 (the m3u of device issue 10) for 07:59 and left it to ring. The birds played,
 SWR3 took over, and after roughly a minute and a quarter the sound stopped.
@@ -955,6 +954,40 @@ running since 2026-09-09 19:15 with `ruffle_desktop` at 82 % of a core;
 `/etc/default/chumby-player` (Aug 28 12:23) still carries the verbose
 `RUST_LOG`, backup `.bak-preverbose` beside it; `card0-DSI-1: connected`,
 backlight `10-0045` at 4/255.
+
+Update 2026-09-24, 20:04 — device verification of the guard, chumby-pi-3,
+0.9.8 (fork `5f585c1bd`, which carries `75f3acf28`). The running player
+logged `wrapped AlarmSet.prototype.stopAlarmsExcept` at start. Two
+one-shot alarms were added to a backed-up `/psp/alarms`, the pairing of
+this issue: "Guard test audio" on the Birds + SWR3 entry at 20:01
+(`auto_dismiss="1"`, `duration="3"`) and "Guard test silent" at 20:02
+(`type="none" action="nightmode" action_param="off" auto_dismiss="1"`).
+Journal:
+
+    20:01:00.050  Alarm.step(): ringing Sep 24 2026, 20:01
+    20:01:00.079  mpv pid=3500 url="/psp/birds.mp3" vol=0
+    20:01:31.979  mpv pid=3541 url="http://liveradio.swr.de/…/play.mp3" vol=50
+    20:02:00.121  Alarm.step(): ringing Sep 24 2026, 20:02
+    20:02:00.122  silent alarm "Guard test silent" rang — not cancelling ringing alarms
+    20:02:00.123  Alarm.doPrePostAction(): night mode off
+    20:04:00.148  Alarm.stopAlarmSoundContinuous(): Sep 24 2026, 20:01   (its duration)
+    20:04:00.171  Alarm.stopAlarm() Sep 24 2026, 20:01 isCancel:
+
+No `stopAlarmsExcept(): cancelling`; SWR3's mpv 3541 was alive 41 s after
+the silent alarm and until the audio alarm's own end at 20:04:00; the
+silent alarm still did its night-mode action. Pass.
+
+Seen in the same trace, harmless: the silent alarm's `stopAlarm(false)`
+(F2:11190) decrements `AlarmSet._alarmRefCount` (F2:12060) that its branch
+never incremented (`AlarmSet.ringAlarm`, F2:12055, runs for sounding
+alarms only) — "count is 0" while the audio alarm still rang, and
+`ScreenManager.stopAlarm()` sets `ScreenManager.mode = "stopAlarm"`
+(F2:9084). Stock behaviour (stock would reach −1 after its cancel), and
+inert: `_alarmRefCount` is only written and traced (F2:11783,
+12057-12069), `ScreenManager.mode` is read nowhere in the decompile.
+
+`/psp/alarms` restored (`cmp` identical), panel restarted to reload it,
+backup removed.
 
 ---
 
