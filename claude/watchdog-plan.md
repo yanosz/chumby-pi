@@ -1,9 +1,9 @@
 # Panel watchdog — plan
 
 Started 2026-09-24. Motivation: appliance issues 21 (alarms dead after a
-clock step) and 22 (WLAN shown good, unusable). Status: **step 1
-(requirements) done 2026-09-24; step 2, design, in progress.** Nothing
-built.
+clock step) and 22 (WLAN shown good, unusable). Status: **steps 1
+(requirements) and 2 (design) done and approved 2026-09-24; step 3 not
+started.** Nothing built.
 
 ## Ground truth: what the original firmware did
 
@@ -116,9 +116,10 @@ From `/home/jan/chumby_backup`:
   `raspberrypi-sys-mods`): a 182 MB `/run` tmpfs, capped near 18 MB, lost
   at every reboot. Accepted. Reverting the verbose `RUST_LOG` (issue 13)
   is what stretches its reach. (2026-09-24)
-- R14. Every restart trigger waits while (a) an alarm is ringing or
-  snoozing, or (c) someone is using the screen — "in use" means a tap
-  event less than 60 s ago — until that ends. Music playing alone does
+- R14. Every restart trigger waits while (a) an audio alarm (not a
+  silent `type="none"` one) is ringing or snoozing, or (c) someone is
+  using the screen — "in use" means a tap event less than 60 s ago —
+  until that ends. Music playing alone does
   not hold a restart back. Triggers arriving during the wait merge into
   one restart when it ends. Reason for (a): a restart silences a ringing
   alarm, and the restarted panel does not ring it again
@@ -127,10 +128,100 @@ From `/home/jan/chumby_backup`:
 
 ## Open questions
 
-- R12: the start-spacing values (design; my proposal: a delay growing from
-  a few seconds to about a minute, reset once the player has stayed up).
-- R14 (design): how the supervisor learns the alarm state and the last
-  tap time from the player process.
+- Moved to the design section below (D3 spacing, D4 alarm/tap state).
+
+## Design (step 2, approved by Jan 2026-09-24)
+
+Facts read for it: `pkg/chumby-player/chumby-player-run` (all 282 lines),
+`chumby-player.service`, `chumby-ctl`; fork `input.rs`, `backup_alarm.rs`,
+`fixture.rs:45-62`, `app.rs` chumby hooks, `claude/patch-surface.md`.
+
+- D1. Process layout. `systemd → chumby-player-run --kiosk → cage →
+  chumby-player-run` (seeding, boot intro — unchanged) `→ exec
+  chumby-supervisor -- <the player command line the launcher builds
+  today>`. The supervisor is cage's one client, so cage survives player
+  restarts; each restart is a new Wayland client in the same cage (to be
+  verified in step 3). The unit keeps `Restart=on-failure`, now for the
+  supervisor only (R12).
+- D2. Rust binary (Rust-over-shell principle; needs timerfd and D-Bus,
+  which shell cannot do), in a new crate in chumby-pi — it is appliance
+  code by the docs split; CI gains a second small cargo build. The
+  player-side half of D4 is fork work. (Q-a, Jan, 2026-09-24)
+- D3. Restart = the player runs in its own process group; the supervisor
+  sends the group SIGTERM, waits up to 10 s (`stop_control_panel`'s
+  budget), then SIGKILL. The group matters: mpv (music, alarm stream) and
+  the backup-alarm Klaxon are the player's children and would otherwise
+  outlive it. Crash restarts (R12): delay 3 s, doubling to 60 s, reset once
+  the player has run 5 min. Triggered restarts: at most one per 5 min;
+  a trigger inside that window merges into one restart at its end, as
+  under R14 (Q-d, Jan, 2026-09-24).
+  Re-evaluation (Jan, 2026-09-24): a pending restart — waiting for the
+  5-min window or for the player (D4) — is dropped when conditions are
+  back to good. The decision is taken when the restart would run, against
+  the state recorded at the last panel start: clock — the accumulated
+  offset change since then is back within 15 s; network — NM is no longer
+  `full` (the next change to `full` triggers anew), while `full` after a
+  drop still restarts, that recovery being R3's point; chumby.com —
+  reachability equals the one at panel start. While the player holds a
+  request, the supervisor withdraws it over the FIFO.
+- D4. Deferral (R14) is decided *in the player*, where the state lives, so
+  there is no race between "alarm starts ringing" and "supervisor kills":
+  1. The supervisor writes `restart-when-idle` to the control FIFO
+     (`--chumby-control`; unknown commands are already ignored,
+     `input.rs:15-17`, so the protocol grows without breaking chumby-ctl).
+  2. The player sets a flag; merging falls out of it (R14).
+  3. Each event-loop pass (next to the existing `take_pointer` hook,
+     `app.rs:458`) it checks: no *audio* alarm (`_type != "none"`) with
+     `_alarmRinging` or `_alarmSnoozing` in `AlarmSet.alarmSet._alarms`
+     (F2:11779, 11230-11236) — a snooze lives only in panel memory, so a
+     restart would silently drop it (Q-e, Jan, 2026-09-24); the audio
+     layer cannot tell an alarm from music (`AudioPlayer::play(url,
+     volume)`, `audio.rs:82`, no alarm flag), so the panel's flags are the
+     signal — and no tap for 60 s (monotonic clock, stamped in the
+     existing touch/mouse arms of `app.rs`). A tap is a touch or click on
+     the screen; a bend is not (Q-c, Jan, 2026-09-24). When both hold it
+     exits with a dedicated code; the supervisor restarts at once, no backoff.
+  No forced timeout: an alarm that rings for its full duration delays the
+  restart for that long. Rejected alternative: the player publishes a
+  status file and the supervisor decides — leaves a window in which an
+  alarm starts ringing after the last status write.
+- D5. Clock (R9). A `timerfd` on `CLOCK_REALTIME` with
+  `TFD_TIMER_CANCEL_ON_SET` wakes on every clock set; the step size is the
+  change of (realtime − monotonic) across it. |step| > 15 s → restart
+  request. Slews never wake it.
+- D6. Network (R3, R7). NetworkManager's D-Bus property `Connectivity`
+  (4 = full), read at each player start, then watched for changes. Any
+  change from not-full to full → restart request; drops only logged. The
+  appliance package gains `Depends:
+  network-manager-config-connectivity-debian`. NM absent (a non-NM image)
+  → watcher off, one log line. Recovery is seen at NM's check interval
+  (default ~300 s, unverified); NM's `CheckConnectivity` method can force
+  a check if that proves too slow.
+- D7. chumby.com (R4, R8), only with `access_chumby_com = 1` in
+  `/etc/chumby-player/player.toml`: `GET
+  http://www.chumby.com/crossdomain.xml`, 10 s timeout; first 60 s after
+  the trigger, then every random 5-20 min. A change up→down or down→up →
+  restart request. Every 5th consecutive failure → a warning with NM
+  connectivity, default route and interface (R8's evidence). Probing runs
+  whenever NM is `full` — from player start when it already is, else from
+  the change to `full` — and stops while it is not. (Q-b, Jan, 2026-09-24)
+- D8. Day mode after boot (R6). The launcher points
+  `$STATE/fixtures/rootfs/tmp` at a directory under the real `/tmp` — a
+  tmpfs on chumby-pi-3 (452 MB, verified) — seeding it from the shipped
+  `fixtures/rootfs/tmp` when absent. Boot empties it, a restart keeps it:
+  the original's ramdisk semantics, and it closes the gap `fixture.rs:52`
+  records. The seed carries `nightmode=0`, so boot means day mode;
+  `/psp/dimlevel` still applies. Precedent for a symlink inside the rootfs:
+  `/mnt/usb` (`chumby-player-run`, USB_LINK). Consumer list for every
+  panel `/tmp` path due before the change (step 3).
+- D9. Logging (R13): every trigger, deferral, restart with its cause, the
+  player's exit status, NM transitions — stderr, i.e. the journal.
+
+Open design questions: none (Q-a to Q-e answered 2026-09-24).
+
+Step-3 to-dos, not risks: confirm cage maps the new player window after
+the old one exits (D1); the consumer list for every panel `/tmp` path
+before D8's change (CLAUDE.md rule).
 
 ## Steps
 
