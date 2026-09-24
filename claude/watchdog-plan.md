@@ -227,5 +227,73 @@ before D8's change (CLAUDE.md rule).
 
 1. Requirements interview — CHECKPOINT.
 2. Design — CHECKPOINT.
-3. Build, desktop verification — CHECKPOINT.
+3. Build, desktop verification, in sub-steps:
+   - 3a. The two to-dos: cage maps a second player window; the `/tmp`
+     consumer list — CHECKPOINT.
+   - 3b. Fork: `restart-when-idle` (FIFO command, tap stamp, audio-alarm
+     flag read, dedicated exit code), desktop-verified — CHECKPOINT.
+   - 3c. chumby-pi: the supervisor crate (process group, spacing, clock,
+     NetworkManager, chumby.com, re-evaluation, logging), unit-tested —
+     CHECKPOINT.
+   - 3d. Launcher and packaging: exec the supervisor, `rootfs/tmp` onto
+     the tmpfs, the new Depends, CI's second cargo build — CHECKPOINT.
+   - 3e. Desktop end-to-end run — CHECKPOINT.
 4. Device verification on chumby-pi-3 — CHECKPOINT.
+
+## Step 3a — consumer list for the panel's `/tmp` (D8), 2026-09-24
+
+Question for each: does moving `$STATE/fixtures/rootfs/tmp` onto the real
+tmpfs `/tmp` (emptied at boot, kept across restarts) change it? The
+fixture fs joins paths under the rootfs and lets `std::fs` follow
+symlinks (`fixture.rs:556-569`); `put_file` creates parents
+(`fixture.rs:593`) — so the link target must exist, which the launcher
+guarantees at each service start.
+
+Panel (F2 = `frame_2/DoAction.as` of the decompile):
+
+| path | use | verdict |
+|---|---|---|
+| `/tmp/nightmode` | read at start F2:359, `DefineSprite_1766/frame_1`:149; written F2:19751, 19757 | **the intended change**: absent after boot → day mode (R6) |
+| `/tmp/musicsource` | resume banner F2:12797 | fork already deletes it at every start (`fixture.rs:52-58`); unaffected, the fork comment there goes stale ("ours persists") |
+| `/tmp/widgetcache` | chumby.com widget download cache F2:30137, 3 MB cap | emptied at boot, as on the original; only matters with `access_chumby_com` |
+| `/tmp/.guidhash` | written then `md5sum`'d at once F2:1945-1946 | unaffected |
+| `/tmp/movieheartbeat` | written F2:174, no reader (R11) | unaffected |
+| `/tmp/channel_names`, `/tmp/widget_names` | written F2:3738, 3750 | unaffected |
+| `/tmp/currentProfileID`, `/tmp/currentProfileName` | written F2:4410-4411 | unaffected |
+| `/tmp/controlpanelversion` | written F2:30531 | unaffected |
+| `/tmp/translation.xml` | read only, ALT2 settings F2:3102/3237; nothing writes it | unaffected (absent either way) |
+| `/tmp/profile.xml` | read only, first of the MultipathFile F2:4344; nothing writes it | unaffected |
+| `/tmp/change_profile` | easter egg, read + `rm` F2:5255 | unaffected |
+| `/tmp/hidden_ssid` | written `DefineSprite_612/frame_9`:21 | unaffected |
+| `/tmp/intercomnamed.sh` | written + exec'd F2:21844-21849 | unaffected by location |
+
+Fork:
+
+| site | verdict |
+|---|---|
+| `fixture.rs:52-58` musicsource removal | still needed (restarts keep `/tmp`); comment to update |
+| `fixture.rs:823-836` test | own temp rootfs; unaffected |
+| `navigator.rs:51, 296-307` widgetcache curl mapping | resolves through the link; unaffected |
+| `real_ident.rs` `md5sum` via the fixture fs | through the link; unaffected |
+| `audio.rs:42` `/tmp/chumby-mpv.sock` | the real `/tmp`, not the rootfs; unaffected |
+| `fixtures/rootfs/tmp/*`, 8 tracked files | panel-written artifacts; none has to pre-exist (`nightmode` absent = day), so the device needs no seeding; desktop runs keep using them |
+
+chumby-pi:
+
+| site | verdict |
+|---|---|
+| `pkg/chumby-player/chumby-local-widgets:81, 113` (`HOW_TO` text, "The download cache is …/rootfs/tmp/widgetcache") | path still resolves; text must add that the cache is emptied at every boot |
+| `pkg/chumby-player/chumby-player-run` | gains the link block (D8), USB_LINK-style |
+
+## Step 3a — cage maps a second player window (D1), 2026-09-24
+
+Desktop, cage 0.2.0-2 (chumby-pi-3 has 0.2.0-2+rpt1+b1, same upstream
+version), nested in the X11 session: `DISPLAY=:10 WLR_BACKENDS=x11
+WLR_RENDERER=pixman cage -- client.sh`, where the client script started
+`ruffle_desktop` (release build of 2026-09-09, tiny-skia, a scratch copy
+of `fixtures/`, `controlpanel.swf`), killed it after 25 s, waited 2 s and
+started it again. Screenshots: run 1 showed the panel clock (11:16), the
+gap a black cage output, run 2 the clock again (11:17); both players
+exited on SIGTERM (143), cage exited 0 only after the client script
+ended. **Cage keeps running across a player restart and maps the new
+window** — D1 holds as designed.
