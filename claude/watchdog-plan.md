@@ -394,3 +394,36 @@ nothing left. Clock and network triggers against a real player are 3e.
   Depends and the supervisor in place — packaging mechanics only, that
   deb was deleted, not deployed. Not yet run: the launcher end to end
   (3e) and CI.
+
+## Step 3e — desktop end-to-end, 2026-09-24
+
+The real launcher (`pkg/chumby-player/chumby-player-run`, dev overrides
+`CHUMBY_STATE/SHARE/SWF/RUFFLE/SUPERVISOR/CTL`, X11 `:10`), release
+builds of player (fork `cd1dc5c12`) and supervisor. The clock was moved
+with a test-only preload shim (scratchpad `fakeclock.c`: `CLOCK_REALTIME`
++ the seconds in a file) inherited by supervisor and player alike, as
+both see a real step. Fixtures: a daily beep alarm 5 min after the real
+time.
+
+1. Start with the clock 3 days slow: the launcher execs the supervisor;
+   the player runs in its own group; `rootfs/tmp` is a link into
+   `/tmp/chumby-panel-tmp`, no `nightmode` (day mode). The panel schedules
+   the alarm for **Mon Sep 21 17:51** — issue 21's shape.
+2. Clock stepped to real time at 17:47:29.026 → 0.72 s later `restart
+   wanted ([Clock])`, `restart-when-idle` sent → 69 ms later the player
+   quits (exit 0) → restarted at once; the new panel schedules the alarm
+   for **Thu Sep 24 17:51**.
+3. The alarm rang at 17:51:00.042. `kill -9` of the player → `exited
+   unasked (signal 9) after 211 s — restarting in 3 s` → new player.
+4. SIGTERM to the supervisor → `signal 15 — stopping the player`, launcher
+   exit 0, no process left.
+
+No panic. The only error, `Unable to create audio device`, appears once
+per player start and equally in the 3b runs that started the player
+directly — this desktop session's audio, not the supervisor.
+
+Not covered on the desktop, left for the device (step 4): the network
+trigger (would need NetworkManager on this machine to change state), a
+real boot (tmpfs emptied → day mode), group cleanup with real mpv
+children, `access_chumby_com` against a real chumby.com loss, and CI
+(runs on a push, Jan's call).
