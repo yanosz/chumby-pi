@@ -163,6 +163,10 @@ fn main() {
         if chumby_com { "on" } else { "off" }
     );
 
+    // If cage dies, stop too — a supervisor outliving its compositor would
+    // keep starting players with no display next to the unit's next cage.
+    unsafe { libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGTERM) };
+
     let (tx, rx) = mpsc::channel();
     watch_signals(tx.clone());
     {
