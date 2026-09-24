@@ -567,3 +567,18 @@ back itself); then `timedatectl set-ntp true`.
 
 That leaves step 4 without a device gap except `access_chumby_com`
 (off on this box) — and CI, which runs on a push.
+
+## Pushed, 2026-09-24 20:22
+
+- Fork `dev` pushed (`a0353a343..5d6aa59f6`); `chumby.yml` dispatched on
+  `dev` (run 36040458005) — builds and starts the panel, publishes nothing.
+- chumby-pi `dev` was not based on `main` (the squash-merged 0.9.x commits
+  lived in `dev` unsquashed; the PR was CONFLICTING, so GitHub started no
+  `pull_request` run). `dev` commit `2788978` had `main`'s exact tree, so
+  `git rebase --onto origin/main 2788978 dev` replayed the 37 later commits
+  (Jan's go); the result's tree equals the old `dev`. Force-pushed with a
+  lease (`d4b7a6f...ccd25fb`); local backup branch
+  `dev-before-rebase-20260924`. PR #18 (`dev` → `main`) is MERGEABLE; CI
+  run 36040758966 (pull_request: build + install test; the movie-start
+  test and the apt repo run only on a push to `main`). A manual dispatch
+  was avoided: it would have published 0.9.8 to the apt repo from `dev`.
