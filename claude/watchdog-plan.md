@@ -378,7 +378,10 @@ nothing left. Clock and network triggers against a real player are 3e.
   `/usr/lib/chumby-player/chumby-supervisor` (cross-built release; NEEDED
   only `libc.so.6`, `libgcc_s.so.1`, both already declared); Depends gains
   `network-manager-config-connectivity-debian` (R7), with a line in the
-  description saying why.
+  description saying why. Kept as Depends, not Recommends (Jan,
+  2026-09-24), knowing it pulls `network-manager` onto an image that uses
+  another network manager — a no-op on Raspberry Pi OS, where NM already
+  owns the interfaces.
 - `deploy-pi.sh` and CI build it (CI also runs its unit tests; the network
   tests stay `#[ignore]`d); the install test checks it runs and refuses a
   bare call with its usage line (exit 2). CI's movie-start test still
