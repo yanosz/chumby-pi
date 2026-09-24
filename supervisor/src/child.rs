@@ -5,7 +5,7 @@
 use std::ffi::OsString;
 use std::io;
 use std::os::unix::process::{CommandExt, ExitStatusExt};
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::sync::mpsc::Sender;
 use std::time::{Duration, Instant};
 
@@ -18,7 +18,10 @@ pub struct Player {
 
 pub fn spawn(argv: &[OsString], events: Sender<Event>) -> io::Result<Player> {
     let mut cmd = Command::new(&argv[0]);
-    cmd.args(&argv[1..]).process_group(0);
+    // Its own group is not the tty's foreground group: a player reading
+    // the service's tty1 stdin (the fork's stdin control channel) would be
+    // stopped by SIGTTIN. The appliance talks to it over the FIFO.
+    cmd.args(&argv[1..]).process_group(0).stdin(Stdio::null());
     // The supervisor blocks its shutdown signals to sigwait on them; the
     // player must not inherit that mask.
     unsafe {
@@ -60,7 +63,11 @@ impl Player {
         if !self.group_alive() {
             return;
         }
-        unsafe { libc::kill(-self.pgid, libc::SIGTERM) };
+        // SIGCONT: a stopped member acts on SIGTERM only once continued.
+        unsafe {
+            libc::kill(-self.pgid, libc::SIGTERM);
+            libc::kill(-self.pgid, libc::SIGCONT);
+        }
         let deadline = Instant::now() + grace;
         while Instant::now() < deadline {
             if !self.group_alive() {

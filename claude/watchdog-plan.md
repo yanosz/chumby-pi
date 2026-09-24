@@ -444,3 +444,34 @@ chumby-pi `76643e8`). Read off the box afterwards:
   reports `ConnectivityCheckEnabled true`, URI
   `http://network-test.debian.org/nm`, `Connectivity 4` (full).
 - The supervisor's first lines: started, player pid 5585, NM `full`.
+
+### Test 1 — reboot, 2026-09-24 18:21, and the regression it exposed
+
+**Regression, fixed:** 0.9.8 froze the panel from the deploy (18:02)
+until the redeploy (18:27). `ps` showed the player in state `T`. The
+service's stdin is `tty1` (`TTYPath=/dev/tty1`, `StandardInput=tty-fail`);
+the player inherited it and the fork's stdin control channel reads it; in
+its own process group — not the tty's foreground group — that read earns
+SIGTTIN. Invisible on the desktop, where stdin was no tty. Fix: the
+supervisor gives the player `/dev/null` as stdin (`child.rs`); reproduced
+and verified under `script`'s pty (old: stand-in stopped, `T`; new: `S`).
+Symptoms on the box, all explained by it: `/tmp/chumby-panel-tmp` stayed
+empty, and the boot's `restart-when-idle` never reached the player.
+Second fix from the same episode: `stop_group` follows SIGTERM with
+SIGCONT — the old supervisor could not end the stopped player and needed
+the 10 s SIGKILL (`player group 1153 ignored SIGTERM for 10 s`); a stopped
+stand-in now ends 0.1 s after SIGTERM. After the redeploy (18:27:12): the
+player runs (`R`), `/tmp/chumby-panel-tmp` fills, `stdin control channel
+closed`.
+
+**Reboot findings** (journal of boot `26fdfe1d…`):
+- The clock step of a warm reboot is small: timesyncd restored 18:21:18
+  from its clock file and its first answer (18:22:08.093) moved the clock
+  by a few seconds — under 15 s, so no clock trigger. R10's "nearly every
+  cold boot" holds for a box that was off for a while, not for a reboot.
+- **Every boot triggers the network restart.** At player start
+  (18:21:44.944) NM connectivity was `none` — its check had not run yet —
+  and `full` 5 s later, so R3 asked for a restart at 18:21:49. With the
+  fix in place that means a second panel start seconds after every boot.
+- Day mode after boot: `/tmp/chumby-panel-tmp` was empty at boot (tmpfs),
+  no `nightmode`.
