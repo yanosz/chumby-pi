@@ -136,6 +136,13 @@ The panel appears on the TFT and from now on comes up on every boot.
   (≥1 s)** is the squeeze of the chumby's top button: it summons (and
   dismisses) the control panel bar, and snoozes a ringing alarm.
   `chumby-ctl bend` does the same from a shell.
+- **The player restarts itself** when the world changes under it:
+  after a crash, when the clock is corrected by more than 15 s (the
+  Pi has no clock battery, so this happens once shortly after most
+  boots), and when the network comes back. It never restarts while an
+  alarm is ringing or snoozed, nor within 60 s of a touch. After a
+  boot the panel starts in day mode, as the chumby did; night mode
+  survives a restart, not a reboot.
 - `sudo systemctl stop chumby-player` — leave player mode until next
   boot; `sudo systemctl disable --now chumby-player` — leave it for
   good; logs: `journalctl -u chumby-player`.

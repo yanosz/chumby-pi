@@ -48,7 +48,9 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: ruffle
+          workspaces: |
+            ruffle
+            supervisor
 
       - name: Guard against exporter's features reaching the player
         working-directory: ruffle
@@ -91,6 +93,14 @@ jobs:
         run: |
           cargo build -p exporter \
             --profile dist --target aarch64-unknown-linux-gnu
+
+      - name: Test and build chumby-supervisor
+        working-directory: supervisor
+        # Its own crate, outside the fork's workspace. The network tests
+        # are #[ignore]d and stay off in CI.
+        run: |
+          cargo test
+          cargo build --release --target aarch64-unknown-linux-gnu
 
       - name: Fetch controlpanel.swf from the private share
         if: github.event_name != 'pull_request'

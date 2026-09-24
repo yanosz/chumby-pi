@@ -4,7 +4,7 @@ Architecture: arm64
 Maintainer: Jan <jan@simula.no>
 Section: misc
 Priority: optional
-Depends: cage, mpv, pipewire-alsa, python3, 7zip | p7zip-full, plymouth, libc6, libgcc-s1, libfontconfig1, libssl3t64, libasound2t64, libudev1
+Depends: cage, mpv, pipewire-alsa, python3, 7zip | p7zip-full, plymouth, network-manager-config-connectivity-debian, libc6, libgcc-s1, libfontconfig1, libssl3t64, libasound2t64, libudev1
 Description: Chumby control panel player (chumby-fork Ruffle kiosk)
  Runs the original Chumby Classic control panel under a patched Ruffle
  inside a cage Wayland kiosk on tty1. Installing this package and
@@ -17,6 +17,10 @@ Description: Chumby control panel player (chumby-fork Ruffle kiosk)
  them from your chumby or its backup into /var/lib/chumby — the
  launcher prints the exact paths when something is missing.
  .
- Library dependencies match the NEEDED entries of the shipped binary
+ network-manager-config-connectivity-debian turns on NetworkManager's
+ connectivity check, which the supervisor's "network is back" restart
+ relies on.
+ .
+ Library dependencies match the NEEDED entries of the shipped binaries
  on Debian trixie (Raspberry Pi OS base); the package is still built
  with plain dpkg-deb, not as a policy-compliant Debian source package.

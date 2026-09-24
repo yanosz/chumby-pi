@@ -363,3 +363,31 @@ chumby.com probed 60 s after `full` (probe on via a scratch player.toml) →
 reachable; after the leader exits its orphan child in the same group is
 gone; SIGTERM → "signal 15 — stopping the player", player group stopped,
 nothing left. Clock and network triggers against a real player are 3e.
+
+## Step 3d — result, 2026-09-24
+
+- `chumby-player-run`: its last line execs `chumby-supervisor --ctl
+  "$CTL" --config /etc/chumby-player/player.toml -- <the player command
+  as before>`; `CHUMBY_SUPERVISOR` overrides the binary like
+  `CHUMBY_RUFFLE`. The fixture `rootfs/tmp` is replaced by a link to
+  `/tmp/chumby-panel-tmp` (mode 700), created at every start; the root-run
+  `--seed` path hands that directory to `pi` along with `$STATE` — found
+  while writing it: `chown -R` does not follow the link, and a root-owned
+  700 directory would have locked the panel out of its `/tmp` until reboot.
+- Package 0.9.8 (`build-debs.sh:21`): ships
+  `/usr/lib/chumby-player/chumby-supervisor` (cross-built release; NEEDED
+  only `libc.so.6`, `libgcc_s.so.1`, both already declared); Depends gains
+  `network-manager-config-connectivity-debian` (R7), with a line in the
+  description saying why.
+- `deploy-pi.sh` and CI build it (CI also runs its unit tests; the network
+  tests stay `#[ignore]`d); the install test checks it runs and refuses a
+  bare call with its usage line (exit 2). CI's movie-start test still
+  expects 124: `timeout` reports 124 whatever the supervisor's own exit.
+- Text: `chumby-local-widgets` says the download cache is emptied at every
+  boot; `docs/setup.md` "Operating it" describes the self-restarts and day
+  mode after boot; fork `fixture.rs:52` comment updated (fork `66ebb6bd2`).
+- Checked locally: `sh -n` on the launcher; `build-debs.sh` with the
+  existing (Sep 10) dist binaries produced a 0.9.8 deb with the right
+  Depends and the supervisor in place — packaging mechanics only, that
+  deb was deleted, not deployed. Not yet run: the launcher end to end
+  (3e) and CI.

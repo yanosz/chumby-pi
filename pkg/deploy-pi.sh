@@ -24,6 +24,9 @@ cargo build --profile dist -p ruffle_desktop \
 cargo build --profile dist -p exporter \
     --target aarch64-unknown-linux-gnu --manifest-path ruffle/Cargo.toml
 
+cargo build --release --target aarch64-unknown-linux-gnu \
+    --manifest-path supervisor/Cargo.toml
+
 # A clean out/ so leftover debs from earlier versions aren't deployed too.
 rm -rf pkg/out
 pkg/build-debs.sh
