@@ -297,3 +297,40 @@ gap a black cage output, run 2 the clock again (11:17); both players
 exited on SIGTERM (143), cage exited 0 only after the client script
 ended. **Cage keeps running across a player restart and maps the new
 window** — D1 holds as designed.
+
+## Step 3b — fork change list and consumers (before coding), 2026-09-24
+
+New module `core/src/chumby/restart.rs`: a requested flag, the last tap
+(`Instant`), and `apply(activation)` which, when requested, no audio
+alarm rings or snoozes and the last tap is ≥ 60 s old, clears the flag,
+logs, and quits the player through the panel's own path.
+
+| touchpoint | change | consumers → verdict |
+|---|---|---|
+| `input.rs:80` `handle()` | new verbs `restart-when-idle`, `restart-cancel` | `chumby-ctl` sends only `bend`/`tap` → unaffected; launcher `mkfifo` → unaffected; unknown verbs were already ignored (`input.rs:15-17`); new consumer: the supervisor |
+| `avm.rs:60` `method` | one more `restart::apply(activation)` after `alarm_guard::apply` | runs on every native call — every frame via the `_bent` poll (`avm.rs:75`); read-only until it quits |
+| `core/src/player.rs:3181` chumby block in `run_mouse_pick` | stamp the tap time when the left button is down | the `chumby_pick` debug trace is unchanged; covers mouse, touch (mapped to left button, `app.rs:178-205`) and FIFO `click`/`drag` |
+| quit | `external_interface.invoke_fs_command("quit", "")` | `DesktopFSCommandProvider` → `RuffleEvent::ExitRequested` → `event_loop.exit()` (`desktop/src/backends/fscommand.rs:13`, `app.rs:769`); bypasses the intro's quit guard, which sits in `avm1/fscommand.rs:32`, not in the provider |
+| panel state read | `AlarmSet.alarmSet` (F2:11779) → `_alarms[i]` → `_type`, `_alarmRinging`, `_alarmSnoozing` | read-only; `_alarmRinging` set F2:11191-11223, cleared 10973, 10993, 11022, 12906; `_alarmSnoozing` set 10980, cleared 10894, 11015, 11034, 11226; `TYPE_NONE = "none"` F2:10170 |
+| `mod.rs` | `pub mod restart;` | — |
+
+Both accepted by Jan, 2026-09-24. Deviation from D4: the quit path ends the process with exit
+code 0, not a dedicated one (a dedicated code would need a hook in
+`desktop/src/main.rs` after `run_app`). The supervisor can tell an idle
+restart from a crash by whether it had a request pending.
+
+Semantics note, for Jan: the tap stamp counts any press on the screen,
+so a long-press — the touch stand-in for a bend (`app.rs:441-452`) —
+also counts as a tap. A real bend (Home key, `chumby-ctl bend`) does not.
+
+## Step 3b — result, 2026-09-24
+
+Fork commit `cd1dc5c12`, fork issue 27 (full record there). The player
+honours `restart-when-idle` / `restart-cancel` on the control FIFO and
+quits (exit 0) once no audio alarm rings or snoozes and the screen has
+been untouched for 60 s. One change against the change list above: the
+check runs only at the per-frame `_bent` poll — inside other natives the
+alarm flags are half-updated (`snoozeAlarm`, F2:10973-10980), which made
+the first alarm run quit at the snooze. Desktop-verified: idle quit,
+press hold + cancel, ring → snooze → re-ring → turn-off → quit 60 s after
+the press.
