@@ -479,3 +479,36 @@ closed`.
   fix in place that means a second panel start seconds after every boot.
 - Day mode after boot: `/tmp/chumby-panel-tmp` was empty at boot (tmpfs),
   no `nightmode`.
+
+### Test 1 repeated with the 30 s settling, 2026-09-24 18:33
+
+Boot at ~18:33: NM `none` at player start (18:33:42.233), `full` at
+18:33:47.237 — no restart requested; player running since boot, day mode.
+Pass.
+
+### Test 3 — mpv dies with the player, 2026-09-24 18:35-18:38
+
+A one-shot alarm on the "Birds + SWR3" stream was added to
+`/psp/alarms` (backup `alarms.bak-watchdog`); `kill -9` of the player →
+`exited unasked (signal 9) after 103 s — restarting in 3 s`, and the new
+panel read the alarm. It rang at 18:38:00 with `mpv pid=1459`, a child of
+the player in its group (pgid 1292). `kill -9 1292` at 18:38:09.904 → no
+mpv 1 s later; restarted after 6 s, the doubled delay for a second crash.
+Pass. `/psp/alarms` restored from the backup (`cmp` identical) and the
+service restarted so the panel reloads it; the test alarm is gone.
+
+### Regression 2 — `systemctl stop`/`restart` hangs 90 s
+
+Found during that restart. The unit's processes live in the logind
+session scope (`PAMName=login`, pam_systemd moves them), not in the
+service cgroup: `/proc/<pid>/cgroup` of cage, supervisor and player =
+`/user.slice/user-1000.slice/session-12.scope`. So stopping the unit
+signals cage alone. cage closes its Wayland clients — the player exits
+(status 1) — and then waits for its child, which used to be ruffle and is
+now the supervisor, which took the exit for a crash and started another
+player 12 s later. Journal: `Stopping chumby-player.service` 18:38:37.125,
+`State 'stop-sigterm' timed out. Killing.` 18:40:07.340, cage SIGKILLed,
+the supervisor then logs `signal 1` (the tty hangup), `Failed with result
+'timeout'`. Before 0.9.8 ruffle died with the Wayland connection and cage
+followed at once. The same pattern explains the `signal 1` of the first
+redeploy (18:27:11). Not fixed yet.
