@@ -1033,7 +1033,7 @@ now applies to a tone at half scale.
 Number: 21
 Timestamp: 2026-09-24, 10:15
 Title: After a cold boot the nightmode alarms never ring — the panel scheduled them against a clock 5½ days slow.
-Status: documented, fix deferred (Jan, 2026-09-24) — no remedy chosen; player side is fork issue 25
+Status: remedy built — the panel watchdog restarts the panel on a clock step > 15 s (`claude/watchdog-plan.md`, R9); desktop-verified end to end (3e), deployed to chumby-pi-3 in 0.9.8; a cold-boot device run is still owed. Player side: fork issue 25
 Description: Jan: chumby-pi-3 did not run the "Daily at 8:00" nightmode-off
 alarm after it was booted on Monday. Read off the box 2026-09-24 10:02
 (192.168.42.24, 0.9.7, verbose `RUST_LOG` from issue 13 still active):
@@ -1095,7 +1095,7 @@ Remedy options, none chosen:
 Number: 22
 Timestamp: 2026-09-24, 10:50
 Title: The panel showed WLAN as good while the WLAN was not usable.
-Status: documented, cause unknown — no evidence left on the box
+Status: cause still unknown; mitigated — NetworkManager's connectivity check is now on (a real reachability test, not a default-route guess) and the watchdog restarts the panel when connectivity returns, refreshing the Info screen's boot-time snapshot (`claude/watchdog-plan.md`, R3/R7/R8; verified on chumby-pi-3 2026-09-24)
 Description: Jan, 2026-09-24: roughly 1-2 weeks ago the panel's WLAN
 information looked good, but the WLAN could not be used. No log exists for
 it: the journal on chumby-pi-3 is volatile and reaches back only to

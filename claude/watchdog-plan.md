@@ -512,3 +512,39 @@ the supervisor then logs `signal 1` (the tty hangup), `Failed with result
 'timeout'`. Before 0.9.8 ruffle died with the Wayland connection and cage
 followed at once. The same pattern explains the `signal 1` of the first
 redeploy (18:27:11). Not fixed yet.
+
+### Regression 2 fixed, 2026-09-24 19:49
+
+Fork unchanged; chumby-pi `b05dbad`: the unit's `ExecStop=/usr/bin/pkill
+-TERM -x -u pi chumby-supervis` stops the supervisor before systemd
+signals cage (Depends gains `procps`), and the supervisor sets
+`PR_SET_PDEATHSIG = SIGTERM`, so it ends if cage dies (desktop: SIGKILL of
+a stand-in parent → `signal 15 — stopping the player`, nothing left).
+On the box, `systemctl restart`: `Stopping` 19:49:35.847 → `Stopped`
+19:49:36.169 (0.32 s), `Result=success`, new instance up 19:49:37. The
+supervisor logged `signal 1`: the tty hangup and `ExecStop`'s SIGTERM
+arrive together and the lower number is delivered first.
+
+### Test 2 — network trigger, 2026-09-24 19:50
+
+Correction first: `nftables` 1.1.3-1 was already installed — the earlier
+"no firewall tool" came from `which` as `pi`, whose PATH lacks
+`/usr/sbin`. Nothing was installed; its service is disabled, the ruleset
+was empty. The check host resolved to 151.101.238.132 and
+2a04:4e42:38::644; a separate table `inet chumbytest` dropped both on
+output, `nmcli networking connectivity check` → `limited` (19:50:41);
+the supervisor logged `limited` and asked for nothing (R3 ignores drops).
+Table deleted 19:51:00, check → `full`; 19:51:02.104 `restart wanted
+([Network])`, `restart-when-idle` received 1 ms later, `panel idle —
+quitting` 89 ms after that, player restarted at once. Ruleset empty
+again. Pass. The alarm-file backup of test 3 was removed after `cmp`.
+
+### Step 4 — state
+
+Passed on the device: day mode after boot, no restart from NM's first
+check at boot, mpv dies with the player, crash spacing, the network
+trigger, stop/restart in under a second. Found and fixed on the device:
+the tty/SIGTTIN freeze and the 90 s stop. Not exercised on the device:
+the clock trigger — a warm reboot steps the clock by a few seconds only;
+it needs the box off for more than 15 s — and `access_chumby_com` (off on
+this box). CI has not run: nothing is pushed.
