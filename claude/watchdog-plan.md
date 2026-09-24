@@ -548,3 +548,22 @@ the tty/SIGTTIN freeze and the 90 s stop. Not exercised on the device:
 the clock trigger — a warm reboot steps the clock by a few seconds only;
 it needs the box off for more than 15 s — and `access_chumby_com` (off on
 this box). CI has not run: nothing is pushed.
+
+### Test 4 — clock trigger on the device, simulated, 2026-09-24 19:56
+
+Jan's procedure: `timedatectl set-ntp false`; `systemctl stop
+chumby-player`; `date -s "-3 days"`; `systemctl start chumby-player`
+(stop → set → start, so the supervisor does not react to the manual step
+back itself); then `timedatectl set-ntp true`.
+- With the clock 3 days slow the panel scheduled "Daily at 8:00 … at: Tue
+  Sep 22 08:00" and "Daily at 23:00 … at: Mon Sep 21 23:00" — issue 21's
+  stranded alarms.
+- NTP on: timesyncd `Initial clock synchronization to Thu 2026-09-24
+  19:57:28.191937` at 19:57:28.193; the supervisor's `restart wanted
+  ([Clock])` 252 ms later; the player got `restart-when-idle` 4 ms after
+  that and quit 5 ms later; new player 19:57:28.801. It scheduled "at: Fri
+  Sep 25 08:00" and "at: Thu Sep 24 23:00".
+- `NTP=yes`, `NTPSynchronized=yes` afterwards. Pass.
+
+That leaves step 4 without a device gap except `access_chumby_com`
+(off on this box) — and CI, which runs on a push.

@@ -1033,7 +1033,7 @@ now applies to a tone at half scale.
 Number: 21
 Timestamp: 2026-09-24, 10:15
 Title: After a cold boot the nightmode alarms never ring — the panel scheduled them against a clock 5½ days slow.
-Status: remedy built — the panel watchdog restarts the panel on a clock step > 15 s (`claude/watchdog-plan.md`, R9); desktop-verified end to end (3e), deployed to chumby-pi-3 in 0.9.8; a cold-boot device run is still owed. Player side: fork issue 25
+Status: remedy built — the panel watchdog restarts the panel on a clock step > 15 s (`claude/watchdog-plan.md`, R9); desktop-verified end to end (3e); on chumby-pi-3 (0.9.8) verified 2026-09-24 by a simulated boot on a slow clock (NTP off, clock −3 days, panel restarted, NTP on): stranded alarms before, correct schedule after the supervisor's restart (plan, test 4). Player side: fork issue 25
 Description: Jan: chumby-pi-3 did not run the "Daily at 8:00" nightmode-off
 alarm after it was booted on Monday. Read off the box 2026-09-24 10:02
 (192.168.42.24, 0.9.7, verbose `RUST_LOG` from issue 13 still active):
