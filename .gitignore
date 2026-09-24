@@ -28,3 +28,6 @@ pdf/
 
 # chumby-supervisor build output
 /supervisor/target/
+
+# Yoga video widget for the hardware chumby — its own repo later (submodule)
+/yoga-widget/
