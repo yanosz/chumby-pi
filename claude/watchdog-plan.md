@@ -427,3 +427,20 @@ trigger (would need NetworkManager on this machine to change state), a
 real boot (tmpfs emptied → day mode), group cleanup with real mpv
 children, `access_chumby_com` against a real chumby.com loss, and CI
 (runs on a push, Jan's call).
+
+## Step 4 — device, chumby-pi-3 (192.168.42.24)
+
+Deployed 2026-09-24 18:02 with `pkg/deploy-pi.sh` (fork `66ebb6bd2`,
+chumby-pi `76643e8`). Read off the box afterwards:
+- `chumby-player` 0.9.8 active, `NRestarts=0`; `cage` (5551) →
+  `chumby-supervisor` (5574) → `ruffle_desktop` (5585) in its own process
+  group. Supervisor lines carry the `chumby-player-run[5574]` identifier
+  (exec'd from the launcher).
+- `rootfs/tmp` → `/tmp/chumby-panel-tmp` (pi, 700); the old on-disk
+  `rootfs/tmp` contents are gone, as intended.
+- apt pulled `network-manager-config-connectivity-debian` 1.52.1-1+rpt4
+  from archive.raspberrypi.com; NM reloaded its config (SIGHUP,
+  `op="reload"`, same NM pid 636 — no restart, SSH unaffected) and now
+  reports `ConnectivityCheckEnabled true`, URI
+  `http://network-test.debian.org/nm`, `Connectivity 4` (full).
+- The supervisor's first lines: started, player pid 5585, NM `full`.
