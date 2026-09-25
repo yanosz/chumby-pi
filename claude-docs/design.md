@@ -399,6 +399,16 @@ lands, the panel's brightness sliders work with no further appliance work.
 A `brightness_ctl` program (e.g. GPIO PWM by hand) would instead be the
 owner's own script named in `/etc/chumby-player/player.toml`.
 
+Since 0.9.6 that conffile also ships `brightness_cap = 25` (fork issue 23):
+the panel's 0-100 maps onto a quarter of the display's `max_brightness`
+rather than all of it. The 5" DSI panel showed why — Jan runs it at 7.2 and
+1.5 out of 100, so the whole useful range sat in the bottom 2 % of the
+scale, where one pixel of slider travel jumps ~2.5 duty steps. Panel space
+and the panel's own two settings files are untouched; only the last stage,
+`Backlight::set_raw`, is scaled. On an upgrade the conffile is kept
+(`--force-confold`), so an existing box takes the new key by hand and the
+shipped default arrives as `player.toml.dpkg-dist`.
+
 Requirements for a
 replacement: ~3.5" SPI HAT on the 2×20 header, touch, 480×320-ish, a
 **PWM-dimmable** backlight, and a mainline DRM driver so §5 and §6 carry over

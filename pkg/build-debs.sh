@@ -5,7 +5,8 @@
 #                         no .swf to build or install
 #
 # Input: the cross-compiled dist binaries, ruffle_desktop and exporter
-# (claude-docs/development.md §3), nothing else. The copyrighted files
+# (claude-docs/development.md §3), and the release build of
+# chumby-supervisor (supervisor/), nothing else. The copyrighted files
 # (controlpanel.swf, widget SWFs, alarm tones, intro.swf, opening.swf)
 # never enter a package: the owner copies them from a chumby or its
 # backup into /var/lib/chumby, or chumby-download-firmware fetches them
@@ -18,15 +19,17 @@ set -eu
 cd "$(dirname "$0")"
 REPO=$(cd .. && pwd)
 
-VERSION="${VERSION:-0.9.5}"
+VERSION="${VERSION:-0.9.8}"
 # dist = release + fat LTO + codegen-units=1 (what upstream ships);
 # measurably lighter on the Pi's CPU-bound rasterization (doc 11).
 BIN="$REPO/ruffle/target/aarch64-unknown-linux-gnu/dist/ruffle_desktop"
 EXPORTER_BIN="$REPO/ruffle/target/aarch64-unknown-linux-gnu/dist/exporter"
+SUPERVISOR_BIN="$REPO/supervisor/target/aarch64-unknown-linux-gnu/release/chumby-supervisor"
 BUILD="$REPO/pkg/build"
 OUT="$REPO/pkg/out"
 
 [ -x "$BIN" ] || { echo "missing $BIN — cross-build with --profile dist first (claude-docs/development.md §3)" >&2; exit 1; }
+[ -x "$SUPERVISOR_BIN" ] || { echo "missing $SUPERVISOR_BIN — cross-build with: cargo build --release --target aarch64-unknown-linux-gnu --manifest-path supervisor/Cargo.toml" >&2; exit 1; }
 [ -x "$EXPORTER_BIN" ] || { echo "missing $EXPORTER_BIN — cross-build with: cargo build --profile dist -p exporter --target aarch64-unknown-linux-gnu --manifest-path ruffle/Cargo.toml" >&2; exit 1; }
 
 rm -rf "$BUILD"
@@ -52,6 +55,7 @@ install -m 644 "$REPO/ruffle/fixtures/player.toml.example" \
 install -m 644 chumby-player/chumby-player.default "$P/etc/default/chumby-player"
 install -m 755 "$BIN" "$P/usr/lib/chumby-player/ruffle_desktop"
 install -m 755 "$EXPORTER_BIN" "$P/usr/lib/chumby-player/ruffle-exporter"
+install -m 755 "$SUPERVISOR_BIN" "$P/usr/lib/chumby-player/chumby-supervisor"
 # Theme script + config only — frames/ is populated later, by
 # chumby-download-firmware, from the copyrighted opening.swf (design.md §5).
 install -m 644 chumby-player/plymouth-theme-chumby/chumby.plymouth \

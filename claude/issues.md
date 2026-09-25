@@ -570,3 +570,596 @@ express and would therefore be player work; (C) leave it. **Jan chose C.**
 4:3 content on this panel letterboxes somewhere regardless; a 4:3 display
 (issue 4) would remove the side bars but never the widget's own artwork.
 
+
+---
+
+Number: 13
+Timestamp: 2026-08-28, 12:30
+Title: A "Birds + SWR3" alarm went silent about 100 s in and stayed silent.
+Status: closed 2026-09-24 — fixed and device-verified (fork issue 10,
+`alarm_guard.rs`); the verbose `RUST_LOG` on chumby-pi-3 is reverted.
+Cause (2026-09-01): the 08:00 nightmode alarm cancels the still-ringing 07:59
+alarm through the panel's own `stopAlarmsExcept`.
+Description: Jan set a one-shot alarm on the "Birds + SWR3" My Streams entry
+(the m3u of device issue 10) for 07:59 and left it to ring. The birds played,
+SWR3 took over, and after roughly a minute and a quarter the sound stopped.
+He did not snooze and did not dismiss — he wanted the radio. Nothing played
+again until he started the same entry by hand at 08:09:35, which worked
+normally. Box: chumby-pi-3 (192.168.42.24), 0.9.4, wlan0.
+
+No player log exists for it. `chumby-player-run:229` defaults `RUST_LOG=warn`
+and every trace that would settle this is at info, so the unit's journal holds
+four systemd lines for the whole boot.
+
+What the box does record, from rtkit's RT-thread grants — each new pid that
+gets an RT audio thread is one mpv spawn:
+
+    07:59:01  pid 2129        alarm rings, birds.mp3 (30.07 s, measured)
+    07:59:33  pid 2148  +32 s SWR3 takes over
+    08:00:48  pid 2168  +75 s
+    08:00:53  pid 2186  +5 s
+      (8 m 42 s with no mpv at all)
+    08:09:35  pid 2208        Jan's manual replay: birds.mp3
+    08:10:07  pid 2227  +32 s   and SWR3
+
+**This evidence has a hole that matters:** an mpv that spawns but never opens
+an audio device asks rtkit for nothing and leaves no line here. There may have
+been further mpv processes in the silent stretch that this timeline cannot
+show.
+
+Read against the panel, the first four fit exactly. `/psp/list.m3u` ends with
+a newline, so `M3U` (F2:15009, which pushes every line whose first character
+is not `#`) yields **three** tracks — birds, SWR3, and an empty string. birds
+ends at 30 s and is correctly treated as finished; SWR3 ends at 75 s, likewise;
+the empty third track is spawned at 08:00:48, dies at once, and
+`DirectURLPlayer.doStepTrack` (F2:15579) removes it under THRESHOLD = 5000 ms
+and wraps the list — so 08:00:53 is birds starting over. The trailing newline
+is the trap already recorded in fork issue 5; here it costs one dead spawn and
+about five seconds, and is **not** why SWR3 stopped (without it the list would
+have wrapped to birds anyway).
+
+Two questions remain, and they are separate:
+
+1. **Why did mpv exit 75 s into SWR3?** Not the panel's 2 s liveness gate:
+   `poll_state` (fork `core/src/chumby/audio.rs:165`) reports Stopped only
+   once the mpv *process* has exited, so a slow start reads as PLAYING here.
+   Not the network either — no wpa_supplicant, dhcp, carrier or resolver event
+   anywhere between 07:30 and 08:30. And not the stream: replayed from the
+   same box at 12:15 with `--ao=null`, it ran the full 150 s asked of it with
+   ICY titles updating, exiting only on our own `--length`. Our own spawn
+   (`audio.rs:82`) sets no length, cache or timeout. The exit status is logged
+   at info (`audio.rs:170`) and was therefore discarded.
+
+2. **Why did nothing play for the next 8 m 42 s,** on an alarm with
+   `duration="15"` and no dismissal? Leading hypothesis, unverified: birds
+   replayed to its end at ~08:01:23, the panel advanced to SWR3 again, and
+   that mpv stayed alive without ever producing audio — which our `poll_state`
+   reports as PLAYING for as long as the process lives, so the panel's track
+   supervision never fires and the alarm sits silent with the panel believing
+   it is playing. That shape matches an eight-minute silence, and it would be
+   ours, not the panel's. It also explains the missing rtkit line. Nothing
+   confirms it yet.
+
+Armed 2026-08-28 for the next occurrence: `RUST_LOG` set as an active line in
+`/etc/default/chumby-player` (previous file kept at
+`/etc/default/chumby-player.bak-preverbose`) to
+`warn,chumby_host=info,chumby_audio=info,avm_trace=info`, and the box upgraded
+to 0.9.5 and restarted. That captures `mpv pid=… url=…`, `mpv exited: …`,
+`doStepTrack(): track ended at N secs`, `track dead, removing` and
+`setTracks(): got N tracks` — between them enough to answer both questions.
+Journald is at its defaults here (≈5.9 GB cap on a 59 G card, 2.9 MB used), so
+the volume is safe; revert the line once this is closed.
+
+Not fixed, deliberately: the trailing newline in `/psp/list.m3u`. It is a
+one-byte change on a live box and would move the evidence under our feet
+before the next ring is captured.
+
+Update 2026-08-28, 18:30 — a control run, and the experiment it sets up.
+
+With `RUST_LOG` raised and 0.9.5 installed, the identical alarm was armed for
+18:10, deliberately far from the three enabled daily alarms (00:00, 08:00,
+23:00). Every field but time and name was copied from the failing one — same
+stream param, `duration="15"`, `snooze="5"`, `auto_dismiss="1"`,
+`action="nightmode"`. It ran clean:
+
+    18:10:00  playAsAlarm(): <stream url="/psp/list.m3u" … name="Birds + SWR3"/>
+    18:10:00  TrackedPlayer.setTracks(): got 3 tracks
+    18:10:00  mpv pid=3684 url="/psp/birds.mp3" vol=0 loops=1
+    18:10:01  WARN IPC socket not ready — volume control limited to spawn-time
+    18:10:01  IPC socket connected late
+    18:10:31  mpv exited: exit status: 0
+    18:10:31  doStepTrack(): track ended at 30.835 secs
+    18:10:31  mpv pid=3714 url="http://liveradio.swr.de/…/play.mp3" vol=44
+
+SWR3 then played unbroken from 18:10:31 until the service was stopped by hand
+at 18:16:56 — 6 min 25 s, no `doStepTrack` intervention, no track death, no
+`stopAlarmsExcept`. **Away from 08:00 this alarm does not fail**, which is the
+first hard evidence that the morning's failure is not intrinsic to playing
+this stream as an alarm.
+
+Confirmed on the device, no longer inferred: `setTracks(): got 3 tracks` —
+the trailing newline in `/psp/list.m3u` really does yield the phantom empty
+third track.
+
+Eliminated since the first pass:
+- **The station.** Jan restarted the same entry by hand minutes after the
+  failure and SWR3 played on. Same URL, same box, same build.
+- **The periodic alarm reload.** `AlarmSet.step` (F2:12030) reloads
+  `/psp/alarms` on a timer and calls `stopAlarmsExcept(undefined)` first,
+  which would stop every ringing alarm — but the interval is
+  `_root.alarmReloadInterval * ONE_MINUTE` **or `ONE_YEAR` when the FlashVar
+  is absent** (F2:11784), and our launcher passes only `-PlocalCache=1`. Inert
+  for us.
+
+Leading hypothesis, Jan's: **the 08:00 nightmode alarm stopped it.**
+`Alarm.ringAlarm` (F2:11182) opens with `_alarmSet.stopAlarmsExcept(this)`,
+and `stopAlarmsExcept` (F2:12039) calls `stopAlarm(true)` on every *other*
+ringing alarm. `"Daily at 8:00"` (`time="480"`, daily, enabled, `type="none"`,
+`action="nightmode" action_param="off"`) would do exactly that to an alarm
+still ringing from 07:59 — two alarms one minute apart. Unexplained detail,
+recorded rather than argued away: `Alarm.step` (F2:10910) rings only when
+`now - alarmTime` is within `RING_WINDOW = 15000` ms (F2:10186) and
+`AlarmSet.step` takes a fresh `new Date()` every frame, so that alarm fired
+between 08:00:00 and 08:00:15 or not at all — while SWR3's mpv was still alive
+until ~08:00:47. The ~32 s gap is close to birds.mp3's length (30.07 s), which
+may mean the spawn-to-track mapping is off by one somewhere. Not resolved.
+
+Armed for 2026-08-29 07:59: the same one-shot alarm, with `"Daily at 8:00"`
+still enabled, so the two ring a minute apart exactly as they did. The panel
+traces `AlarmSet.stopAlarmsExcept(): cancelling <alarm>` (F2:12049) whenever
+that path fires, so the outcome is binary — either that line appears at ~08:00
+and settles it, or mpv's own exit status is captured at the moment of death.
+
+Box state left behind on chumby-pi-3: 0.9.5, `RUST_LOG` active in
+`/etc/default/chumby-player`, the 07:59 alarm armed, `/psp/alarms` backed up
+at `/psp/alarms.bak-20260828`, `/psp/list.m3u` still carrying its trailing
+newline on purpose.
+
+Update 2026-08-29, 16:00 — session closed, retry moved to Monday
+2026-08-31. Jan deleted the 07:59 test alarm before it could ring, so the
+experiment did not run; the entry is gone from `/psp/alarms` (not merely
+disabled) and Monday needs a fresh one. Its exact XML is preserved in the
+backup `/psp/alarms.bak-20260828` and in the first block of this issue.
+
+One measurement did come out of the morning, from a run where the test alarm
+was not armed at all:
+
+    Aug 29 08:00:00.065  avm_trace: Alarm.step(): ringing Daily at 8:00
+
+The nightmode alarm fires within 65 ms of 08:00:00, on the device, exactly as
+`RING_WINDOW` (F2:10186) predicts. **This strains the leading hypothesis
+rather than supporting it.** `stopAlarm(true)` → `stopAlarmSoundContinuous`
+→ `MusicPlayer.stopMusic(false)` reaches our `stop()` with no delay, so had
+`stopAlarmsExcept` killed the 07:59 alarm on 2026-08-28 it would have died at
+08:00:00, not at ~08:00:47. The 47 s is now measured to be unexplained, not
+merely assumed to be. The hypothesis is not dead — nothing else found so far
+stops a ringing alarm from outside — but it no longer accounts for the
+timeline on its own.
+
+To resume on Monday:
+1. Re-arm the alarm for 07:59 with `"Daily at 8:00"` left enabled. `time` for
+   a `when="once"` alarm is **minutes since the Unix epoch, local time**
+   (verified: 29798279 = 2026-08-28 07:59 CEST); copy every other attribute
+   from the block at the head of this issue. The panel reads `/psp/alarms`
+   only at start, so restart `chumby-player` after writing it.
+2. Confirm it is scheduled: the log prints
+   `Alarm heartbeat <name> rings in N seconds, at:<time>` for each alarm.
+3. After the ring, pull `journalctl --since "<date> 07:55:00"` and grep for
+   `chumby_audio`, `setTracks`, `doStepTrack`, `stopAlarmsExcept`,
+   `Alarm.step(): ringing`. Expect `got 3 tracks` — the phantom empty track
+   is normal here and is not the failure.
+4. Note journalctl on this box rejects relative timestamps ("today",
+   "-1 min"); use absolute ones, and query without `-u chumby-player`, since
+   the player's lines carry the `chumby-player-run` identifier.
+
+Left armed on chumby-pi-3 for Monday: 0.9.5, `RUST_LOG` active in
+`/etc/default/chumby-player`, `/psp/list.m3u` still ending in a newline on
+purpose. Revert the `RUST_LOG` line once this issue closes.
+
+Also seen and deliberately not pursued, worth its own issue later: the alarm
+fade spawns mpv at `vol=0` and ramps over IPC, and on 2026-08-28 the socket
+was not ready at spawn ("IPC socket not ready", then "connected late" 160 ms
+after). It won the race that time. It is the same race behind the 2026-07-06
+"alarm fade-in muted forever" note in `audio.rs:228`, and losing it means a
+silent alarm.
+
+Update 2026-09-01, 09:15 — **reproduced and fully traced. Jan's hypothesis
+was right.** The alarm rang again at 07:59 and went silent as the 8 o'clock
+news started; this time the box was still on 0.9.5 with `RUST_LOG` raised and
+the player process running unbroken since 2026-08-28 18:17:20, so the whole
+morning is in the journal. The decisive lines, verbatim:
+
+    07:59:00.063  Alarm.step(): ringing Sep 01 2026,  7:59
+    07:59:00.077  DirectURLPlayer.playAsAlarm(): <stream url="/psp/list.m3u" …/>
+    07:59:00.091  TrackedPlayer.setTracks(): got 3 tracks
+    07:59:00.094  mpv pid=9282 url="/psp/birds.mp3" vol=0 loops=1
+    07:59:31.686  mpv exited: exit status: 0
+    07:59:31.686  doStepTrack(): track ended at 30.69 secs
+    07:59:31.689  mpv pid=9300 url="http://liveradio.swr.de/…/play.mp3" vol=44
+    08:00:00.083  Alarm.step(): ringing Daily at 8:00
+    08:00:00.084  Alarm.ringAlarm() Daily at 8:00
+    08:00:00.085  AlarmSet.stopAlarmsExcept(): cancelling Sep 01 2026,  7:59
+    08:00:00.086  Alarm.stopAlarm() Sep 01 2026,  7:59 isCancel:true
+    08:00:00.087  Alarm.stopAlarmSoundContinuous(): Sep 01 2026,  7:59
+    08:00:00.087  MusicPlayer.stopMusic() → doStopTrack → mpv killed
+    08:00:00.108  Alarm.restoreSoundSettings(): restoring volume:16 mute:false
+
+The chain is entirely the panel's own, and it is faithful to the original
+firmware: `Alarm.ringAlarm` (F2:11182) opens with
+`_alarmSet.stopAlarmsExcept(this)`, and `stopAlarmsExcept` (F2:12039) calls
+`stopAlarm(true)` on every *other* ringing alarm. `"Daily at 8:00"` is
+`type="none" arg="None" action="nightmode" action_param="off"
+auto_dismiss="1" enabled="1" time="480"` — a **silent** alarm whose only job
+is to leave night mode. It makes no sound of its own (its ringAlarm branch is
+autoDismiss + TYPE_NONE → `doPreAction` → `stopAlarm`, F2:11184-11191), yet it
+still runs `stopAlarmsExcept` first and so kills the audio alarm that has been
+ringing since 07:59. Two alarms one minute apart, and the silent one wins.
+
+Latency measured, no longer inferred: the cancel lands **85 ms** after
+08:00:00.000, exactly as `RING_WINDOW` (F2:10186) predicts.
+
+**Both open questions from the previous blocks dissolve.**
+
+1. *Why did mpv exit 75 s into SWR3?* It did not exit — it was killed, at
+   08:00:00.087, by our own `stop()` under `doStopTrack`. The 2026-08-28
+   "+75 s" was reconstructed from rtkit RT-thread grants, and that
+   reconstruction's own recorded hole (an mpv that never opens an audio device
+   leaves no line) is what made it look like a 47 s discrepancy. Nothing was
+   wrong with the exit.
+2. *Why did nothing play for the next 8 m 42 s?* Because the alarm had been
+   cancelled and nothing was supposed to play. There is no stuck-but-silent
+   mpv and no missed track supervision; the leading hypothesis recorded on
+   2026-08-28 (a live mpv that our `poll_state` reports as PLAYING forever) is
+   **refuted** — it never happened.
+
+Also settled, and both exonerated:
+
+- **The stream and the 8 o'clock news are innocent.** After Jan restarted the
+  entry by hand, SWR3 played unbroken from 08:00:51 to 08:17:15 — 16 min 24 s
+  straight through the entire news bulletin, no `doStepTrack` intervention, no
+  track death, ending only when he stopped it.
+- **The 08:00:19 "replay" is Jan's own.** `_bent() -> 1` at 08:00:14
+  (`BendTapper.onBend`), the control panel opens, Music, and at 08:00:19
+  `MusicPlayer.resume(): resuming from <stream …Birds + SWR3/>`. Nothing
+  restarted itself.
+
+Side finding, same trace, worth knowing: the cancel runs
+`Alarm.restoreSoundSettings()`, which puts the system volume back to its
+pre-alarm value — 44 → 16 here. So the manual resume at 08:00:19 played at
+volume 16 while the alarm had been at 44, which is why a restart after a
+cancelled alarm sounds quiet.
+
+The full consumer list for `stopAlarmsExcept`, since any remedy touches it:
+
+| site | caller | argument | reachable on our stack |
+|------|--------|----------|------------------------|
+| F2:11182 | `Alarm.ringAlarm` | `this` | **yes — this is the path that bites** |
+| F2:12033 | `AlarmSet.step`, periodic reload | `undefined` | no — the interval is `ONE_YEAR` without the `alarmReloadInterval` FlashVar (F2:11784) and our launcher passes only `-PlocalCache=1` |
+| F2:12238 | `AlarmSet.gotEvent("reload")` | `undefined` | fed by `ExtendedEvents.AlarmPlayer` (F2:12182); we drive no such event |
+| F2:12244 | `AlarmSet.gotEvent("load")` | `undefined` | same |
+
+Options for a remedy, none chosen (Jan's call):
+
+- **A — configuration only, no code.** Move `"Daily at 8:00"` out of the way
+  (before the wake alarm, or after its `duration="20"` window ends at 08:19),
+  or disable it. Zero risk, faithful, but the owner has to remember the
+  collision every time a wake alarm is set near a nightmode alarm.
+- **B — fork fix: a silent alarm must not cancel a sounding one.** Prototype
+  surgery on `AlarmSet.stopAlarmsExcept` (or on the `ringAlarm` call site) so
+  an alarm whose `_type == Alarm.TYPE_NONE` (F2:10170) skips the cancel. The
+  guard exists to keep two *sounding* alarms from overlapping; an alarm that
+  makes no sound has nothing to protect. Same class of one-shot VM surgery as
+  `empty_channel.rs` and `intro.rs`, and it is a deliberate deviation from
+  stock behaviour around alarms, so it needs saying out loud in the docs.
+- **C — leave it.** It is what a real chumby did.
+
+Box state unchanged by this session: chumby-pi-3, 0.9.5, `RUST_LOG` still
+active in `/etc/default/chumby-player`, `/psp/list.m3u` still ending in a
+newline (`setTracks(): got 3 tracks` again today — the phantom empty track is
+present and is *not* implicated in the failure). Nothing was written to the
+device. Revert the `RUST_LOG` line once a remedy is settled.
+
+Update 2026-09-01, 09:55 — remedy CHOSEN (option B), fix deferred to the next
+session for a clean context. Handoff:
+
+**The fix.** One-shot AVM prototype surgery, same pattern as
+`empty_channel.rs`/`intro.rs`. Recommended hook site: **`Alarm.ringAlarm`**
+(F2:11178). Wrap it so that when `this._type == Alarm.TYPE_NONE` (F2:10170,
+value `"none"`) it does **not** run the opening `_alarmSet.stopAlarmsExcept(this)`
+(F2:11182) — a silent nightmode/none alarm then does its night-mode side
+effect without silencing a sounding alarm. Keep every other effect of the
+TYPE_NONE branch intact (autoDismiss → doPreAction → stopAlarm,
+F2:11184-11191); only that one cancel line is skipped. This site is preferred
+over guarding `stopAlarmsExcept` itself because the canceller's identity is
+not passed to it (`anAlarm` is the survivor), and because `ringAlarm`/F2:11182
+is the single reachable caller — the other three `stopAlarmsExcept` callers
+(F2:12033, 12238, 12244) pass `undefined` and are unreachable on our stack
+(`ExtendedEvents.AlarmPlayer` drives none of them, and the periodic reload's
+interval is ONE_YEAR without the `alarmReloadInterval` FlashVar).
+
+**Where it goes.** New file in the fork under `core/src/chumby/` (e.g.
+`alarm_guard.rs`), wired in `mod.rs`, one-shot retry until frame 2 defines
+`Alarm.prototype.ringAlarm` — mirror `empty_channel.rs`. Before coding, grep
+every consumer of `ringAlarm`, `stopAlarmsExcept` and `TYPE_NONE` and list
+them with a verdict (CLAUDE.md consumer-list rule). It is a deliberate
+deviation from stock alarm behaviour, so record it in the fork's
+requirements.md (amendment near FR13) and design.md (the alarm chain / §9),
+per the docs-split rules.
+
+**Verify.** Desktop first: two alarms one minute apart — the later
+`type="none" action="nightmode"`, the earlier an audio stream — the audio must
+survive the silent alarm's ring. Then on chumby-pi-3, the real 07:59+08:00
+pairing this issue reproduced. Success signal: **no** `AlarmSet.stopAlarmsExcept():
+cancelling` at ~08:00 while the audio alarm keeps its mpv alive.
+
+**Recorded, not part of this fix:** the cancel also runs `restoreSoundSettings()`
+(volume 44→16 on 2026-09-01), so a manual resume after any cancel plays quiet.
+Moot once the cancel no longer fires for a silent alarm.
+
+Box left for the next session: chumby-pi-3 (192.168.42.24), 0.9.5, verbose
+`RUST_LOG` active in `/etc/default/chumby-player`
+(backup `.bak-preverbose`), `/psp/list.m3u` still ends in a newline. When the
+fix lands and is verified on the device, revert the `RUST_LOG` line and close
+this issue.
+
+Update 2026-09-01, 11:10 — option B built and verified on the desktop; the
+device run is what remains.
+
+Jan confirmed option B this session. The fix is fork commit 75f3acf28,
+`core/src/chumby/alarm_guard.rs`: a one-shot wrapper on
+`AlarmSet.prototype.stopAlarmsExcept` (F2:12039) that returns without
+cancelling when the argument's `_type` is `Alarm.TYPE_NONE` (F2:10170), and
+delegates to the parked original otherwise. Full rationale, consumer list and
+evidence are in the fork's `claude/issues.md` #10 — the player record, not
+repeated here.
+
+Two decisions differ from the 09:55 handoff, both deliberate:
+
+- **Hook site.** The handoff recommended wrapping `Alarm.ringAlarm` because
+  "the canceller's identity is not passed to `stopAlarmsExcept`". That is
+  wrong: at F2:11182 the argument is `this`, the ringing alarm, so canceller
+  and survivor are the same object on the only reachable path. Wrapping
+  `stopAlarmsExcept` is stateless; wrapping `ringAlarm` would require either
+  reimplementing its 50-line body or shadowing `stopAlarmsExcept` with a
+  no-op and restoring it, where a missed restore disables cancelling for every
+  alarm. Jan chose the `stopAlarmsExcept` site.
+- **Where it is documented.** The handoff said to amend the fork's
+  `requirements.md` (FR13) and `design.md` (§9). Those live in
+  `claude-docs/`, which fork commit 85d3447bc froze: *"claude-docs/ is the
+  frozen historical record. Live notes go in claude/."* The deviation is
+  recorded in the fork's `claude/issues.md` #10 instead.
+
+Desktop verification, same binary with the guard compiled out and in, two
+`when="once"` alarms a minute apart — earlier `type="beep" auto_dismiss="0"`,
+later `type="none" action="nightmode" auto_dismiss="1"`, the shape of the
+device failure. Guard off reproduced it off-device for the first time
+(`stopAlarmsExcept(): cancelling`, `isCancel:true`, `restoreSoundSettings():
+volume:60`); guard on shows none of those, the surviving alarm is never
+mentioned again after it rings, and the silent alarm still does its own work
+(`night mode off`, widget mode, `post_alarm_action` probes, `saveAlarms`).
+
+Still to do, and the reason this issue stays open:
+1. Build and deploy to chumby-pi-3 (192.168.42.24), gitlink bumped to
+   75f3acf28 on this repo's dev.
+2. Re-run the real pairing: a `when="once"` audio alarm at 07:59 with
+   `"Daily at 8:00"` enabled. Success signal: `silent alarm "Daily at 8:00"
+   rang — not cancelling ringing alarms` at 08:00, **no**
+   `stopAlarmsExcept(): cancelling`, and mpv still alive afterwards.
+3. Then revert the `RUST_LOG` line in `/etc/default/chumby-player` (backup at
+   `.bak-preverbose`) and close this issue.
+
+Box state, read off chumby-pi-3 on 2026-09-10, 19:58 (192.168.42.24, wired):
+`chumby-player` 0.9.5, so the fix is still undeployed; unit enabled and
+running since 2026-09-09 19:15 with `ruffle_desktop` at 82 % of a core;
+`/etc/default/chumby-player` (Aug 28 12:23) still carries the verbose
+`RUST_LOG`, backup `.bak-preverbose` beside it; `card0-DSI-1: connected`,
+backlight `10-0045` at 4/255.
+
+Update 2026-09-24, 20:04 — device verification of the guard, chumby-pi-3,
+0.9.8 (fork `5f585c1bd`, which carries `75f3acf28`). The running player
+logged `wrapped AlarmSet.prototype.stopAlarmsExcept` at start. Two
+one-shot alarms were added to a backed-up `/psp/alarms`, the pairing of
+this issue: "Guard test audio" on the Birds + SWR3 entry at 20:01
+(`auto_dismiss="1"`, `duration="3"`) and "Guard test silent" at 20:02
+(`type="none" action="nightmode" action_param="off" auto_dismiss="1"`).
+Journal:
+
+    20:01:00.050  Alarm.step(): ringing Sep 24 2026, 20:01
+    20:01:00.079  mpv pid=3500 url="/psp/birds.mp3" vol=0
+    20:01:31.979  mpv pid=3541 url="http://liveradio.swr.de/…/play.mp3" vol=50
+    20:02:00.121  Alarm.step(): ringing Sep 24 2026, 20:02
+    20:02:00.122  silent alarm "Guard test silent" rang — not cancelling ringing alarms
+    20:02:00.123  Alarm.doPrePostAction(): night mode off
+    20:04:00.148  Alarm.stopAlarmSoundContinuous(): Sep 24 2026, 20:01   (its duration)
+    20:04:00.171  Alarm.stopAlarm() Sep 24 2026, 20:01 isCancel:
+
+No `stopAlarmsExcept(): cancelling`; SWR3's mpv 3541 was alive 41 s after
+the silent alarm and until the audio alarm's own end at 20:04:00; the
+silent alarm still did its night-mode action. Pass.
+
+Seen in the same trace, harmless: the silent alarm's `stopAlarm(false)`
+(F2:11190) decrements `AlarmSet._alarmRefCount` (F2:12060) that its branch
+never incremented (`AlarmSet.ringAlarm`, F2:12055, runs for sounding
+alarms only) — "count is 0" while the audio alarm still rang, and
+`ScreenManager.stopAlarm()` sets `ScreenManager.mode = "stopAlarm"`
+(F2:9084). Stock behaviour (stock would reach −1 after its cancel), and
+inert: `_alarmRefCount` is only written and traced (F2:11783,
+12057-12069), `ScreenManager.mode` is read nowhere in the decompile.
+
+`/psp/alarms` restored (`cmp` identical), panel restarted to reload it,
+backup removed.
+
+Update 2026-09-24, 20:17 — closed. `/etc/default/chumby-player` restored
+from `.bak-preverbose` (the two differed only in line 55; the backup is
+byte-identical to the 0.9.8 template), backup removed, service restarted
+(`Result=success`); the player now runs with `RUST_LOG=warn`, the
+launcher default. Why now (Jan asked whether the verbose log is a
+problem): not for stability — the journal is volatile and capped near
+18 MB (10 % of the 182 MB `/run`), journald rotates it and used 5 s CPU in
+1 h 40 min — but the panel's periodic trace (~30 lines, 4.4 KB/min) filled
+that cap in under a day, so rare events aged out before anyone looked.
+Steady state afterwards: 7 journal lines in 2 min, none from the player;
+the supervisor logs regardless of `RUST_LOG`.
+
+---
+
+Number: 18
+Timestamp: 2026-09-10, 19:57
+Title: Sony Dash panel support — parked on the sony-dash branch.
+Status: parked — steps 1-4 done, step 5 not started
+Description: The Dash work is on branch `sony-dash`, tip `6f0439a` (pushed to
+origin), whose gitlink is the fork's `sony-dash` tip `0ea50a70b`. dev was
+rewound to `e7aa3ee` so the Pi appliance work continues without the Dash tree
+in the way. Everything Dash lives on that branch and nowhere else:
+`claude/sony-dash-panel-plan.md` (steps 1-4 with their records) and appliance
+issues 14-17 — package into `$STATE`, panel selection in the launcher and
+`/etc/default`, how a theme reaches the panel, docs/packaging/boot theme — so
+numbers 14-17 are reserved here and must not be reused on dev. Player side:
+fork issues 11-21 on the fork's `sony-dash` branch, with the fork's dev
+rewound to `75f3acf28` — its counterpart pointer is fork issue 22.
+Next there, gated by CHECKPOINT 5: step 5, themes for the user and panel
+selection (seeded `/psp/theme.swf`, the `/mnt/usb/externalthemes.xml` stick,
+`chumby-download-firmware` fetching panel and theme apart under `$STATE`, an
+explicit active setting naming panel and theme, docs and the Dash's
+`default_opening.swf` boot theme against Plymouth's classic 132 frames).
+Two step-4 findings want the DSI box before step 5: fork issue 20 (brightness
+via native 5,22 never reaches the backlight on platform `yume`) and fork issue
+21 (the silent-alarm cancel is probably unguarded on the Dash).
+Untracked and in git nowhere, left in the fork worktree:
+`ruffle/fixtures-dash/rootfs/psp/guid` and `.../theme.swf`.
+
+---
+
+Number: 19
+Timestamp: 2026-09-10, 21:45
+Title: 0.9.6 — the backlight cap on chumby-pi-3.
+Status: open — the 25 % value is Jan's call, sliders being set now
+Description: Fork issue 23 caps the backlight: `brightness_cap` in
+`player.toml`, shipped active at 25, so the panel's 0-100 spreads over a
+quarter of `max_brightness` instead of all of it. Appliance side: version
+0.9.6 (`build-debs.sh:21` — a conffile template change forces the bump),
+`docs/setup.md` §5 and design §8.
+Deployed to chumby-pi-3 (192.168.42.24) 2026-09-10 21:38 via
+`pkg/deploy-pi.sh`. The box's `player.toml` was unmodified, so dpkg took the
+new default outright — no `.dpkg-dist`, `brightness_cap = 25` active, the
+other four keys unchanged. Verified: `sense1/brightness` 65535 →
+`/sys/class/backlight/10-0045/brightness` **64** (= 25 % of 255), unit
+`NRestarts=0`, `ruffle_desktop` up.
+To let Jan find his level, both panel settings were put at the top of the new
+scale: `/psp/daymode_brightness` and `nightmode_brightness` = 100 (old day
+value 7.2222 kept as `daymode_brightness.bak-precap`; old night value was
+1.5). Night must come back down once he has picked — at 100 the idle dim
+does not dim.
+
+---
+
+Number: 20
+Timestamp: 2026-09-10, 22:25
+Title: 0.9.7 — one volume ceiling on chumby-pi-3, no exemptions.
+Status: open — the 50 % value and the Klaxon's loudness are Jan's to judge
+Description: Fork issue 24: `volume_cap` shipped at 50 instead of 100, and the
+backup-alarm Klaxon brought under it (the FR13 exemption reversed). Appliance
+side: version 0.9.7 (`build-debs.sh:21`, forced by the conffile template
+change) and `docs/setup.md` §5.
+Deployed to chumby-pi-3 2026-09-10 22:20. The conffile carries
+`volume_cap = 50` and `brightness_cap = 25`, again with no `.dpkg-dist` —
+the box's copy still matched what 0.9.6 shipped.
+Everything below the slider was already at unity and stays untouched: ALSA
+`PCM` 100 % on both cards, PipeWire sinks `vol: 1.00`, the SWF mixer at the
+CLI default 1, `/psp/backup_alarm_volume` absent (knob default 100, now × 50).
+Set to the top of the new scale for Jan to dial in: `/psp/volume` 32 → 100,
+`/psp/alarm_volume` 44 → 100. Player restarted, unit active, backlight still
+64 of 255.
+The one thing this makes worse: the never-done on-device Klaxon loudness check
+now applies to a tone at half scale.
+
+---
+
+Number: 21
+Timestamp: 2026-09-24, 10:15
+Title: After a cold boot the nightmode alarms never ring — the panel scheduled them against a clock 5½ days slow.
+Status: remedy built — the panel watchdog restarts the panel on a clock step > 15 s (`claude/watchdog-plan.md`, R9); desktop-verified end to end (3e); on chumby-pi-3 (0.9.8) verified 2026-09-24 by a simulated boot on a slow clock (NTP off, clock −3 days, panel restarted, NTP on): stranded alarms before, correct schedule after the supervisor's restart (plan, test 4). Player side: fork issue 25
+Description: Jan: chumby-pi-3 did not run the "Daily at 8:00" nightmode-off
+alarm after it was booted on Monday. Read off the box 2026-09-24 10:02
+(192.168.42.24, 0.9.7, verbose `RUST_LOG` from issue 13 still active):
+
+    (Alarm heartbeat Daily at 8:00 rings in -544945 seconds, at:Thu Sep 17 08:00:00 GMT+0200 2026)
+    (Alarm heartbeat Daily at 23:00 rings in -577345 seconds, at:Wed Sep 16 23:00:00 GMT+0200 2026)
+
+Both enabled daily alarms point at times days in the past, and have since
+boot. The cause is the wall clock at player start:
+
+- Boot (`btime` 1790028539) was 2026-09-22 00:08:59 CEST; `ruffle_desktop`
+  pid 1143 started 00:09:30.
+- systemd stamped the unit `active since Wed 2026-09-16 08:53:04` at monotonic
+  30.4 s — so 30 s after boot the clock read Sep 16 08:53, **5 d 15 h 16 min
+  behind**. The Pi has no RTC (`RTC time: n/a`), no fake-hwclock; timesyncd
+  restores the last saved time and steps it forward only once NTP answers.
+  A step, not a slew: timesyncd (pid 306; no ntpd or chrony installed)
+  slews only offsets below `NTP_MAX_ADJUST = 0.4` s and sets larger ones
+  with `ADJ_SETOFFSET` (systemd v257 `timesyncd-manager.c:52,247-272`), and
+  the kernel's 500 ppm slew limit would cover at most ~104 s over this
+  uptime, not 5 d 15 h.
+- `chumby-player.service` orders only `After=systemd-user-sessions.service
+  getty@tty1.service`; `time-sync.target` was never reached (monotonic 0)
+  and `systemd-time-wait-sync.service` is disabled.
+
+The panel computed each alarm's next time once, from Sep 16 08:53:
+`computeNextAlarmTimeDaily` (F2:10805) gives 23:00 → Sep 16 23:00 and
+08:00 → Sep 17 08:00, exactly the two times logged. `Alarm.step` (F2:10897)
+rings only while `now - _alarmTime` is within `RING_WINDOW = 15000` ms
+(F2:10186, test at F2:10910), and a new time is computed only after a ring.
+After the forward step every enabled alarm sits outside its window for good;
+nothing in the panel notices a clock step. The 23:00 nightmode-on alarm is
+dead for the same reason. Any enabled alarm — audio ones included — is
+affected after a boot with a stale clock, until the player restarts.
+
+Not related to issue 13 / fork `alarm_guard.rs`: no alarm reaches
+`ringAlarm`, so the guard never runs.
+
+Side finding, not pursued: the journal is volatile (files under
+`/run/log/journal`, `/var/log/journal` empty), 17 MB, and with the verbose
+`RUST_LOG` it reaches back only to 2026-09-23 15:22 — the boot and the NTP
+step are already rotated out. The issue-13 note of a ≈5.9 GB persistent cap
+does not describe this box as it is now.
+
+Remedy options, none chosen:
+- **A — appliance: start the player after the clock is set.** Order the unit
+  after `time-sync.target` with `systemd-time-wait-sync` enabled. That unit
+  is `TimeoutStartSec=infinity`, so offline the panel would never start; it
+  needs a bounded wait. Does not help a clock that is stepped later (network
+  arrives after the timeout).
+- **B — player: re-arm alarms on a wall-clock step.** Compare wall-clock
+  against monotonic time; on a step beyond a threshold, recompute every
+  enabled alarm's `_alarmTime`. Covers late syncs and manual clock changes
+  too. Fork work, consumer list first.
+- **C — both.**
+
+---
+
+Number: 22
+Timestamp: 2026-09-24, 10:50
+Title: The panel showed WLAN as good while the WLAN was not usable.
+Status: cause still unknown; mitigated — NetworkManager's connectivity check is now on (a real reachability test, not a default-route guess) and the watchdog restarts the panel when connectivity returns, refreshing the Info screen's boot-time snapshot (`claude/watchdog-plan.md`, R3/R7/R8; verified on chumby-pi-3 2026-09-24)
+Description: Jan, 2026-09-24: roughly 1-2 weeks ago the panel's WLAN
+information looked good, but the WLAN could not be used. No log exists for
+it: the journal on chumby-pi-3 is volatile and reaches back only to
+2026-09-23 15:22 (issue 21, side finding). What the panel's WLAN display is
+able to show, from the code — player side in fork issue 26:
+
+- **Link quality** is signal strength, nothing more: `/proc/net/wireless`
+  `link` (0-70, cfg80211's signal + 110 dBm, clamped) rescaled to percent.
+  `connected="1"` means only "the default route is on a wireless interface
+  and `/proc/net/wireless` has a line for it". Association status,
+  gateway and DNS reachability are not consulted. Polled live: the dashboard
+  meter every 60 frames, the Info screen on each open.
+- **IP, netmask, gateway, DNS, SSID** on the Info screen are read once, in
+  the panel's boot chain, and never refreshed.
+
+So a strong signal with a dead link, or a network that changed after player
+start, both render as "good". Same family as issue 21: the panel samples the
+system once, or through a proxy, and does not notice it changing.
+
+Next time it happens, before anything is restarted: `ip addr`, `ip route`,
+`cat /proc/net/wireless`, `iw dev wlan0 link`, `ping` the gateway and a name,
+and `journalctl --since "<absolute time>"` while the lines still exist.

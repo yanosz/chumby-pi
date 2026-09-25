@@ -36,6 +36,11 @@ EnvironmentFile=-/etc/default/chumby-player
 # even when cage cannot start at all (no DRM device, wrong overlay).
 ExecStartPre=/usr/bin/chumby-player-run --check
 ExecStart=/usr/bin/chumby-player-run --kiosk
+# PAMName moves cage, supervisor and player into the logind session scope,
+# so stopping the unit signals cage alone — which then waits for its child,
+# the supervisor, until the stop times out. Stop the supervisor first; it
+# takes the player down and cage follows it out.
+ExecStop=/usr/bin/pkill -TERM -x -u pi chumby-supervis
 Restart=on-failure
 RestartSec=3
 
