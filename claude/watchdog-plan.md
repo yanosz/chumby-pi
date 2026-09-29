@@ -582,3 +582,28 @@ That leaves step 4 without a device gap except `access_chumby_com`
   run 36040758966 (pull_request: build + install test; the movie-start
   test and the apt repo run only on a push to `main`). A manual dispatch
   was avoided: it would have published 0.9.8 to the apt repo from `dev`.
+
+## PR #18 closed, 2026-09-29
+
+PR #18 was never asked for: "make sure that ci runs" met a `ci.yml` that
+ignores pushes to `dev`, and the frozen `claude-docs/development.md` §1 (both
+repos) still said a session ends with a PR. Jan: "open a PR is definitely
+incorrect". Closed; `CLAUDE.md` now forbids PRs (`62727d5`). The code reaches
+`main` the 0.9.4/0.9.5 way instead — one release commit on `main`, the fork's
+`chumby` pair regenerated — as a single 0.9.8 (0.9.6 and 0.9.7 never reached
+`main` or apt). Jan's go includes shipping with `access_chumby_com` untested.
+
+### Release step 1 — fork pair regenerated (local), 2026-09-29
+
+- Base unchanged: `8328af42d`. Backup of the old tip: local branch
+  `chumby-before-regen-2026-09-29` (`a82bd5501`).
+- Built with a temporary index, no checkout: commit 1 = base + every path
+  added in fork `dev` (88 A), `9b029bbcd`; commit 2 = fork `dev`'s tree
+  (18 M, 1 D), `f714dc44a`, local branch `chumby-regen-2026-09-29`. Old
+  messages reused.
+- Checks: `git diff f714dc44a origin/dev` empty; the edit surface lists the
+  same 19 paths as the old pair; commit 1 differs from the old commit 1 in
+  exactly the 13 addition paths the session changed (`restart.rs` new).
+- Movie-start check on fork `dev` (same tree), debug build, CI's command line
+  on a scratch copy of `fixtures/`, desktop display `:11` (no `xvfb-run` on
+  this machine): exit 124, `_getPlatform` 1, `panicked` 0. Pass.
