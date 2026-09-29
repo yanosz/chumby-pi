@@ -607,3 +607,25 @@ incorrect". Closed; `CLAUDE.md` now forbids PRs (`62727d5`). The code reaches
 - Movie-start check on fork `dev` (same tree), debug build, CI's command line
   on a scratch copy of `fixtures/`, desktop display `:11` (no `xvfb-run` on
   this machine): exit 124, `_getPlatform` 1, `panicked` 0. Pass.
+
+### Release step 2 — the 0.9.8 commit on `main` (local), 2026-09-29
+
+- Jan asked for the PR instruction to go from the docs: both
+  `claude-docs/development.md` §1 rewritten (fork `513327ff7`, here
+  `879b7f5`) — work on `dev`, no PRs, release = main commit + regenerated
+  pair; what each CI runs on, and that a `ci.yml` dispatch publishes to apt
+  (`ci.yml:146`, `if: github.event_name != 'pull_request'`).
+- That moved fork `dev`, so the pair was regenerated again: commit 1
+  `ca1ba274e`, commit 2 `5dac40c05` (branch `chumby-regen-2026-09-29`),
+  tree equal to fork `dev`. Its only difference from the pair checked in
+  step 1 is that markdown file, so the movie-start check was not repeated.
+- Release commit on `origin/main` (`1f3de01`): `dev`'s tree with the gitlink
+  at `5dac40c05`, branch `release-0.9.8`; `git diff --raw` against `dev`
+  shows only the gitlink.
+- Build from the same trees: dist cross-builds (player, exporter,
+  supervisor) + `pkg/build-debs.sh` → `chumby-player_0.9.8_arm64.deb`,
+  Depends include `procps` and `network-manager-config-connectivity-debian`,
+  ships `chumby-supervisor`, `ruffle_desktop`, `ruffle-exporter`. One
+  warning, upstream's (`core/src/ecma_conversions.rs:48`, `__jcvt`).
+- Push order next: fork `chumby` (force, with the backup branch), then
+  `main`, which also publishes 0.9.8 to apt. Jan: I push.
