@@ -96,6 +96,10 @@ A `yoga-widget/` folder, where present, is a separate project — chumby-yoga,
 a video widget for the original chumby hardware. It is not part of this repo
 (ignored here) and is documented in its own repository.
 
+Likewise `rust-remote/` (chumby-rust-remote): a separate project with its own git
+repository, a small service for the original chumby hardware that switches
+night mode and suppresses alarms. Ignored here, documented in its own README.
+
 ## What works, and what doesn't
 
 **Working on the Pi:** boot-to-panel kiosk, the clock, touch input
