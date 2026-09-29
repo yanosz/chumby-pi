@@ -20,9 +20,8 @@ When being tasked to fix a bug or do a feature, create a plan with steps / check
 Non-negotiable rules:
 - Work in branch "dev" - both repositories. Default branches are main (chumby-pi) and chumby (ruffle).
   Rebase dev branches to main / chumby when tasked. Work in main / chumby only when requested explicitly. 
-- Never open a pull request, in either repository. Both claude-docs/development.md §1 still
-  say "finishing a session means opening the pull request" — that is obsolete. Code reaches
-  main / chumby as a release commit (main) and a regenerated two-commit pair (chumby).
+- Never open a pull request, in either repository. Code reaches main / chumby as a release
+  commit (main) and a regenerated two-commit pair (chumby); see claude-docs/development.md §1.
   If CI cannot be triggered without a PR or dispatch, ask.
 - STOP at every CHECKPOINT. Summarize findings, ask the user, and wait for
   an answer. Never proceed past a checkpoint on your own. When scope is
