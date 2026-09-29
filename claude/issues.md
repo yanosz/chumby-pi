@@ -1163,3 +1163,53 @@ system once, or through a proxy, and does not notice it changing.
 Next time it happens, before anything is restarted: `ip addr`, `ip route`,
 `cat /proc/net/wireless`, `iw dev wlan0 link`, `ping` the gateway and a name,
 and `journalctl --since "<absolute time>"` while the lines still exist.
+
+---
+
+Number: 23
+Timestamp: 2026-09-30, 01:52
+Title: Idea: rebuild the hardware chumby's control panel in Rust, without Flash.
+Status: parked — idea only, Jan: "do not work on this for the time being"
+Description: Target is the classic chumby (i.MX21, ARMv5TE, Linux 2.6.16),
+not the Pi appliance; filed here at Jan's choice. Nothing built or tested.
+
+- **Memory.** Today Flash with panel and yoga widget: RSS 23 MB, 4.4 MB free
+  (yoga-widget `PLAN.md:252`). A single-process Rust panel is *estimated*
+  at 3-6 MB RSS: 320x240 at 16 bpp is 150 KB a frame, and the resolution is
+  fixed, so the panel's 567 shapes, 29 bitmaps and 14 embedded fonts
+  (916 KB TTF) can be pre-rendered at build time, a subset of them.
+  chumby-rust-remote shows a static armv5te binary at 0 CPU idle. If Flash
+  stays for widgets, its memory stays too.
+- **Constraints on the toolkit.** No GPU, no X/Wayland; fb + touchscreen;
+  on 2.6.16 `Condvar` and contended `Mutex` waits return at once and spin
+  (`rust-remote/README.md`, "Build"), so a single-threaded event loop and
+  software rendering. The panel owns fb1, the overlay the i.MX21 LCDC lays
+  over fb0; `/proc/fb` on the device lists only `0 IMX` and `1 IMX`
+  (2026-09-30).
+- **Toolkit candidates.** Slint (recommended): MCU-oriented software
+  renderer, custom platform for fb1 + touch, declarative screens —
+  unverified: an `armv5te-unknown-linux-musleabi` build, and whether its
+  licence (GPL / royalty-free / commercial) fits. embedded-graphics plus an
+  own widget layer: tiny, all widgets hand-written. LVGL via bindings:
+  proven on weaker hardware, but C. egui (redraws every frame) and
+  GPU/thread-based toolkits (iced) do not fit.
+- **Size of the panel** (decompile
+  chumby-pi-internal/docs/reference/appendix/controlpanel-2.8.87b3):
+  `frame_2/DoAction.as` 30,624 lines, 356 `_global` classes, 155 distinct
+  `ASnative` calls, 21 `exec://` commands. Dead services drop out
+  (MP3tunes, CBS/NPR podcasts, NOAA, Internode, Sleepcast, Chumbcast, ads,
+  widget ratings, the chumby.com catalogue). The subset: alarm engine
+  (snooze, backup alarm, actions, night mode — the hardest part), clock,
+  night mode, music (streams, FM, USB MP3, Bluetooth — the native players
+  `btplay`, `mp3.x`, `chumbradio*` stay callable), settings (volume,
+  brightness, wifi, timezone, touch calibration), widget player. Rebuilding
+  the look from the sprites/shapes is its own job.
+- **Widgets decide the architecture.** Widgets are SWFs:
+  1. no widgets — a pure Rust clock radio;
+  2. hybrid — `chumbyflashplayer.x` stays with a stub master SWF that only
+     loads widgets into the slave and takes orders over XMLSocket (proven
+     by chumby-rust-remote); Rust draws the panel on fb1, the stub sets the
+     overlay alpha (`ASnative(5,110)`, panel `DoAction.as:1474`);
+  3. a native Rust widget system.
+  Suggested if it is ever taken up: the hybrid on Slint, first slice clock,
+  alarms, night mode and streams, alarm engine proven first.
