@@ -136,6 +136,13 @@ The panel appears on the TFT and from now on comes up on every boot.
   (≥1 s)** is the squeeze of the chumby's top button: it summons (and
   dismisses) the control panel bar, and snoozes a ringing alarm.
   `chumby-ctl bend` does the same from a shell.
+- **The player restarts itself** when the world changes under it:
+  after a crash, when the clock is corrected by more than 15 s (the
+  Pi has no clock battery, so this happens once shortly after most
+  boots), and when the network comes back. It never restarts while an
+  alarm is ringing or snoozed, nor within 60 s of a touch. After a
+  boot the panel starts in day mode, as the chumby did; night mode
+  survives a restart, not a reboot.
 - `sudo systemctl stop chumby-player` — leave player mode until next
   boot; `sudo systemctl disable --now chumby-player` — leave it for
   good; logs: `journalctl -u chumby-player`.
@@ -152,11 +159,17 @@ the player.
 
 Two files, both surviving upgrades:
 
-- **`/etc/chumby-player/player.toml`** — owner policy: volume cap,
-  `access_chumby_com` (opt-in: internet-radio directories, device
-  registration and your account's widget channels from the still-alive
-  chumby.com), `merge_local_remote_widgets` (whether local widgets ride
-  along inside those account channels), `enable_lyrion`,
+- **`/etc/chumby-player/player.toml`** — owner policy: `volume_cap`
+  (what the panel's 100 % volume reaches — 50 by default, since every
+  other stage in the chain runs at unity and the slider is the only
+  fader),
+  `brightness_cap` (how much of your display's backlight range the
+  panel's 100 % reaches — 25 by default, because most panels are far too
+  bright at full duty and the interesting settings crowd into the bottom
+  of the scale), `access_chumby_com` (opt-in: internet-radio directories,
+  device registration and your account's widget channels from the
+  still-alive chumby.com), `merge_local_remote_widgets` (whether local
+  widgets ride along inside those account channels), `enable_lyrion`,
   `brightness_ctl`. Each key is documented in the file.
 - **`/etc/default/chumby-player`** — environment overrides: pin a
   specific display (`WLR_DRM_DEVICES`), route audio to a specific

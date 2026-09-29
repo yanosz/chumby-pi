@@ -12,42 +12,18 @@ This document is the engineering record: it keeps the reasons and the traps.
 
 ## 1. Branch and commit policy
 
-**One feature branch per working session, squashed on merge**, in both this
-repository and the submodule.
+Work happens on `dev`, in this repository and in the submodule. **No pull
+requests.** A release reaches `main` as one commit carrying `dev`'s tree,
+with the `ruffle/` gitlink re-pointed at the fork's regenerated `chumby` pair
+(the fork's `claude-docs/development.md` §1). On `dev` the gitlink tracks the
+fork's `dev` head. Push the fork's `chumby` first — otherwise `git clone
+--recursive` of `main` cannot fetch the submodule.
 
-**Finishing a session means opening the pull request** — push the branch and
-create the PR yourself, in each repo the session touched. A pushed branch
-with no PR is an unfinished session. Jan reviews and merges with GitHub's
-*Squash and merge*.
-
-```sh
-git push -u origin <branch>
-gh pr create --repo yanosz/chumby-pi --base main --head <branch> \
-    --title "…" --body "…"
-```
-
-Both workflows run on pull requests, but **a PR only builds.** Everything
-past the build needs `controlpanel.swf` — copyrighted, on a private share —
-so the deb build, the install/run test and the fork's movie-start check run
-on push to the default branch, after the squash-merge, and on manual
-dispatch. Verify locally before opening a PR; CI will not catch it for you.
-Merging is the user's call.
-
-**Order matters when the session touched the player.** Bump the `ruffle/`
-gitlink in the same change that needs it, but merge the **fork's PR first**:
-squash-merging replaces its commits with a new one, orphaning whatever the
-gitlink pinned. Then re-point the gitlink at the squashed commit, push, and
-only then merge this repo's PR. Otherwise `git clone --recursive` of `main`
-cannot fetch the submodule.
-
-The submodule tracks the fork's `chumby` branch (`branch = chumby` in
-`.gitmodules`), so re-pointing after a merge is:
-
-```sh
-git submodule update --remote ruffle    # fast-forward to origin/chumby
-git commit -am "Bump ruffle to the squashed <topic> commit"
-git push
-```
+`ci.yml` runs on a push to `main` and on manual dispatch, not on a push to
+`dev`. Both run everything — the deb build, the install/run test with
+`controlpanel.swf` from the private share, and the apt-repo publish — so a
+dispatch from `dev` publishes too. Verify locally before a release; CI will
+not catch it for you first.
 
 ## 2. Player work happens in the submodule
 

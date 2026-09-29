@@ -25,3 +25,10 @@ pdf/
 
 # KiCad generation tryout, not part of the record
 /hardware/breakout-tryout/
+
+# chumby-supervisor build output
+/supervisor/target/
+
+# Yoga video widget for the hardware chumby — its own repo (yanosz/chumby-yoga),
+# kept here as a plain subdirectory, deliberately not a submodule
+/yoga-widget/

@@ -92,6 +92,10 @@ this thing has to do, how it's put together, and how to work on it. Handy
 if you want to know *why* something works, but not needed to use it. The
 player has its own record, in the `ruffle/` submodule.
 
+A `yoga-widget/` folder, where present, is a separate project — chumby-yoga,
+a video widget for the original chumby hardware. It is not part of this repo
+(ignored here) and is documented in its own repository.
+
 ## What works, and what doesn't
 
 **Working on the Pi:** boot-to-panel kiosk, the clock, touch input

@@ -19,6 +19,13 @@ test -x /usr/bin/chumby-ctl
 test -x /usr/bin/chumby-local-widgets
 test -x /usr/bin/chumby-player-run
 /usr/lib/chumby-player/ruffle_desktop --version
+# The supervisor runs (declared libraries) and refuses a bare call.
+set +e
+/usr/lib/chumby-player/chumby-supervisor > /tmp/sup.log 2>&1
+status=$?
+set -e
+test "$status" -eq 2
+grep -q 'usage: chumby-supervisor' /tmp/sup.log
 
 # The public deb carries the fixtures but never a SWF.
 test -d /usr/share/chumby-player/fixtures

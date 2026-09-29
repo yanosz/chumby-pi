@@ -12,11 +12,17 @@ Both repositories contain a folder called claude-docs. These are internal docume
 the project was active and had not reached maintenance mode, yet. This notes can be helpful for understanding design 
 decisions but are not changed any longer.
 
+Chumby is a historic, hackerfriendly, open-hardware and open-source device. Many
+resources are available online, still. Ask Jan, if they are needed and cannot be found.
+
 When being tasked to fix a bug or do a feature, create a plan with steps / checkpoints first.
 
 Non-negotiable rules:
 - Work in branch "dev" - both repositories. Default branches are main (chumby-pi) and chumby (ruffle).
   Rebase dev branches to main / chumby when tasked. Work in main / chumby only when requested explicitly. 
+- Never open a pull request, in either repository. Code reaches main / chumby as a release
+  commit (main) and a regenerated two-commit pair (chumby); see claude-docs/development.md §1.
+  If CI cannot be triggered without a PR or dispatch, ask.
 - STOP at every CHECKPOINT. Summarize findings, ask the user, and wait for
   an answer. Never proceed past a checkpoint on your own. When scope is
   ambiguous, ask — one clarifying question beats an exploratory detour, and

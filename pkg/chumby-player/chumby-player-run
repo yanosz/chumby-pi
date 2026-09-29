@@ -32,6 +32,8 @@
 #   CHUMBY_SHARE         installed data (default /usr/share/chumby-player)
 #   CHUMBY_RUFFLE        player binary  (default
 #                        /usr/lib/chumby-player/ruffle_desktop)
+#   CHUMBY_SUPERVISOR    supervisor binary (default
+#                        /usr/lib/chumby-player/chumby-supervisor)
 #   LP_NUM_THREADS       lavapipe worker threads; unset ⇒ lavapipe default (NFR4)
 #   CHUMBY_QUALITY       Flash stage quality (low/medium/high); unset ⇒ player default
 #   CHUMBY_RENDERER      render backend (wgpu/tiny-skia); unset ⇒ player default
@@ -42,6 +44,7 @@ SHARE="${CHUMBY_SHARE:-/usr/share/chumby-player}"
 STATE="${CHUMBY_STATE:-/var/lib/chumby}"
 CTL="${CHUMBY_CTL:-/tmp/chumby-ctl}"
 RUFFLE="${CHUMBY_RUFFLE:-/usr/lib/chumby-player/ruffle_desktop}"
+SUPERVISOR="${CHUMBY_SUPERVISOR:-/usr/lib/chumby-player/chumby-supervisor}"
 
 # controlpanel.swf: owner copy first; the /usr/share path still serves
 # boxes that installed the retired data deb. Checks readability, not
@@ -150,6 +153,18 @@ if [ ! -L "$USB_LINK" ]; then
     ln -s /media/chumby-usb "$USB_LINK"
 fi
 
+# The panel's /tmp lives on the real /tmp (a tmpfs on Raspberry Pi OS):
+# emptied at boot, kept across player restarts — the chumby's ramdisk.
+# A boot therefore starts in day mode, as the chumby did; /tmp/nightmode
+# only survives a restart (claude/watchdog-plan.md R6, D8).
+PANEL_TMP=/tmp/chumby-panel-tmp
+TMP_LINK="$STATE/fixtures/rootfs/tmp"
+mkdir -p -m 700 "$PANEL_TMP"
+if [ ! -L "$TMP_LINK" ]; then
+    rm -rf "$TMP_LINK"
+    ln -s "$PANEL_TMP" "$TMP_LINK"
+fi
+
 # Alarm tones are owner-supplied. Point the fixture path at the owner
 # folder — unless a tree seeded by the retired data deb already carries
 # real tones, which keeps working until its owner deletes them.
@@ -188,7 +203,7 @@ mkdir -p "$STATE/widgets"
 # the panel must write its settings into it (User=pi in the unit).
 if [ "${1:-}" = "--seed" ]; then
     if [ "$(id -u)" = 0 ] && getent passwd pi >/dev/null 2>&1; then
-        chown -R pi:pi "$STATE"
+        chown -R pi:pi "$STATE" "$PANEL_TMP"
     fi
     exit 0
 fi
@@ -270,7 +285,12 @@ if [ -f "$INTRO" ] && [ -r "$INTRO" ] && [ ! -e "$STATE/fixtures/rootfs/psp/disa
         "$INTRO" || true
 fi
 
-exec "$RUFFLE" \
+# The supervisor owns the player from here on: restarts it after a crash,
+# and asks it to restart when idle after a clock step or when the network
+# comes back (claude/watchdog-plan.md). It stays cage's only client, so
+# cage survives those restarts.
+exec "$SUPERVISOR" --ctl "$CTL" --config /etc/chumby-player/player.toml -- \
+    "$RUFFLE" \
     --load-behavior blocking \
     --filesystem-access-mode allow \
     --chumby-fixtures "$STATE/fixtures" \

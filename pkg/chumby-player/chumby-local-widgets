@@ -28,7 +28,8 @@ How to add a widget:
 
 Keeping a widget the player downloaded from chumby.com:
   The download cache is {cache}.
-  It stores each downloaded widget movie under its opaque widget id (a
+  Like the chumby's, it lives in RAM and is emptied at every boot — copy
+  a widget out before rebooting. It stores each downloaded widget movie under its opaque widget id (a
   GUID on a real chumby), and its widgetcache.xml records only
   id/version/size/md5 — no names, no preview images. Play the widget to
   figure out which file is which, then copy it here under a real name:
