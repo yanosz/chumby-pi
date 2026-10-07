@@ -98,7 +98,7 @@ a video widget for the original chumby hardware. It is not part of this repo
 
 Likewise `rust-remote/` (chumby-rust-remote): a separate project with its own git
 repository, a small service for the original chumby hardware that switches
-night mode and suppresses alarms. Ignored here, documented in its own README.
+night mode and keeps the chumby awake. Ignored here, documented in its own README.
 
 ## What works, and what doesn't
 
