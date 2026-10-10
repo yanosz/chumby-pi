@@ -421,6 +421,13 @@ standby and dark night mode), the level survives the switch. Unit- and
 desktop-verified; the DSI box was not reachable that evening, so the run on
 it is open.
 
+**Step 2 (appliance issue 14) — inventory done 2026-10-10, not implemented.**
+Every medium the Dash needs is listed in issue 14 with its source; all are
+downloadable except the tones (decided: mapped onto the classic mp3s) and
+the music icons (open). No deploy that day (Jan: late, wrap up); the
+issue-20 box run waits for the next session. The WLAN outage that took the
+box offline was back by the end of the session.
+
 ### Step 5 — themes for the user, and panel selection
 
 - The user-supplied theme route, whichever step 2 shows to be real: a seeded

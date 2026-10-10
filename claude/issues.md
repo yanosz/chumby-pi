@@ -1046,6 +1046,19 @@ Not needed by the player: `movie.swf` and the Dash's startup scripts (our
 launcher replaces that chain), `factorytest.swf`, `default_opening.swf`
 (boot animation, issue 17), `flashplayer.cfg`, `default_hosts`.
 
+Decisions (Jan, 2026-10-10, interview):
+- **Tones: mapped onto the classic mp3s** the downloader already fetches,
+  "by character": Basic 1 → Beep, Basic 2 → Beep, Sonar → Klaxon, Tinkle →
+  ClockStrikes, Crystal → Gong, Chime → Bugle, Birds → Nightingale, Wave →
+  RoosterCrow — for alarm and event tones alike. That is fork work (the
+  `.raw` paths answered with the mapped mp3), plus the downloader shipping
+  the tones where the Dash tree resolves them.
+- **Icons: open.** Jan asked whether they can be extracted from a firmware
+  binary. Checked: not in the backup, not in the classic fixtures, and none
+  of the Dash panel's 96 embedded bitmaps is one of them (UI chrome only —
+  the panel loads these by URL, `MusicPlayer.as:22`). Sony's 1.7.1526 might
+  hold copies; unknown, not in hand. Options left: blank, or our own.
+
 ---
 
 Number: 15
