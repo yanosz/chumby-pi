@@ -1059,6 +1059,23 @@ Decisions (Jan, 2026-10-10, interview):
   the panel loads these by URL, `MusicPlayer.as:22`). Sony's 1.7.1526 might
   hold copies; unknown, not in hand. Options left: blank, or our own.
 
+Lead (Jan, 2026-10-11): forum thread 9758, "Sony Dash HID-C10 Original
+Firmware, Themes, and File Downloads" (drexful, 2017-07-16, last edited
+2023-10-31; page 1 of 2 read, one request, nothing downloaded):
+`https://forum.chumby.com/viewtopic.php?id=9758`. It links, on
+**third-party hosts** (mega.nz, anonfiles — not chumby's; link liveness
+not checked):
+- Sony firmware `update.zip`s: 1.7.1371 (stock and SSH-enabled), 1.7.1461
+  (stock and SSH), **1.7.1526 (stock, mega.nz)** — the image the Dash zip
+  installs onto, and the candidate source for the `.raw` tones and maybe
+  the music icons — and 1.7.1604 (bricks the device, "development only").
+- Eight more home-screen themes: App Launcher, App View, Bento, CBS,
+  Dr. Oz, Full App View, PlayStation, Winter Wonderland.
+- Stock Sony control panels 4.3.04 to 4.4.01, and the English manual (PDF).
+Whether 1.7.1526 holds the tones/icons is unverified. Fetching from a
+third-party host is Jan's call (the step-1 deferral of Sony's firmware);
+the tone mapping above stands until then. Page 2 unread.
+
 ---
 
 Number: 15
