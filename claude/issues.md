@@ -1027,6 +1027,25 @@ source that verifies the md5 and extracts `controlpanel.swf`,
 seeds `/psp/theme.swf` and `/psp/theme_name.txt`). Nothing else from the zip
 is needed by the player. Size: M (shell in the downloader, as it is today).
 
+UPDATE 2026-10-10 — the media inventory (Jan: the download script must
+fetch **all** media the Dash needs). Every file the Dash reads outside its
+own SWF, from the decompile's literal paths and a desktop run's `MISSING`
+lines, with its source (files.chumby.com probed serially, one request each):
+
+| Medium | Read at | Source | Status |
+|---|---|---|---|
+| `controlpanel.swf` | launcher | Dash zip | served, 200 |
+| `default_theme.swf` = Space Theme (md5 `539748ae…`) + name | `/psp/theme.swf` (a copy), `/psp/theme_name.txt` | Dash zip | served |
+| Space, Full Screen App, Clock/Weather themes + `theme.jpg` thumbnails | `/psp/themes/<Name>.swf` + `<Name>.jpg` (fork `dash_theme.rs` catalog) | `files.chumby.com/dash/production/themes/{space,fullscreen,weatherclock}/` per the live `themes.xml` (md5s in it) | all six served, 200 |
+| `builtinclock.swf` (the channel's clock widget) | `/usr/widgets/builtinclock.swf` | classic `update.zip`, `usr/widgets/` — seen in the zurks copy of the image, to verify in the official one | served |
+| sample photos (5 + thumbs) | `/psp/sample_photos/` | Dash zip (`install_chumby.sh` copies them) | served |
+| alarm + event tones `alarm1`-`alarm6`, `Birds`, `Wave` (`.raw`) | `/usr/chumby/{alarm,event}tones/<name>.raw` (`Alarm.as:86,1467`, `Event.as:98,1595`) | **only Sony's firmware 1.7.1526** — not in the Dash zip, not in the classic image, the unbrick kit is 7 KB | **missing**; the fork has no `.raw` decoding either |
+| 7 music-source icons | `http://files.chumby.com/dash/icons/*.png` (`MusicPlayer.as:22`) | 404 on the live host, not in the Wayback index | **unobtainable** |
+
+Not needed by the player: `movie.swf` and the Dash's startup scripts (our
+launcher replaces that chain), `factorytest.swf`, `default_opening.swf`
+(boot animation, issue 17), `flashplayer.cfg`, `default_hosts`.
+
 ---
 
 Number: 15
