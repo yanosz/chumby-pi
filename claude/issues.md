@@ -1028,6 +1028,13 @@ via native 5,22 never reaches the backlight on platform `yume`) and fork issue
 Untracked and in git nowhere, left in the fork worktree:
 `ruffle/fixtures-dash/rootfs/psp/guid` and `.../theme.swf`.
 
+UPDATE 2026-10-10: resumed. `sony-dash` is rebased onto dev in both repos —
+the tips above are gone from the branch and kept as
+`sony-dash-before-rebase-20261010`; read the branch, not a hash. Fork issue 21
+is accepted as a known issue (Jan: it concerns the real chumby devices too)
+and no longer gates step 5; fork issue 20 is fixed in this run, then the Dash
+is deployed onto the DSI box with `pkg/deploy-pi.sh` for end-user testing.
+
 ---
 
 Number: 19
