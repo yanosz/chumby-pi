@@ -377,6 +377,42 @@ before step 5 is the two new fork issues, both of which want the box, and
 the appliance list (issues 14-17 here), which is where the packaging,
 `CHUMBY_PANEL` and the theme seeding live.
 
+### Resumed 2026-10-10 — rebase, and the order to the deploy
+
+Parked 2026-09-10 (issue 18), resumed 2026-10-10 (Jan: implement what is
+missing and deploy it on the DSI box for end-user testing). Settled in an
+interview:
+
+- Fork issue 21 (silent-alarm cancel) is a **known issue**, not fixed — it
+  concerns the real chumby devices too.
+- Fork issue 20 (brightness via 5,22) **is fixed in this run**, before the
+  deploy.
+- The deploy is `pkg/deploy-pi.sh` onto the box as it stands, not a fresh
+  card.
+- Jan force-pushes the rebased branches himself.
+
+**Rebase — done 2026-10-10.** Both `sony-dash` branches were replayed onto
+dev; the old tips are `sony-dash-before-rebase-20261010`. Fork: 14 commits
+onto `bafaf337a`; conflicts in `chumby/mod.rs` (`restart` and `tzdump`,
+both kept) and `chumby/avm.rs` (the `dash_widget` one-shot placed after
+`alarm_guard`, before the per-frame `restart` check), and `issues.md` merged
+by number (1-10 and 22-27 from dev, 11-21 from the Dash). Here: 16 commits
+onto `11e7e1c`, `issues.md` by number (14-17 from the Dash), and each
+commit's gitlink rewritten to its rebased fork counterpart, matched by
+subject. Checked: the changed lines of every file are identical to the old
+delta; `cargo test -p ruffle_core chumby` 58 passed; classic movie-start
+check passes (exit 124, `_getPlatform`, no panic); `run-dash.sh` reaches
+the Dash home screen with the clock widget (desktop, wgpu).
+
+Order from here, one checkpoint each:
+
+1. Fork issue 20 — 5,22 reaches the backlight; verified on the box.
+2. Appliance issue 14 — the downloader's second source and theme seeding.
+3. Appliance issue 15 — `CHUMBY_PANEL` and a fixture tree per panel.
+4. Appliance issue 16 — the owner's themes directory and the USB route.
+5. Appliance issue 17 — docs, packaging, CI install test per panel.
+6. Deploy onto chumby-pi-3 with `CHUMBY_PANEL=dash` for end-user testing.
+
 ### Step 5 — themes for the user, and panel selection
 
 - The user-supplied theme route, whichever step 2 shows to be real: a seeded
