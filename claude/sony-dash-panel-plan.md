@@ -408,10 +408,18 @@ Order from here, one checkpoint each:
 
 1. Fork issue 20 — 5,22 reaches the backlight; verified on the box.
 2. Appliance issue 14 — the downloader's second source and theme seeding.
+   Jan (2026-10-10): the download script must fetch **all** media the Dash
+   needs — every file the player reads at run time, not just the panel.
 3. Appliance issue 15 — `CHUMBY_PANEL` and a fixture tree per panel.
 4. Appliance issue 16 — the owner's themes directory and the USB route.
 5. Appliance issue 17 — docs, packaging, CI install test per panel.
 6. Deploy onto chumby-pi-3 with `CHUMBY_PANEL=dash` for end-user testing.
+
+**Step 1 (fork issue 20) — implemented 2026-10-10**, fork `1a638a58d`: 5,22
+sets the kernel backlight, 5,20 LCD_OFF / LCD_ON switch it (the Dash's
+standby and dark night mode), the level survives the switch. Unit- and
+desktop-verified; the DSI box was not reachable that evening, so the run on
+it is open.
 
 ### Step 5 — themes for the user, and panel selection
 
