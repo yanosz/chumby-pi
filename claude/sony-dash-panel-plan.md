@@ -438,6 +438,27 @@ above names 4.10.0 paths as they were at the time. Consequence for step 2:
 the downloader is to fetch the panel from that URL, the zip only for theme
 and photos (issue 14).
 
+**Step 2 broken down (2026-10-11).** The Dash plays its built-in tones
+through `BTPlayer.startAlarm` → `_sendMediaPlayerCommand("playalarm 0|1
+<path>.raw")` (`BTPlayer.as:161-168`), 5,152, a logging stub in the fork
+(fork issue 19 (c)) — so tones are silent whatever the downloader fetches.
+Sony's 1.7.1526 ships each tone as `.raw` and `.mp3` side by side.
+- 2a (fork): `playalarm` / `stopalarm` play the `.raw` path's `.mp3`
+  sibling; desktop-verified with a ringing alarm.
+- 2b (downloader): the Dash media into `$STATE/dash/` — 4.10.3 panel (URL,
+  md5), the zip's theme, theme name and sample photos, the three catalog
+  themes + thumbnails (md5s from `themes.xml`), `builtinclock.swf` from the
+  1.7.3 image, and the tones (Sony's from the owner's zip, else the classic
+  mapping, announced; event tones as copies). Needs its own cramfs reader:
+  7-Zip fails on 1.7.1526's 16 KiB blocks.
+- Seeding `/psp/theme.swf` / `theme_name.txt` moves to step 3: the Dash
+  fixture tree is created by the launcher at first start, after the
+  downloader ran.
+- Not covered: `keytones/nav.raw` — 4.10.3 never names that path.
+
+Decided (Jan): **the downloader asks which panel** when it runs (not a
+command-line switch, not `CHUMBY_PANEL`).
+
 **Step 2 (appliance issue 14) — inventory done 2026-10-10, not implemented.**
 Every medium the Dash needs is listed in issue 14 with its source; all are
 downloadable except the tones (decided: mapped onto the classic mp3s) and
