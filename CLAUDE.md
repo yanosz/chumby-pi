@@ -59,6 +59,10 @@ Non-negotiable rules:
   and put this rule into every agent prompt about the chumby.
 - Work on ONE step at a time. Do not look ahead or start the next step's
   work while the current step is unfinished.
+- KISS and YAGNI are guiding principles: build what the goal needs, not a
+  reproduction of every detail. Apply them only where they reduce
+  complexity without compromising another quality goal (correctness,
+  robustness, UX, maintainability). When there is a trade-off, ask.
 - Keep code comments brief. Code should speak for itself; comment only
   what cannot be read from the code — the why, a non-obvious constraint, a
   reference. Do not narrate what the code plainly does.
