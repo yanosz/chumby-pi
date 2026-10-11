@@ -6,9 +6,9 @@ copyrighted Chumby Industries firmware, so the Debian package does not
 contain them. Chumby's own servers still do: the classic 1.7.3 firmware
 image (update.zip, ~30 MB) carries everything but the newest control
 panel, and chumby.com serves that panel through the same protocol the
-original firmware's download_cp used. For the Sony Dash panel, chumby's
-servers hold the panel, its themes and photos; its alarm tones are in
-Sony's own firmware, which you may add yourself. This helper shows
+original firmware's download_cp used. It installs either that panel or
+the Sony Dash's, whose 860x480 layout suits larger screens; chumby
+still serves the Dash panel and its default theme too. This helper shows
 exactly what it would download and asks before touching the network.
 Nothing identifying
 is sent (the device id in the control-panel query is zeroed), and the
@@ -24,17 +24,19 @@ import hashlib
 import io
 import os
 import shutil
-import struct
 import subprocess
 import sys
 import tempfile
 import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
-import zlib
 from pathlib import Path
 
 STATE = Path(os.environ.get("CHUMBY_STATE", "/var/lib/chumby"))
+SHARE = Path(os.environ.get("CHUMBY_SHARE", "/usr/share/chumby-player"))
+# The panel's writable tree, seeded per panel; its platform file says
+# which (ruffle fixtures/platform "ironforge", fixtures-dash/platform "yume").
+FIXTURES = STATE / "fixtures"
 
 UPDATE_URL = "https://files.chumby.com/resources/classic/1-7-3/update.zip"
 UPDATE_MD5 = "3fa64d39777d27908586d51824bb0eb7"
@@ -71,25 +73,18 @@ EXPORTER = Path(os.environ.get(
 BOOT_CMDLINE = Path("/boot/firmware/cmdline.txt")
 SPLASH_ARGS = "quiet splash plymouth.ignore-serial-consoles"
 
-# The Sony Dash (HID-C10) panel, under $STATE/dash/. Duane's 2023 build
-# (forum thread 10301) — the 1.0.0 package's own 4.10.0 lost its weather.
-DASH = STATE / "dash"
+# The Sony Dash panel: Duane's 2023 build (forum thread 10301) — the
+# package's own 4.10.0 lost its weather feed.
 DASH_PANEL_URL = "http://files.chumby.com/yume/controlpanels/4_10_3/controlpanel.swf"
 DASH_PANEL_MD5 = "d2354d700a7b4abe6abe037347b711b0"
-# chumby's add-on package (thread 9843): the default theme and sample photos.
+# chumby's Dash package (thread 9843), for its default theme: without a
+# theme the Dash has no home screen.
 DASH_PACKAGE_URL = "http://files.chumby.com/dash/chumby/chumby-hidc10-1.0.0.zip"
 DASH_PACKAGE_MD5 = "4fd7b88a993125a0c3d82aca8fe5673c"
-DASH_PACKAGE_FILES = ("default_theme.swf", "default_theme_name.txt")
-DASH_THEMES_URL = "http://files.chumby.com/dash/production/themes/themes.xml"
-# The channel's clock widget, from the classic image like the tones.
+# The clock widget the Dash's channel names, from the 1.7.3 image.
 BUILTIN_CLOCK = "usr/widgets/builtinclock.swf"
-
-# The Dash's alarm tones exist only in Sony's firmware, which chumby never
-# hosted: the owner fetches it (forum thread 9758) into /home/pi.
-SONY_ZIP = Path(os.environ.get("CHUMBY_SONY_ZIP", "/home/pi/Dash1.7.1526update.zip"))
-SONY_ZIP_MD5 = "35f49ae0b19aee592189297039cccd9e"
-SONY_FORUM_URL = "https://forum.chumby.com/viewtopic.php?id=9758"
-# Dash tone -> classic stand-in "by character" (Jan, chumby-pi issue 14).
+# Dash tone -> classic tone "by character" (chumby-pi claude/issues.md 14);
+# Sony's own tones were never on chumby's servers.
 DASH_TONES = {
     "alarm1": "Beep", "alarm2": "Beep", "alarm3": "Klaxon",
     "alarm4": "ClockStrikes", "alarm5": "Gong", "alarm6": "Bugle",
@@ -147,8 +142,10 @@ def sevenzip() -> str:
 
 def extract_rootfs(workdir: Path, dash: bool) -> Path | None:
     """Download update.zip, unpack the CRAMFS rootfs, return its tree."""
-    missing = [t for t in FIRMWARE_FILES.values() if not (STATE / t).is_file()]
-    if dash and not (DASH / "widgets/builtinclock.swf").is_file():
+    wanted = {s: t for s, t in FIRMWARE_FILES.items()
+              if not (dash and t == "intro.swf")}  # the tour is the classic's
+    missing = [t for t in wanted.values() if not (STATE / t).is_file()]
+    if dash and not (FIXTURES / "rootfs" / BUILTIN_CLOCK).is_file():
         missing.append(BUILTIN_CLOCK)
     if not missing:
         print("firmware files: all present, skipping update.zip.")
@@ -179,7 +176,7 @@ def extract_rootfs(workdir: Path, dash: bool) -> Path | None:
                     "usr/widgets", "usr/chumby/alarmtones"],
                    check=True, stdout=subprocess.DEVNULL)
 
-    for src, target in FIRMWARE_FILES.items():
+    for src, target in wanted.items():
         dest = STATE / target
         if dest.is_file():
             print(f"  {dest} already present, kept.")
@@ -225,130 +222,75 @@ def download_controlpanel(rootfs: Path | None) -> None:
             save(target, (rootfs / BLOB_CONTROLPANEL).read_bytes())
 
 
-def safe_name(name: str) -> str:
-    # The theme catalog shows a file's stem with "_" as spaces
-    # (ruffle core/src/chumby/dash_theme.rs).
-    return "".join(c if c.isalnum() or c == "-" else "_" for c in name)
+def installed_platform() -> str | None:
+    panel = STATE / "controlpanel.swf"
+    if panel.is_file():
+        dash = hashlib.md5(panel.read_bytes()).hexdigest() == DASH_PANEL_MD5
+        return "yume" if dash else "ironforge"
+    if not FIXTURES.is_dir():
+        return None
+    try:
+        return (FIXTURES / "platform").read_text().strip()
+    except OSError:
+        return "ironforge"  # trees from before the Dash are all classic
 
 
-def download_dash(rootfs: Path | None) -> None:
-    """The Dash panel, its themes and photos, the clock widget and tones."""
+def switch_panel(platform: str) -> None:
+    """Remove the other panel, its intro and its tree (with its settings)."""
+    installed = installed_platform()
+    if installed is None or installed == platform:
+        return
+    print("Another panel is installed. Switching removes it, the intro and")
+    print(f"its settings (alarms, clock, weather) in {FIXTURES}.")
+    if not confirm("Switch panels?"):
+        sys.exit("Nothing changed.")
+    for f in ("controlpanel.swf", "intro.swf"):
+        (STATE / f).unlink(missing_ok=True)
+    shutil.rmtree(FIXTURES, ignore_errors=True)
+    print("  removed the previous panel.")
+
+
+def install_dash(rootfs: Path | None) -> None:
+    """The Dash panel and what its tree needs: theme, clock, tones."""
+    if not FIXTURES.is_dir():
+        seed = STATE / "fixtures.seed"
+        shutil.copytree(SHARE / "fixtures-dash", seed, symlinks=True)
+        seed.rename(FIXTURES)
+        print(f"  seeded {FIXTURES} for the Dash.")
+    rootfs_dir = FIXTURES / "rootfs"
     if rootfs is not None:
-        save(DASH / "widgets/builtinclock.swf", (rootfs / BUILTIN_CLOCK).read_bytes())
+        save(rootfs_dir / BUILTIN_CLOCK, (rootfs / BUILTIN_CLOCK).read_bytes())
 
-    if (DASH / "controlpanel.swf").is_file():
-        print(f"Dash panel: already at {DASH}, skipping the downloads.")
+    panel = STATE / "controlpanel.swf"
+    theme = rootfs_dir / "psp/theme.swf"
+    if panel.is_file() and theme.is_file():
+        print("Dash panel and theme: already installed, skipping.")
     else:
-        try:
-            catalog = ET.fromstring(fetch(DASH_THEMES_URL, timeout=30))
-        except OSError as e:
-            sys.exit(f"theme catalog {DASH_THEMES_URL} failed ({e}).")
-        themes = [(t.findtext("name", ""), t.findtext("url", ""),
-                   t.findtext("md5", ""), t.findtext("thumbnailURL", ""))
-                  for t in catalog.iter("theme")]
-        print("The Sony Dash panel 4.10.3, chumby's Dash package (default")
-        print("theme, sample photos) and the themes chumby.com offers:")
+        print("The Sony Dash panel 4.10.3 and chumby's Dash package (for")
+        print("its default theme, Space Theme):")
         print(f"  {DASH_PANEL_URL}")
         print(f"  {DASH_PACKAGE_URL}")
-        for name, url, _, _ in themes:
-            print(f"  {url}  ({name})")
         if not confirm("Download them?"):
             print("  skipped.")
             return
-        with tempfile.TemporaryDirectory(prefix="chumby-dash-") as tmp:
-            package = Path(tmp) / "package.zip"
-            package.write_bytes(fetch_checked(DASH_PACKAGE_URL, DASH_PACKAGE_MD5))
-            with zipfile.ZipFile(package) as z:
-                for info in z.infolist():
-                    name = info.filename
-                    if name in DASH_PACKAGE_FILES or (
-                            name.startswith("sample_photos/") and not info.is_dir()):
-                        save(DASH / name, z.read(info))
-        for name, url, md5, thumb in themes:
-            stem = DASH / "themes" / safe_name(name)
-            save(stem.with_suffix(".swf"), fetch_checked(url, md5))
-            if thumb:
-                save(stem.with_suffix(".jpg"), fetch(thumb))
-        # Last, so a run broken off above starts over.
-        save(DASH / "controlpanel.swf", fetch_checked(DASH_PANEL_URL, DASH_PANEL_MD5))
+        if not theme.is_file():
+            with zipfile.ZipFile(io.BytesIO(
+                    fetch_checked(DASH_PACKAGE_URL, DASH_PACKAGE_MD5))) as z:
+                # A copy, not a link: installing a theme writes this path.
+                save(theme, z.read("default_theme.swf"))
+                save(rootfs_dir / "psp/theme_name.txt", z.read("default_theme_name.txt"))
+        save(panel, fetch_checked(DASH_PANEL_URL, DASH_PANEL_MD5))
 
-    install_dash_tones()
-
-
-def install_dash_tones() -> None:
-    sony = None
-    if SONY_ZIP.is_file():
-        data = SONY_ZIP.read_bytes()
-        if hashlib.md5(data).hexdigest() == SONY_ZIP_MD5:
-            sony = data
-        else:
-            print(f"{SONY_ZIP}: not Sony's 1.7.1526 (md5 differs), ignored.")
-
-    if sony is not None:
-        tones = sony_alarm_tones(sony)
-        print("Dash alarm tones: Sony's originals, from " + str(SONY_ZIP))
-    elif all((DASH / "alarmtones" / f"{t}.mp3").is_file() for t in DASH_TONES):
-        # Never trade installed tones (maybe Sony's) for the stand-ins.
-        print("Dash alarm tones: already present, kept.")
-        return
-    else:
-        classic = STATE / "alarmtones"
-        missing = [c for c in DASH_TONES.values() if not (classic / f"{c}.mp3").is_file()]
-        if missing:
-            print("Dash alarm tones: skipped — the classic tones are missing too.")
-            return
-        tones = {d: (classic / f"{c}.mp3").read_bytes() for d, c in DASH_TONES.items()}
-        print("Dash alarm tones: Sony's originals not found — using the classic")
-        print("  chumby tones instead. The originals are in Sony's firmware")
-        print(f"  {SONY_ZIP.name}, linked from {SONY_FORUM_URL} —")
-        print(f"  save it to {SONY_ZIP.parent} and run this command again.")
-
-    for name, data in tones.items():
-        save(DASH / "alarmtones" / f"{name}.mp3", data)
-    for name, source in DASH_EVENT_TONES.items():
-        save(DASH / "eventtones" / f"{name}.mp3", tones[source])
-
-
-def sony_alarm_tones(update_zip: bytes) -> dict[str, bytes]:
-    """The eight alarm MP3s from Sony's rootfs (rfs1.cramfs.img).
-
-    A minimal CRAMFS reader: 7-Zip cannot read this image, whose blocks
-    are 16 KiB instead of the page size.
-    """
-    with zipfile.ZipFile(io.BytesIO(update_zip)) as z:
-        img = z.read("rfs1.cramfs.img")
-    block = 16384
-
-    def inode(off):
-        mode, _uid, w2, w3 = struct.unpack_from("<HHII", img, off)
-        namelen = (w3 & 0x3F) * 4
-        name = img[off + 12:off + 12 + namelen].rstrip(b"\0").decode()
-        return w2 & 0xFFFFFF, (w3 >> 6) * 4, name, off + 12 + namelen
-
-    def entries(offset, size):
-        p = offset
-        while p < offset + size:
-            size_, offset_, name, p = inode(p)
-            yield name, size_, offset_
-
-    def lookup(path):
-        size, offset, _, _ = inode(64)  # the root inode follows the superblock
-        for part in path.split("/"):
-            size, offset = next((s, o) for n, s, o in entries(offset, size) if n == part)
-        return size, offset
-
-    def read(size, offset):
-        n = (size + block - 1) // block
-        ends = struct.unpack_from(f"<{n}I", img, offset)
-        start, out = offset + 4 * n, b""
-        for end in ends:
-            out += zlib.decompress(img[start:end])
-            start = end
-        return out
-
-    size, offset = lookup("usr/chumby/alarmtones")
-    files = {n: (s, o) for n, s, o in entries(offset, size)}
-    return {t: read(*files[f"{t}.mp3"]) for t in DASH_TONES}
+    # The launcher links the tree's alarmtones to $STATE/alarmtones.
+    tones = STATE / "alarmtones"
+    for dash, classic in DASH_TONES.items():
+        target = tones / f"{dash}.mp3"
+        if not target.is_file() and (tones / f"{classic}.mp3").is_file():
+            save(target, (tones / f"{classic}.mp3").read_bytes())
+    for event, alarm in DASH_EVENT_TONES.items():
+        target = rootfs_dir / "usr/chumby/eventtones" / f"{event}.mp3"
+        if not target.is_file() and (tones / f"{alarm}.mp3").is_file():
+            save(target, (tones / f"{alarm}.mp3").read_bytes())
 
 
 def install_boot_theme() -> None:
@@ -442,9 +384,9 @@ def main() -> None:
         sys.exit(f"{STATE} does not exist and is not creatable — "
                  "install chumby-player first (or run with sudo once).")
 
-    print("Which control panel should the player run?")
-    print("  1  chumby classic")
-    print("  2  Sony Dash")
+    print("Which control panel?")
+    print("  1  chumby classic (320x240)")
+    print("  2  Sony Dash (860x480 — suits larger screens)")
     try:
         choice = input("Panel [1]: ").strip() or "1"
     except EOFError:
@@ -452,12 +394,13 @@ def main() -> None:
     if choice not in ("1", "2"):
         sys.exit(f"no panel {choice!r} — run again and answer 1 or 2.")
     dash = choice == "2"
+    switch_panel("yume" if dash else "ironforge")
 
     with tempfile.TemporaryDirectory(prefix="chumby-fw-") as tmp:
         rootfs = extract_rootfs(Path(tmp), dash)
         print()
         if dash:
-            download_dash(rootfs)
+            install_dash(rootfs)
         else:
             download_controlpanel(rootfs)
 

@@ -1189,6 +1189,37 @@ at the zip path (ignored with a note, installed tones kept); classic path
 using `$STATE/dash/` (issue 15), seeding `/psp/theme.swf` (moved to step
 3), the box.
 
+UPDATE 2026-10-11 (later) — **re-scoped and reworked** (plan, "Re-scoped
+2026-10-11"). The `$STATE/dash/` layout above is gone; so are Sony's tones
+(zip lookup, cramfs reader), the catalog themes and the sample photos.
+One panel per install, chosen in the downloader; the launcher is unchanged:
+- The downloader asks classic or Dash. Choosing the other panel than the
+  installed one (identified by `$STATE/controlpanel.swf`'s md5, else by
+  `$STATE/fixtures/platform`) asks to switch, then removes
+  `controlpanel.swf`, `intro.swf` and `$STATE/fixtures` (that panel's
+  settings). The same panel again wipes nothing.
+- Dash: seeds `$STATE/fixtures` from `$SHARE/fixtures-dash`; 4.10.3 at
+  `$STATE/controlpanel.swf` (md5-checked, written last); the zip's
+  `default_theme.swf` copied to `fixtures/rootfs/psp/theme.swf` with
+  `theme_name.txt`; `builtinclock.swf` to `fixtures/rootfs/usr/widgets/`;
+  the classic stand-ins under the Dash names into `$STATE/alarmtones`
+  (the launcher links the tree's `alarmtones` there) and
+  `fixtures/rootfs/usr/chumby/eventtones/`. No intro (the tour is the
+  classic's).
+- `build-debs.sh` ships `fixtures-dash/` (tracked files only) next to
+  `fixtures/`.
+Verified on the desktop (scratch `$STATE`, a share staged from the fork's
+tracked files): fresh Dash install; re-run keeps settings; switch to
+classic declined (nothing changed, exit 1) and confirmed (classic panel,
+intro, tree reseeded by the launcher); classic → Dash with no tree yet
+(switch detected by the panel's md5 — first version missed it and would
+have kept the classic intro); an interrupted install resumes; the staging
+loop ships the 33 tracked files and none of the local MP3/SWF. Then the
+**unchanged launcher** (`chumby-player-run` with `CHUMBY_STATE`,
+`CHUMBY_SHARE`, dev `CHUMBY_RUFFLE` and `CHUMBY_SUPERVISOR`) on that state:
+the supervisor starts the player fullscreen, `_getPlatform` "yume", the
+Space Theme home screen with the clock widget (wgpu). Not yet: the box.
+
 ---
 
 Number: 15

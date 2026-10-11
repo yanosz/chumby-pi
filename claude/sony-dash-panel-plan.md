@@ -546,6 +546,12 @@ Dash. Agreed:
 This supersedes the step-3 plan above, its open hand-off question and
 issue 15's `CHUMBY_PANEL`; issue 16 (owner themes, USB) waits with themes.
 
+**Implemented 2026-10-11** (issue 14, last update): downloader reworked,
+`build-debs.sh` ships `fixtures-dash/`, launcher untouched; desktop-verified
+end to end through the real launcher. Remaining before the deploy: docs
+and packaging check (old issue 17, cut to what the new scope needs), then
+the box (step 6), which also takes issue 20's run.
+
 **Step 2 (appliance issue 14) — inventory done 2026-10-10, not implemented.**
 Every medium the Dash needs is listed in issue 14 with its source; all are
 downloadable except the tones (decided: mapped onto the classic mp3s) and

@@ -79,11 +79,15 @@ install -m 644 chumby-player/chumby-usb-mount@.service "$P/lib/systemd/system/"
 # except the copyrighted binaries, which are gitignored and ship (or are
 # owner-copied) separately. cp keeps working-tree edits; the prune drops
 # untracked files (the private overlay, local junk, the dev guid).
-cp -a "$REPO/ruffle/fixtures" "$P/usr/share/chumby-player/fixtures"
-( cd "$REPO/ruffle" && git ls-files -o fixtures ) | while read -r f; do
-    rm -f "$P/usr/share/chumby-player/$f"
+# fixtures-dash seeds the tree when chumby-download-firmware installs the
+# Dash panel instead.
+for tree in fixtures fixtures-dash; do
+    cp -a "$REPO/ruffle/$tree" "$P/usr/share/chumby-player/$tree"
+    ( cd "$REPO/ruffle" && git ls-files -o "$tree" ) | while read -r f; do
+        rm -f "$P/usr/share/chumby-player/$f"
+    done
+    find "$P/usr/share/chumby-player/$tree" -type d -empty -delete
 done
-find "$P/usr/share/chumby-player/fixtures" -type d -empty -delete
 find "$P" -type d -exec chmod 755 {} +
 dpkg-deb --build --root-owner-group "$P" "$OUT/chumby-player_${VERSION}_arm64.deb"
 
