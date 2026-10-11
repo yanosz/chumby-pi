@@ -1076,6 +1076,83 @@ Whether 1.7.1526 holds the tones/icons is unverified. Fetching from a
 third-party host is Jan's call (the step-1 deferral of Sony's firmware);
 the tone mapping above stands until then. Page 2 unread.
 
+UPDATE 2026-10-11 — 1.7.1526 inspected (Jan's go). The forum is reachable
+directly again (one request, 200); the thread's 1.7.1526 link is
+`mega.nz/file/Ar9iAb5I` (the anonfiles links are dead). Downloaded once to
+the session scratchpad: `Dash1.7.1526update.zip`, 101 776 156 bytes, md5
+`35f49ae0b19aee592189297039cccd9e`, zip CRCs clean, `version.txt`
+`production/candidate 1.7.0 1.7.1526`. The rootfs is `rfs1.cramfs.img`
+(`rfs2` a smaller second rootfs): cramfs v2 with **16 KiB blocks**, zlib —
+`fsck.cramfs` needs `-b 16384` and still stops at the first device node
+without root, so the files were read with a 40-line cramfs reader instead.
+- **Alarm tones: present.** `usr/chumby/alarmtones/` holds `alarm1`-`alarm6`,
+  `Birds`, `Wave` as `.raw` **and** `.mp3` (44.1 kHz MP3s, 1-12 s). The MP3
+  durations match `Alarm.as:86`'s `alarmTimes` for alarm1-6 (1.071 / 1.076 /
+  2.069 / 4.049 / 1.019 / 2.062 s against 1.071 / 1.071 / 2.063 / 4.075 /
+  1.055 / 2.063); Birds 8.2 s and Wave 11.7 s against 5 / 5. The `.raw`
+  sample format is not confirmed — the sizes fit 16-bit stereo at 44.1 kHz
+  for alarm1-6 (within 0.08 s of the MP3s), not for Birds (4.1 s against
+  8.2 s). Also `usr/chumby/keytones/nav.raw` (16 512 bytes).
+- **Event tones: absent.** No `eventtones` directory in either rootfs or
+  `psp.tar.gz`. `Event.as:96-98` names `event1`-`event6`, `Birds`, `Wave`
+  with exactly the alarm tones' durations and labels — the same sounds by
+  every visible sign, unverified.
+- **Music icons: absent.** None of the seven names in `MusicPlayer.as:22`
+  (`shoutcast_music.png` …) is in either rootfs or `psp.tar.gz`; they were
+  chumby-hosted, not Sony's.
+- `psp.tar.gz` is the factory `/psp` (27 files: settings, `dash_Intro.mp4`,
+  crontab) — nothing the player needs.
+
+Decision (Jan, 2026-10-11): **the owner supplies the firmware zip.** The
+owner downloads `Dash1.7.1526update.zip` by hand; the downloader takes the
+eight alarm MP3s out of it when it is present, and otherwise uses the
+classic-mp3 mapping above — an announced fallback, not a silent one. The
+event tones reuse the alarm MP3s either way. No re-hosting, and no fetching
+from mega.nz by our code.
+
+UPDATE 2026-10-11 — the icons, and a newer panel. Jan doubted the icons
+were gone (Blue Octy still sells the Dash subscription). Forum read with
+curl, serially: threads 9843 (Blue Octy's 1.0.0 release), 10301, the
+Sony dash subforum's page 1 of 8, and a search for "icon" (three unrelated
+classic posts) — nothing on the icons. **Thread 10301 (Duane, 2023-08-31)
+ships a newer Dash panel**: `files.chumby.com/yume/controlpanels/4_10_3/
+controlpanel.swf`, fetched once — 896 197 bytes, md5
+`d2354d700a7b4abe6abe037347b711b0`, as the post states. The zip's panel is
+**4.10.0** (its `ControlPanelVersion`, md5 `50715475…`). Their URL strings
+differ in one place only: weather moved from
+`sonyyume.accu-weather.com/widget/sonyyume/` to
+`wapi.chumby.com/widget/chumby/` — the fix for that feed's loss. The seven
+icon URLs are identical in both. `ExternalMusicSources.as:8`'s list,
+`files.chumby.com/dash/production/externalmusic/sources.xml`, is served
+(200) and empty. Icons: still unobtainable.
+
+Are the sources deactivated without their icons (Jan's expectation)? Not
+in 4.10.0. The list the theme gets is `availablePlayers()`
+(`MusicPlayer.as:50-66`, sent by `ThemeLoader.as:204,219`): a descriptor
+passes when a player is registered for its selector (`MusicPlayer.as:29-38`)
+and that player's `exists()` is true. `pcMusic` has no player, so it never
+shows; the four streaming sources pass with `hasNetwork()`
+(`ShoutcastPlayer.as:239`, `ChumbcastPlayer.as:149`, `SleepcastPlayer.as:149`,
+`DirectURLPlayer.as:158`); USB music and video always pass
+(`USBFilesPlayer.as:288`, `USBVideoFilesPlayer.as:295`). The icon is never
+consulted. The panel's popup item loads it with an empty `onLoadError`
+(`PopupMenuItemSecondaryLargeIcon.as:15-31`), so a 404 leaves the slot
+blank. The Space Theme draws them too, the same way: `MusicListItemIcon.as:12-29`
+and `VideoItem.as:19-41` (companions-dash-1.0.0 `default_theme`) load
+`icon` with an empty `onLoadError`. Holds for 4.10.3: none of these
+classes changed (`resources/dash-controlpanel-4.10.3/README.md`).
+
+Panel source (Jan, 2026-10-11): **4.10.3 is the Dash panel** — the live
+`files.chumby.com/yume/controlpanels/4_10_3/controlpanel.swf`, 896 197 bytes,
+md5 `d2354d700a7b4abe6abe037347b711b0`. The downloader therefore fetches
+the panel from that URL and verifies it; the zip stays the source of
+`default_theme.swf`, its name and the sample photos, and its own
+`controlpanel.swf` (4.10.0) is not used. New in 4.10.3 and relevant here:
+an alarm plays `/mnt/usb/alarm<N>.mp3`, `alarm<day>.mp3` or `alarm.mp3`
+from a stick when present (`Alarm.playAlarmSoundEasterEgg`), and
+`AlarmPlayer.playFile` sends `.mp3` files through `BTPlayer.start` rather
+than `BTPlayer.startAlarm`.
+
 ---
 
 Number: 15

@@ -424,6 +424,20 @@ Decided 2026-10-11 (Jan): the box run moves into step 6 — the appliance
 cannot start the Dash before step 3's `CHUMBY_PANEL`, and a hand-built
 setup on the box would be thrown away by it.
 
+**The panel is 4.10.3 since 2026-10-11** (Jan). The package's own 4.10.0
+lost its weather feed; Duane's replacement
+`files.chumby.com/yume/controlpanels/4_10_3/controlpanel.swf` (forum thread
+10301) is the live one. Archive: `resources/dash-controlpanel-4.10.3/` with
+the code delta in its README, export `appendix/controlpanel-dash-4.10.3/`;
+the 4.10.0 export and SWF removed (archive `0d4d970f4`). Ten classes change
+in code — weather endpoint and parsing, USB alarm MP3s, branding — the
+rest only in ffdec's field declarations; eight citations in the fork's
+records moved by 1-3 lines. `run-dash.sh` with 4.10.3 reaches the Space
+Theme home screen with the clock widget (desktop, wgpu). The step-1 record
+above names 4.10.0 paths as they were at the time. Consequence for step 2:
+the downloader is to fetch the panel from that URL, the zip only for theme
+and photos (issue 14).
+
 **Step 2 (appliance issue 14) — inventory done 2026-10-10, not implemented.**
 Every medium the Dash needs is listed in issue 14 with its source; all are
 downloadable except the tones (decided: mapped onto the classic mp3s) and
