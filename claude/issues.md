@@ -1006,7 +1006,7 @@ the supervisor logs regardless of `RUST_LOG`.
 Number: 14
 Timestamp: 2026-09-09, 19:10
 Title: Dash: obtain and unpack the package into $STATE.
-Status: open — step 3 item (sony-dash-panel-plan.md)
+Status: open — implemented and run on chumby-pi-3 2026-10-11 (Jan: the screen looks interesting, night mode works); the box is back on its original classic setup; weather is a later feature (sony-dash-panel-plan.md)
 Description: **The downloader must also register the shipped theme for
 later use** (Jan, 2026-09-09): besides extracting the panel it places
 `default_theme.swf` in the themes directory the picker's catalog is
@@ -1255,6 +1255,28 @@ pointed at it; and **all PipeWire sinks at 30%** (Jan: loud — the USB
 dongle sink had been at 100%; `volume_cap = 50` only scales mpv, Flash
 audio goes to the sink directly). Not seen on screen yet (Jan away; no
 `grim` on the box).
+
+Update 2026-10-11, evening — Jan at the box: **the screen looks
+interesting, night mode apparently works** (fork issue 20: night mode
+seen; the brightness slider and standby not reported). Redeployed before
+that (backup 18:59, deb with the switch fix): the installed downloader has
+the fix, sinks still at 30%.
+- **Weather: a later feature** (Jan). It needs a fixture for 4.10.3's
+  `wapi.chumby.com` feed; until then the Space Theme's weather panel stays
+  empty. Recorded in the plan's later features, next to themes.
+- **The box is restored to its original setup** (Jan): backup
+  `chumby-backup-20261011-2153.tar.gz` of the Dash state first (also in
+  `~/chumby-pi-3-backup/`), then the released 0.9.8 reinstalled from apt
+  (`apt-get install --reinstall chumby-player=0.9.8`) and `/var/lib/chumby`
+  replaced by its copy in `chumby-backup-20261011-1827.tar.gz` (taken
+  before the first Dash deploy). `/etc/chumby-player`,
+  `/etc/default/chumby-player`, the Plymouth theme, `cmdline.txt` and
+  `config.txt` were compared against that backup first: unchanged, left
+  alone. Verified: classic `controlpanel.swf` (md5 `21d54cd7…`, as in the
+  backup), no `fixtures/platform`, no Space Clock fixture, `intro.swf`
+  back, player active. **Kept, deliberately: both sinks at 30%** — the
+  18:27 backup holds no WirePlumber state, and the original 100% was the
+  loud one; `wpctl set-volume <id> 1.0` restores it.
 
 ---
 

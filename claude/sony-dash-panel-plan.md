@@ -519,6 +519,10 @@ Dash. Agreed:
 - **Themes are a later feature** ("it can be nice") — the theme picker,
   owner-supplied themes, the USB route (issue 16) and the catalog download
   wait. The Space Theme stays: without a theme there is no home screen.
+- **Weather is a later feature** (Jan, 2026-10-11, after the box run).
+  4.10.3 asks `http://wapi.chumby.com/widget/chumby/weather-data.asp?location=10022`;
+  the Dash fixtures have none, so the Space Theme's weather panel stays
+  empty (issue 14).
 - **Out:** Sony's original tones (the firmware zip, `/home/pi` lookup,
   cramfs reader — the classic stand-ins suffice), the catalog themes, the
   sample photos.
@@ -551,6 +555,14 @@ issue 15's `CHUMBY_PANEL`; issue 16 (owner themes, USB) waits with themes.
 end to end through the real launcher. Remaining before the deploy: docs
 and packaging check (old issue 17, cut to what the new scope needs), then
 the box (step 6), which also takes issue 20's run.
+
+**Box run 2026-10-11** (issue 14): the Dash ran on chumby-pi-3 with the
+Space Theme and the Space Clock (a testing aid). Jan: the screen looks
+interesting, night mode apparently works. Afterwards the box was restored
+to its original classic setup (release 0.9.8 from apt, `/var/lib/chumby`
+from the pre-deploy backup). Open: the brightness slider and standby
+(fork issue 20), weather and themes (later features), fork issue 29
+(known issue).
 
 **Step 2 (appliance issue 14) — inventory done 2026-10-10, not implemented.**
 Every medium the Dash needs is listed in issue 14 with its source; all are
