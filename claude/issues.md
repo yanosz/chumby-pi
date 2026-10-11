@@ -1194,7 +1194,7 @@ using `$STATE/dash/` (issue 15), seeding `/psp/theme.swf` (moved to step
 Number: 15
 Timestamp: 2026-09-09, 19:10
 Title: Dash: panel selection in the launcher and /etc/default.
-Status: open — step 3 item
+Status: superseded 2026-10-11 — one panel per install, chosen in the downloader; no CHUMBY_PANEL, launcher unchanged (plan, "Re-scoped 2026-10-11")
 Description: An explicit, active `CHUMBY_PANEL=classic` line in
 `/etc/default/chumby-player` (no silent fallback — the no-silent-defaults
 rule), read by `chumby-player-run` to pick `$STATE/controlpanel.swf` or
@@ -1213,7 +1213,7 @@ install-test for both values).
 Number: 16
 Timestamp: 2026-09-09, 19:10
 Title: Dash: how a theme reaches the panel, and how the user supplies one.
-Status: open — step 3 item, the headline of the plan
+Status: deferred 2026-10-11 — themes are a later feature (Jan); the Space Theme is seeded by the downloader (issue 14)
 Description: Fork survey §1.7: no signing, no server. Routes, cheapest
 first: (1) `$STATE/fixtures-dash/rootfs/psp/theme.swf` seeded from the
 package (issue 14) — the default; (2) a USB stick with `theme.swf` — beats

@@ -522,10 +522,29 @@ Dash. Agreed:
 - **Out:** Sony's original tones (the firmware zip, `/home/pi` lookup,
   cramfs reader — the classic stand-ins suffice), the catalog themes, the
   sample photos.
-- **One panel per install** (pending Jan's confirmation of the wording):
-  a Pi runs the classic or the Dash; no switching, so no per-panel trees
-  side by side — one state tree, seeded for the installed panel. That
-  supersedes the step-3 plan above and its open hand-off question.
+- **One panel per install, chosen in the downloader; the launcher is
+  unchanged.** Jan: a downloader wiping old artefacts is one line, and the
+  player's existing entry point (`$STATE/controlpanel.swf`) needs none —
+  the installed panel *is* the setting, so there is no `CHUMBY_PANEL` and
+  no hand-over. (Per-panel folders were never the cost — I first called
+  them complexity, wrongly; with nothing to switch at run time they are
+  simply unnecessary.) The Dash never reads `localCache` (no occurrence in
+  4.10.3), so the launcher's `-PlocalCache=1` is harmless; its intro only
+  runs when `intro.swf` exists.
+- **The downloader, Dash chosen:** if the installed tree is not the Dash's
+  (`$STATE/fixtures/platform` ≠ `yume`), remove `controlpanel.swf`,
+  `intro.swf` and `fixtures/`; seed `$STATE/fixtures` from
+  `$SHARE/fixtures-dash`; put 4.10.3 at `$STATE/controlpanel.swf`, the
+  Space Theme at `fixtures/rootfs/psp/theme.swf` (a copy) with its name,
+  `builtinclock.swf` at `fixtures/rootfs/usr/widgets/`, the classic
+  stand-ins under the Dash names in `$STATE/alarmtones` (linked in by the
+  launcher) and in `fixtures/rootfs/usr/chumby/eventtones`. Classic
+  chosen over a Dash tree: remove the same and run today's classic path.
+  Same panel again: nothing wiped, settings kept.
+- **Packaging:** the deb ships the fork's `fixtures-dash/` (tracked files
+  only) as `$SHARE/fixtures-dash`, like `fixtures/`.
+This supersedes the step-3 plan above, its open hand-off question and
+issue 15's `CHUMBY_PANEL`; issue 16 (owner themes, USB) waits with themes.
 
 **Step 2 (appliance issue 14) — inventory done 2026-10-10, not implemented.**
 Every medium the Dash needs is listed in issue 14 with its source; all are
