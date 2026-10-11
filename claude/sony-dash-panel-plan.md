@@ -508,6 +508,25 @@ it already does for `splash` in `cmdline.txt`. Rejected: a `$STATE/panel`
 file, whose absence on existing boxes would mean classic — a silent
 default. Jan asked to step back before deciding (2026-10-11).
 
+### Re-scoped 2026-10-11 — KISS
+
+Jan, stepping back: the reason for the Dash is that **its panel fits the
+1024x600 screen better than the 320x240 classic** — not to reproduce the
+Dash. Agreed:
+- **Goal:** the Pi shows the Dash panel full screen with its home screen,
+  clock, ringing alarms, radio and brightness. Fidelity beyond that is
+  YAGNI.
+- **Themes are a later feature** ("it can be nice") — the theme picker,
+  owner-supplied themes, the USB route (issue 16) and the catalog download
+  wait. The Space Theme stays: without a theme there is no home screen.
+- **Out:** Sony's original tones (the firmware zip, `/home/pi` lookup,
+  cramfs reader — the classic stand-ins suffice), the catalog themes, the
+  sample photos.
+- **One panel per install** (pending Jan's confirmation of the wording):
+  a Pi runs the classic or the Dash; no switching, so no per-panel trees
+  side by side — one state tree, seeded for the installed panel. That
+  supersedes the step-3 plan above and its open hand-off question.
+
 **Step 2 (appliance issue 14) — inventory done 2026-10-10, not implemented.**
 Every medium the Dash needs is listed in issue 14 with its source; all are
 downloadable except the tones (decided: mapped onto the classic mp3s) and
