@@ -1182,7 +1182,7 @@ hint is classic-only. `CHUMBY_SONY_ZIP` overrides the zip path, like
 `CHUMBY_STATE` and `CHUMBY_EXPORTER`.
 
 Verified on the desktop against scratch `$STATE`s: Dash without the zip
-(43 files, stand-ins equal their classic tones, event tones equal alarm
+(36 files under `dash/`, 45 in all; stand-ins equal their classic tones, event tones equal alarm
 tones); again with the zip (no download, every tone Sony's); a wrong file
 at the zip path (ignored with a note, installed tones kept); classic path
 (intro, opening, tones, 2.8.87b3 panel, as before). Not yet: the launcher
