@@ -459,6 +459,13 @@ Sony's 1.7.1526 ships each tone as `.raw` and `.mp3` side by side.
 Decided (Jan): **the downloader asks which panel** when it runs (not a
 command-line switch, not `CHUMBY_PANEL`).
 
+Decided (Jan): **the owner places Sony's zip in `/home/pi`.** No prompt
+for a path: the downloader looks for `/home/pi/Dash1.7.1526update.zip`
+(md5-checked). Missing, it installs the classic stand-ins and tells the
+owner once to download the file from forum thread 9758, place it in
+`/home/pi` and run the downloader again; a later run with the file there
+replaces the stand-ins with Sony's tones.
+
 **Step 2 (appliance issue 14) — inventory done 2026-10-10, not implemented.**
 Every medium the Dash needs is listed in issue 14 with its source; all are
 downloadable except the tones (decided: mapped onto the classic mp3s) and
