@@ -473,6 +473,11 @@ Desktop: a Sonar alarm fired and looped from `alarm3.mp3`; classic check
 clean. Consequence for 2b: the downloader writes MP3s only, under the Dash
 tone names, into `alarmtones/` and `eventtones/`.
 
+**2b done 2026-10-11** — `chumby-download-firmware` asks for the panel and
+fills `$STATE/dash/` (layout and checks in issue 14). Step 2 is complete;
+next is step 3 (issue 15), which now also seeds `/psp/theme.swf` and
+`theme_name.txt` from `$STATE/dash/default_theme*`.
+
 **Step 2 (appliance issue 14) — inventory done 2026-10-10, not implemented.**
 Every medium the Dash needs is listed in issue 14 with its source; all are
 downloadable except the tones (decided: mapped onto the classic mp3s) and

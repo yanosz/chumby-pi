@@ -1156,6 +1156,39 @@ than `BTPlayer.startAlarm`.
 Decision (Jan, 2026-10-11): **the music icons stay blank** — nothing to
 fetch, draw or serve; the 404 leaves the slot empty, the source works.
 
+UPDATE 2026-10-11 — implemented (plan step 2b), `chumby-download-firmware`.
+It first asks which panel (1 classic, 2 Dash; Enter = 1, as before for a
+piped run); the classic path is unchanged. The Dash path writes
+`$STATE/dash/`:
+- `controlpanel.swf` — 4.10.3 from `files.chumby.com/yume/controlpanels/4_10_3/`,
+  md5-checked, written last so a broken-off run starts over;
+- `default_theme.swf`, `default_theme_name.txt`, `sample_photos/` — from the
+  1.0.0 zip (md5-checked); the zip's other files are not used;
+- `themes/<Name>.swf` + `.jpg` — every theme in the live
+  `dash/production/themes/themes.xml`, md5s from the catalog; names made
+  file-safe for the fork's catalog (`Space_Theme`, `Full_Screen_App`,
+  `Clock_Weather` — the slash cannot stay);
+- `widgets/builtinclock.swf` — from the 1.7.3 image the classic path already
+  fetches (md5 `ccfefdd3…`, the same file as the hardware chumby's);
+- `alarmtones/{alarm1-6,Birds,Wave}.mp3` and `eventtones/{event1-6,Birds,Wave}.mp3`
+  — Sony's from `/home/pi/Dash1.7.1526update.zip` when its md5 matches (read
+  with a 40-line cramfs reader: 7-Zip cannot read the 16 KiB-block image),
+  else the classic stand-ins with the note pointing at thread 9758; the
+  stand-ins only fill missing tones, so a run after the zip is deleted
+  keeps Sony's. MP3s only — fork issue 28 serves the `.raw` names.
+The intro, opening and classic tones land in `$STATE` on the Dash path too
+(one shared extraction; the tones are the stand-ins' source); the widgets
+hint is classic-only. `CHUMBY_SONY_ZIP` overrides the zip path, like
+`CHUMBY_STATE` and `CHUMBY_EXPORTER`.
+
+Verified on the desktop against scratch `$STATE`s: Dash without the zip
+(43 files, stand-ins equal their classic tones, event tones equal alarm
+tones); again with the zip (no download, every tone Sony's); a wrong file
+at the zip path (ignored with a note, installed tones kept); classic path
+(intro, opening, tones, 2.8.87b3 panel, as before). Not yet: the launcher
+using `$STATE/dash/` (issue 15), seeding `/psp/theme.swf` (moved to step
+3), the box.
+
 ---
 
 Number: 15
