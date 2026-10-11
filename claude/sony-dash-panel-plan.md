@@ -466,6 +466,13 @@ owner once to download the file from forum thread 9758, place it in
 `/home/pi` and run the downloader again; a later run with the file there
 replaces the stand-ins with Sony's tones.
 
+**2a done 2026-10-11** — fork issue 28: `playalarm` / `stopalarm` on a
+second mpv beside the music player; a `.raw` tone path resolves to its
+`.mp3` (so `_fileExists` and playback agree, the tree holds MP3s only).
+Desktop: a Sonar alarm fired and looped from `alarm3.mp3`; classic check
+clean. Consequence for 2b: the downloader writes MP3s only, under the Dash
+tone names, into `alarmtones/` and `eventtones/`.
+
 **Step 2 (appliance issue 14) — inventory done 2026-10-10, not implemented.**
 Every medium the Dash needs is listed in issue 14 with its source; all are
 downloadable except the tones (decided: mapped onto the classic mp3s) and
