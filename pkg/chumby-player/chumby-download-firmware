@@ -242,8 +242,14 @@ def switch_panel(platform: str) -> None:
         return
     print("Another panel is installed. Switching removes it, the intro and")
     print(f"its settings (alarms, clock, weather) in {FIXTURES}.")
+    running = subprocess.run(["systemctl", "is-active", "--quiet", "chumby-player"]).returncode == 0
+    if running:
+        print("The running player is stopped first (sudo) — it would write the")
+        print("old panel's files into the new tree.")
     if not confirm("Switch panels?"):
         sys.exit("Nothing changed.")
+    if running:
+        subprocess.run(["sudo", "systemctl", "stop", "chumby-player"], check=True)
     for f in ("controlpanel.swf", "intro.swf"):
         (STATE / f).unlink(missing_ok=True)
     shutil.rmtree(FIXTURES, ignore_errors=True)
