@@ -478,6 +478,36 @@ fills `$STATE/dash/` (layout and checks in issue 14). Step 2 is complete;
 next is step 3 (issue 15), which now also seeds `/psp/theme.swf` and
 `theme_name.txt` from `$STATE/dash/default_theme*`.
 
+**Step 3 (issue 15) — planned 2026-10-11, not started.**
+- 3a packaging: the deb also ships the fork's `fixtures-dash/` (tracked
+  files only, as `fixtures/`) to `$SHARE/fixtures-dash`.
+- 3b launcher: the panel picks the tree. The Dash: `$STATE/fixtures-dash`,
+  seeded once like the classic's, with the same USB, `/tmp` and
+  `player.toml` links; links into `$STATE/dash/` for the alarm and event
+  tones, `usr/widgets/builtinclock.swf`, `psp/themes`, `psp/sample_photos`;
+  at first seed a copy of `default_theme.swf` as `psp/theme.swf` and
+  `theme_name.txt`; SWF `$STATE/dash/controlpanel.swf`, no intro, no
+  `-PlocalCache=1`; `--check` per panel; its own `/tmp` dir
+  (`/tmp/chumby-dash-tmp`) so a switch does not mix runtime files.
+- 3c verify: the launcher on the desktop against a scratch `$STATE`, both
+  panels, with the dev build (`CHUMBY_RUFFLE`, `CHUMBY_SHARE`,
+  `CHUMBY_STATE`).
+- Classic-only and unchanged: `chumby-local-widgets` (the classic's
+  `profile.xml`), the intro. The UI policy is compiled in and matches
+  nothing on the Dash (fork issue 19 (b)).
+- Found while planning: fork issue 29 — restart-when-idle reads the
+  classic's `_global.AlarmSet`, so it cannot see a ringing Dash alarm and
+  the supervisor could restart the Dash mid-alarm. Not in step 3 unless
+  Jan says so.
+
+Open: **how the downloader's answer reaches the launcher.** The panel must
+be an active setting (no silent default), and the downloader asks for it
+(Jan). Proposed: the conffile ships `CHUMBY_PANEL=classic`; choosing the
+Dash in the downloader offers a sudo edit of that line with a backup, as
+it already does for `splash` in `cmdline.txt`. Rejected: a `$STATE/panel`
+file, whose absence on existing boxes would mean classic — a silent
+default. Jan asked to step back before deciding (2026-10-11).
+
 **Step 2 (appliance issue 14) — inventory done 2026-10-10, not implemented.**
 Every medium the Dash needs is listed in issue 14 with its source; all are
 downloadable except the tones (decided: mapped onto the classic mp3s) and
