@@ -1334,7 +1334,7 @@ all**, so the seeding is not optional.
 Number: 17
 Timestamp: 2026-09-09, 19:10
 Title: Dash: docs, packaging, boot theme.
-Status: open — step 3 item
+Status: done 2026-10-11 under the re-scope — see the update below
 Description: `docs/setup.md` gains the panel choice and the theme routes;
 the debs ship the Dash share tree and the second downloader source; CI's
 install test runs once per `CHUMBY_PANEL` value. The boot animation is
@@ -1344,12 +1344,19 @@ built from the classic's `opening.swf`; the Dash's `default_opening.swf`
 scales to 1024x571 with 14 px bars (`showAll`), the classic to 800x600
 pillarboxed — no launcher change. Size: S.
 
+UPDATE 2026-10-11: cut to the re-scope (sony-dash-panel-plan.md,
+"Re-scoped 2026-10-11"). Done: `docs/setup.md` §3 and `README.md` document
+the panel choice (e001b3e); `pkg/build-debs.sh:82-84` ships the fork's
+`fixtures-dash/` (3606777). Dropped: the theme routes (themes are a later
+feature) and a CI install test per `CHUMBY_PANEL` (no such setting). The
+boot theme stays the classic Plymouth one, as above.
+
 ---
 
 Number: 18
 Timestamp: 2026-09-10, 19:57
 Title: Sony Dash panel support — parked on the sony-dash branch.
-Status: parked — steps 1-4 done, step 5 not started
+Status: parked again 2026-10-11 — re-scoped goal implemented and box-run; box restored to classic; not on dev
 Description: The Dash work is on branch `sony-dash`, tip `6f0439a` (pushed to
 origin), whose gitlink is the fork's `sony-dash` tip `0ea50a70b`. dev was
 rewound to `e7aa3ee` so the Pi appliance work continues without the Dash tree
@@ -1377,6 +1384,17 @@ the tips above are gone from the branch and kept as
 is accepted as a known issue (Jan: it concerns the real chumby devices too)
 and no longer gates step 5; fork issue 20 is fixed in this run, then the Dash
 is deployed onto the DSI box with `pkg/deploy-pi.sh` for end-user testing.
+
+UPDATE 2026-10-11, session end: re-scoped by Jan (the Dash because its
+panel fits a larger screen; KISS): one panel per install, chosen in
+`chumby-download-firmware`, launcher unchanged — issue 15 superseded, issue
+16 deferred, issue 17 done. Panel 4.10.3. Ran on chumby-pi-3 (issue 14),
+then the box was restored to its original classic setup. Both `sony-dash`
+branches pushed (chumby-pi `39aab2d` plus this record, fork `429eaae77`);
+not merged to dev. Open on the branch: the brightness slider and standby on
+the box (fork issue 20), fork issue 29 (known issue), the
+`sys:///tmp/photo.jpg` error (issue 14). Later features: themes, weather.
+Next is Jan's call — merge to dev, or another box run.
 
 ---
 
