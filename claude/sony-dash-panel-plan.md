@@ -420,6 +420,9 @@ sets the kernel backlight, 5,20 LCD_OFF / LCD_ON switch it (the Dash's
 standby and dark night mode), the level survives the switch. Unit- and
 desktop-verified; the DSI box was not reachable that evening, so the run on
 it is open.
+Decided 2026-10-11 (Jan): the box run moves into step 6 — the appliance
+cannot start the Dash before step 3's `CHUMBY_PANEL`, and a hand-built
+setup on the box would be thrown away by it.
 
 **Step 2 (appliance issue 14) — inventory done 2026-10-10, not implemented.**
 Every medium the Dash needs is listed in issue 14 with its source; all are
