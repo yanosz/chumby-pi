@@ -108,6 +108,16 @@ before touching the network, and verifies checksums. It gets you the
 control panel, the guided-tour intro and the alarm tones — a complete
 chumby that boots to a clock; widgets are optional extras.
 
+It first asks **which control panel** to install: the chumby classic's
+(320x240), or the one chumby made for the **Sony Dash** (860x480), which
+uses more of a larger screen such as a 7″ display. The Dash comes with
+its default theme and clock; it rings with the classic's alarm tones
+(the Dash's own were never on chumby's servers) and has no intro. A Pi
+runs one panel: choosing the other one later switches, and that removes
+the current panel's settings (alarms, clock, weather) — the downloader
+asks first. Restart the player afterwards
+(`sudo systemctl restart chumby-player`).
+
 **Copy from your own chumby or its backup** — the same files, plus any
 widgets you want; left side is the path on the chumby:
 

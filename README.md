@@ -26,7 +26,9 @@ around between reboots.
   pull them from your own Chumby's backup, or let
   `chumby-download-firmware` (part of the package) fetch them all from
   Chumby's still-running servers — it asks first and shows what it
-  downloads. Widgets are optional; without any, the panel is a clock.
+  downloads. It can install the Sony Dash's panel instead, a better fit
+  for larger screens. Widgets are optional; without any, the panel is a
+  clock.
   Which file goes where is in [docs/setup.md](docs/setup.md).
 
 ## Try it on your computer first
