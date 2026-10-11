@@ -1153,6 +1153,9 @@ from a stick when present (`Alarm.playAlarmSoundEasterEgg`), and
 `AlarmPlayer.playFile` sends `.mp3` files through `BTPlayer.start` rather
 than `BTPlayer.startAlarm`.
 
+Decision (Jan, 2026-10-11): **the music icons stay blank** — nothing to
+fetch, draw or serve; the 404 leaves the slot empty, the source works.
+
 ---
 
 Number: 15
