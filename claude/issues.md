@@ -1220,6 +1220,42 @@ loop ships the 33 tracked files and none of the local MP3/SWF. Then the
 the supervisor starts the player fullscreen, `_getPlatform` "yume", the
 Space Theme home screen with the clock widget (wgpu). Not yet: the box.
 
+UPDATE 2026-10-11 (evening) — **on the box.** Backup first
+(`/home/pi/chumby-backup-20261011-1827.tar.gz`, copy in
+`~/chumby-pi-3-backup/` on the desktop: `/var/lib/chumby`, `/etc/chumby-player`,
+`/etc/default/chumby-player`, the Plymouth frames, `cmdline.txt`,
+`config.txt`). Deployed with `pkg/deploy-pi.sh` (deb 0.9.8, fixtures-dash
+33 files), then the downloader switched chumby-pi-3 to the Dash.
+
+Found there, fixed: **a switch with the player running left the Dash tree
+unseeded** — the running classic player wrote `rootfs/tmp/movieheartbeat`
+right after the tree was deleted, the folder existed again, and the
+downloader took it for a seeded tree. A switch now stops `chumby-player`
+first (sudo, announced in the switch prompt). Tested on the box with the
+player running, both ways (Dash → classic, classic → Dash): stopped, wiped,
+seeded (`platform` "yume", 43 files after the downloader). The installed
+`/usr/bin` copy is still the old one until the next deploy.
+
+Running (journal by PID — with `PAMName=login` the player's lines are not
+attributed to the unit): `_getPlatform` "yume", theme "Space Theme",
+the channel's clock loaded. Expected errors: the seven blank music icons.
+Unplanned, open:
+- **Weather:** 4.10.3 asks `http://wapi.chumby.com/widget/chumby/weather-data.asp?location=10022`
+  and the host refuses it ("missing chumby fixture") — the Dash fixtures
+  have no weather; the Space Theme's weather panel stays empty.
+- `sys:///tmp/photo.jpg` fails with a URL builder error (fork item 15's
+  scheme).
+Testing aids on the box, not shipped: **the Space Clock** (Jan: it goes
+with the panel; `widget_names` on the hardware chumby, widget id
+`E1FDC24C-88F4-11DD-B9A5-001B24F07EF4` v1.2, md5 `569a6580…`, copied from
+its `/tmp/widgetcache`; no public URL known — an anonymous profile fetch
+answers chumby's "unsub" placeholder) at
+`fixtures/rootfs/usr/widgets/spaceclock.swf`, the box's channel fixture
+pointed at it; and **all PipeWire sinks at 30%** (Jan: loud — the USB
+dongle sink had been at 100%; `volume_cap = 50` only scales mpv, Flash
+audio goes to the sink directly). Not seen on screen yet (Jan away; no
+`grim` on the box).
+
 ---
 
 Number: 15
