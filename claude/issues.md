@@ -55,8 +55,8 @@ daughtercard itself (unassessed).
 Number: 3
 Timestamp: 2026-07-17, 02:00 (updated 2026-07-17, 17:00)
 Title: Plymouth boot animation, replacing the dropped Ruffle boot-opening.
-Status: open — boot animation confirmed on both boxes; only the
-black-gap/handoff quality and the alt_opening audio question remain
+Status: closed 2026-10-20 — good enough (Jan): the animation ships, the
+handoff gap and the alt_opening audio question are accepted as they are
 Description: The 0.9.1 attempt to reproduce real hardware's opening.swf via
 a sequential Ruffle run was dropped (design.md §5, "not worth the
 complexity") because the animation never exits itself and a kill-timeout
@@ -199,11 +199,11 @@ Still outstanding:
 Number: 4
 Timestamp: 2026-07-26, 19:45 (updated 2026-07-26, 22:40)
 Title: Find a display: 3.5", 4:3, real brightness control, and 12 fps.
-Status: open — criterion 4 is NOT met and cannot be tuned into being: every SPI
-clock above the overlay's nominal 24 MHz visibly corrupts the picture. The
-panel's honest clean ceiling is 8.4 fps, reached by pinning the core clock
-alone. 4:3 and brightness remain unmet too. All three criteria now point at a
-different display.
+Status: closed 2026-10-20 — the 5" DSI panel is the answer (Jan): brightness
+works there (issue 5), 3.5" and 4:3 were given up with its 1024x600 (issue
+12). On SPI, criterion 4 was never met: every SPI clock above the overlay's
+nominal 24 MHz visibly corrupts the picture; the honest clean ceiling is 8.4
+fps, reached by pinning the core clock alone.
 Description: With the CPU renderer shipped (fork
 claude/tiny-skia-backend-plan.md; CHUMBY_RENDERER=tiny-skia), the player is no
 longer what limits the panel: it draws the control panel using 37 % of one core
@@ -1047,7 +1047,7 @@ simplify here. Anyone resuming reads the branch, not this entry.
 Number: 19
 Timestamp: 2026-09-10, 21:45
 Title: 0.9.6 — the backlight cap on chumby-pi-3.
-Status: open — the 25 % value is Jan's call, sliders being set now
+Status: closed 2026-10-20 — 25 % accepted (Jan)
 Description: Fork issue 23 caps the backlight: `brightness_cap` in
 `player.toml`, shipped active at 25, so the panel's 0-100 spreads over a
 quarter of `max_brightness` instead of all of it. Appliance side: version
@@ -1070,7 +1070,7 @@ does not dim.
 Number: 20
 Timestamp: 2026-09-10, 22:25
 Title: 0.9.7 — one volume ceiling on chumby-pi-3, no exemptions.
-Status: open — the 50 % value and the Klaxon's loudness are Jan's to judge
+Status: closed 2026-10-20 — 50 % accepted (Jan)
 Description: Fork issue 24: `volume_cap` shipped at 50 instead of 100, and the
 backup-alarm Klaxon brought under it (the FR13 exemption reversed). Appliance
 side: version 0.9.7 (`build-debs.sh:21`, forced by the conffile template
@@ -1264,7 +1264,7 @@ hardcoded guid (`Chumby.as:73`), so a canned "eth0 up" file and an
 Number: 25
 Timestamp: 2026-10-20, 17:30
 Title: Housekeeping before ikea-lys — chumby-pi only.
-Status: in progress — step 3 of 4 (appliance code) done
+Status: closed 2026-10-20 — all four steps done
 Description: Jan's ask: the code base in good shape, YAGNI/KISS, before
 ikea-lys starts. Scope: this repo; the fork is a later option. Decisions
 (interview, 2026-10-20): `sony-dash` is stale and kept for reference (issue
@@ -1297,4 +1297,10 @@ Steps:
    with an unreadable intro; links idempotent over four runs. The exec
    lines are unchanged; CI's movie start covers them on the next push to
    main.
-4. Issue adjudication with Jan; record closed.
+4. Issue adjudication (interview) — done: 3 closed (good enough), 4
+   closed (the DSI panel is the answer), 19 and 20 closed (values
+   accepted); `claude/chumby-vnc-plan.md` dropped (Jan: the idea lives in
+   git history, last present in 6867afb). Still open and
+   unchanged: 1-2 (hardware-ideas), 7-8 (pi.nic known behaviours), 14-18
+   (Dash, stale), 21-22 (mitigated, cause of 22 unknown), 23 (parked).
+   The fork was not touched; its pass is a later option.
