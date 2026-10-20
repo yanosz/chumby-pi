@@ -1,20 +1,24 @@
 # Hardware variation: other displays, sound devices, Pi models
 
 The packaged defaults target the reference device (Pi 3B+, ILI9486
-SPI TFT, PipeWire default sink). Everything hardware-specific is
-overridable in **`/etc/default/chumby-player`**, which the kiosk unit
-reads at start (`sudo systemctl restart chumby-player` to apply):
+SPI TFT, PipeWire default sink), but the kiosk detects the display by
+itself and every hardware-specific value has an override in
+**`/etc/default/chumby-player`**, which the kiosk unit reads at start
+(`sudo systemctl restart chumby-player` to apply). The file documents
+each variable in place; in short:
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
-| `WLR_DRM_DEVICES` | `/dev/dri/by-path/platform-3f204000.spi-cs-0-card` | which DRM device (display) cage runs on |
-| `WLR_RENDERER` | `pixman` | `pixman` = software rendering (right for GPU-less SPI panels); unset/`gles2` for HDMI on the Pi's GPU |
-| `CHUMBY_AUDIO_DEVICE` | unset (PipeWire default sink) | mpv audio device for panel audio |
+| `WLR_DRM_DEVICES` | auto-detected | which DRM device (display) cage runs on: the first SPI panel if one exists, otherwise cage's own choice (HDMI/DSI). Set it only to pin a specific device |
+| `WLR_RENDERER` | `pixman` | software rendering in the compositor (right for GPU-less SPI panels) |
+| `CHUMBY_RENDERER` | `tiny-skia` | the player's rasterizer: `tiny-skia` draws on the CPU and loads no Vulkan at all; `wgpu` goes through software Vulkan (lavapipe) and costs three times the CPU |
+| `CHUMBY_QUALITY` | `low` | Flash stage quality, `wgpu` only; `low` skips anti-aliasing, `high` = stock Flash look |
+| `LP_NUM_THREADS` | `2` | lavapipe worker threads, `wgpu` only |
+| `CHUMBY_AUDIO_SINK` | unset (leave PipeWire's default) | PipeWire sink made the default output: moves the player and mpv alike |
+| `CHUMBY_AUDIO_DEVICE` | unset (PipeWire default sink) | mpv audio device for music and alarms only |
 | `CHUMBY_STATE` | `/var/lib/chumby` | writable state dir (live fixtures) |
 | `CHUMBY_CTL` | `/tmp/chumby-ctl` | control FIFO path |
 | `RUST_LOG` | `warn` | set `warn,chumby_host=info` to log all panel↔host traffic |
-| `LP_NUM_THREADS` | `2` | software-Vulkan worker threads; each buys frame rate for about one core of CPU |
-| `CHUMBY_QUALITY` | `low` | Flash stage quality; `low` skips anti-aliasing (~2.4× faster frames), `high` = stock Flash look |
 
 ## A different TFT / display
 
@@ -34,32 +38,23 @@ cage (a Wayland compositor), not the legacy fbdev/fbtft framebuffer.
 2. **Rotation gotcha:** DRM's base orientation is landscape. If you
    are porting settings from an fbtft setup, fbtft's `rotate=90`
    corresponds to DRM `rotate=0`.
-3. **Point the kiosk at the right DRM device.** Card numbers
-   (`/dev/dri/card0`, `card1`) are **not stable across boots** — use
-   the by-path name:
+3. **The kiosk finds the display by itself.** It pins an SPI panel by
+   its stable by-path name (card numbers like `/dev/dri/card0` shuffle
+   between boots) on any Pi model, and otherwise lets cage pick the
+   HDMI or DSI output. Only a machine with several candidates needs a
+   pin, in `/etc/default/chumby-player`:
 
    ```sh
    ls -l /dev/dri/by-path/
    # e.g. platform-3f204000.spi-cs-0-card  → SPI panel on a Pi 3
    #      platform-fe204000.spi-cs-0-card  → same panel on a Pi 4
    #      platform-gpu-card                → vc4 (HDMI/DSI)
-   ```
-
-   Then in `/etc/default/chumby-player`:
-
-   ```sh
    WLR_DRM_DEVICES=/dev/dri/by-path/<your-card>
    ```
-
-   (The default bakes in `3f204000.spi` — the Pi 3 SoC's SPI0 address.
-   Any other Pi model has a different address, so this override is
-   needed even for the same panel on a Pi 4/5.)
-4. **Renderer:** keep `WLR_RENDERER=pixman` for SPI panels (no GPU
-   path to them). On an HDMI display via vc4, unset it in
-   `/etc/default/chumby-player` to let the GPU render.
-5. **Resolution:** the panel movie is 320×240 design-size and scales;
-   480×320 and 640×480 are both verified. Higher resolutions cost CPU
-   (software rendering scales with pixels).
+4. **Resolution:** the panel movie is 320×240 design-size and scales to
+   the screen, keeping its 4:3 shape; 480×320, 640×480 and a 1024×600
+   DSI panel (black bars at the sides) have all run. Higher resolutions
+   cost CPU, since rendering is done in software and scales with pixels.
 
 ### Touch calibration
 
@@ -125,12 +120,12 @@ No sound at all? mpv missing = silent-stub mode (the UI still works);
 ## A different Pi
 
 - Any Pi that runs 64-bit Raspberry Pi OS should work; the deb is
-  arm64. A Pi 3 runs the panel at its native 12 fps on just under two
-  busy cores with the shipped defaults; `LP_NUM_THREADS=1` halves that
-  to one core at ~6 fps — faster Pis have headroom, a Pi Zero 2 W is
-  untested but has the same architecture.
-- The only model-specific default is the SPI controller address in
-  `WLR_DRM_DEVICES` (see above).
+  arm64. With the shipped defaults a Pi 3B+ drives the SPI TFT on about
+  a third of one core — the display, not the player, caps the frame
+  rate there at 6-7 fps. Faster Pis have headroom; a Pi Zero 2 W has the
+  same architecture but is untested. The original Pi Zero W is too slow.
+- Nothing in the defaults is tied to a Pi model: the display is
+  detected, the overlay line in `config.txt` is the same on every model.
 - The kiosk unit assumes user `pi` exists (it runs the compositor as
   a real logind session for `pi` on tty1). A different username
   currently means editing `pkg/chumby-player/chumby-player.service`

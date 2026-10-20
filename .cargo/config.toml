@@ -2,14 +2,7 @@
 # root (NOT inside ruffle/) so the fork stays upstream-clean; cargo merges
 # this config when invoked from ruffle/.
 #
-# Requires (dev box):
-#   rustup target add aarch64-unknown-linux-gnu
-#   sudo dpkg --add-architecture arm64 && sudo apt-get update
-#   sudo apt-get install gcc-aarch64-linux-gnu libasound2-dev:arm64 \
-#        libudev-dev:arm64 libssl-dev:arm64 libwayland-dev:arm64
-#
-# Build: cd ruffle && cargo build --release -p ruffle_desktop \
-#        --features chumby --target aarch64-unknown-linux-gnu
+# One-time setup and the build commands: claude-docs/development.md §3.
 
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-linux-gnu-gcc"

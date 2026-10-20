@@ -1,9 +1,10 @@
 # Panel watchdog — plan
 
 Started 2026-09-24. Motivation: appliance issues 21 (alarms dead after a
-clock step) and 22 (WLAN shown good, unusable). Status: **steps 1
-(requirements) and 2 (design) done and approved 2026-09-24; step 3 not
-started.** Nothing built.
+clock step) and 22 (WLAN shown good, unusable). Status: **done — shipped as
+`chumby-supervisor` in 0.9.8 (released 2026-09-29), device-verified on
+chumby-pi-3.** The sections below are the working record in order; the code
+is `supervisor/`.
 
 ## Ground truth: what the original firmware did
 

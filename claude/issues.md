@@ -8,10 +8,10 @@ Appliance-side issues only; player issues live in ruffle/claude/issues.md.
 Number: 1
 Timestamp: 2026-07-17, 00:15 (moved 2026-07-17, 18:00)
 Title: Check chumby_accel.c applicability to the Pi kernel.
-Status: open — moved to the pcb-ideas branch with hardware/
+Status: open — moved to the hardware-ideas branch with hardware/
 Description: All PCB/hardware work (this issue, #2, and hardware/) now
-lives on the pcb-ideas branch, kept out of dev's tree. This entry stays
-here only as a pointer; the full text (unchanged) is on pcb-ideas.
+lives on the hardware-ideas branch, kept out of dev's tree. This entry stays
+here only as a pointer; the full text (unchanged) is on hardware-ideas.
 The chumby kernel source is public (GPL), so the accelerometer
 driver behind /dev/accel — chumby_accel.c, "2.1-Kionix-Ironforge", bunnie's
 one-off that also carries the dcid EEPROM driver — can be read and possibly
@@ -30,9 +30,9 @@ hardware/chumby-hat/accelerometer.md.
 Number: 2
 Timestamp: 2026-07-17, 01:00 (moved 2026-07-17, 18:00)
 Title: Daughtercard breakout board (supersedes the HAT concept).
-Status: open — moved to the pcb-ideas branch with hardware/
+Status: open — moved to the hardware-ideas branch with hardware/
 Description: See issue 1's note — this issue and hardware/breakout-tryout/
-now live on pcb-ideas, unchanged. Reframe hardware/chumby-hat/ from a Pi HAT to a passive breakout
+now live on hardware-ideas, unchanged. Reframe hardware/chumby-hat/ from a Pi HAT to a passive breakout
 with a soldered-on 2x13 header the chumbilical plugs into. Mapping: DC jack →
 USB-A power-only port (decide: 5 V supply into the barrel jack, or buck for
 the original 12 V wart); speakers → 4-pin PH2.0 (Waveshare amp); 2x USB-A
@@ -175,7 +175,7 @@ reset button GPIO3+GND, bend button GPIO5+GND):
   one-row misread in the recorded pin table. Full corrected table
   (provenance-tagged, refined against pstrick2's 2019 forum survey —
   numbering convention comes from that post, not a board marking) and
-  the P33VBKUP-role question: pcb-ideas branch, commit 7a1f3ef
+  the P33VBKUP-role question: hardware-ideas branch, commit 7a1f3ef
   (hardware/chumby-hat/accelerometer.md §3). Wiring: chumbilical 5 →
   Pi GPIO3, chumbilical 6 → Pi GND; stock gpio-shutdown, wake
   included — the mainboard's active-high biasing was its own affair.
@@ -1258,3 +1258,32 @@ decompile); that path reads `data/start_network.xml` next to the SWF and uses a
 hardcoded guid (`Chumby.as:73`), so a canned "eth0 up" file and an
 `http/www.chumby.com/xapis/device/authorize/<that guid>` fixture answering
 `<chumby id="…"><name>chumby</name></chumby>` reach My Streams.
+
+---
+
+Number: 25
+Timestamp: 2026-10-20, 17:30
+Title: Housekeeping before ikea-lys — chumby-pi only.
+Status: in progress — step 2 of 4 (appliance artifacts) done
+Description: Jan's ask: the code base in good shape, YAGNI/KISS, before
+ikea-lys starts. Scope: this repo; the fork is a later option. Decisions
+(interview, 2026-10-20): `sony-dash` is stale and kept for reference (issue
+18); ROADMAP.md deleted — its content is in the frozen `claude-docs/` and the
+git log; the backup branches `release-0.9.8` (identical to origin/main),
+`dev-before-rebase-20260924` and `sony-dash-before-rebase-20261010` deleted,
+the last also on origin; `hardware-ideas` stays; the wifi note in
+`pi.nic/README.md` removed (key rotated); the data-deb compatibility paths
+in the launcher and postinst go; the CI `pull_request` triggers go.
+
+Steps:
+1. Branches and the stray files — done (b6c9c06, this entry's commit).
+2. Appliance artifacts — done: `ROADMAP.md`, `CLAUDE.old.md` deleted;
+   README "what works" and sharing note rewritten against the shipped
+   state; `docs/hardware.md` brought to display autodetect, tiny-skia and
+   the shipped `/etc/default` keys; `.cargo/config.toml` comment points at
+   development.md §3 instead of a removed cargo feature; watchdog plan
+   header says shipped; issues 1-2 name the real branch (`hardware-ideas`);
+   apt landing page names the downloader.
+3. Appliance code: data-deb compat paths, CI triggers, two broken line
+   wraps in the helpers' texts; verified with a desktop launcher run.
+4. Issue adjudication with Jan; record closed.

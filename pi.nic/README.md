@@ -206,8 +206,3 @@ the USB-stick route above if it is not.
   drops traffic makes the panel hang forever and look like a failed boot —
   worse than no route at all, which fails fast. This is what a missing NAT
   looked like. `claude/issues.md` #8.
-
-## Note
-
-The house wifi PSK was exposed during this work and needs rotating; until then
-the wifi side is not a trust boundary.

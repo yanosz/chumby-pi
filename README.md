@@ -102,15 +102,22 @@ night mode and keeps the chumby awake. Ignored here, documented in its own READM
 
 ## What works, and what doesn't
 
-**Working on the Pi:** boot-to-panel kiosk, the clock, touch input
-(long-press = squeeze), alarms, My-Streams internet radio, volume, and
-mute — all with settings that persist across reboots.
+**Working on the Pi:** boot-to-panel kiosk with the original boot
+animation, the clock, touch input (long-press = squeeze), alarms with a
+backup beep if the player should die, My-Streams internet radio, music
+from a USB stick, your own widgets, volume and mute, brightness and
+night mode on displays with a kernel backlight — all with settings that
+persist across reboots. The player restarts itself after a crash, a
+clock correction or a network outage. Opt-in: chumby.com's still-alive
+radio directories, device registration and your account's widget
+channels.
 
-**Not yet:** screen brightness and night mode (both waiting on a dimmable
-panel), widget channel management, and USB music playback.
+**Out of scope:** the panel's social surface (widget browsing, rating,
+sending), the timezone and network screens (the Pi OS owns those), and
+anything that needs chumby hardware the Pi lacks.
 
 ## A note on sharing
 
-Never publish a built `chumby-player-data` package — it bundles the
-copyrighted firmware files. Everything else here (scripts, fixtures, and
-docs) is yours under Ruffle's Apache-2.0 / MIT licenses.
+The firmware files stay yours: they are chumby's, never commit or
+redistribute them. Everything else here (scripts, fixtures, and docs)
+is under Ruffle's Apache-2.0 / MIT licenses.

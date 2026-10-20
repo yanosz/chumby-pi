@@ -24,10 +24,11 @@ echo 'deb [signed-by=/usr/share/keyrings/chumby-archive.gpg] https://yanosz.gith
 sudo apt update
 sudo apt install chumby-player</pre>
 
-<p>The package contains no Chumby firmware. On first start the player tells
-you which files to copy from your chumby (or its backup) into
-<code>/var/lib/chumby</code> — <code>controlpanel.swf</code> is required;
-widgets, alarm tones and the intro are optional.</p>
+<p>The package contains no Chumby firmware. After installing, run
+<code>chumby-download-firmware</code> to fetch the control panel, intro and
+alarm tones from Chumby's servers, or copy them from your chumby (or its
+backup) into <code>/var/lib/chumby</code> — <code>controlpanel.swf</code> is
+required; widgets, alarm tones and the intro are optional.</p>
 
 <p>Signing key fingerprint:
 <code>1197 17A0 5AFB 53A8 AE6F 240C 4C8E 58B4 6807 1237</code></p>
