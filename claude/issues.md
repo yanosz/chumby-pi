@@ -1264,7 +1264,7 @@ hardcoded guid (`Chumby.as:73`), so a canned "eth0 up" file and an
 Number: 25
 Timestamp: 2026-10-20, 17:30
 Title: Housekeeping before ikea-lys — chumby-pi only.
-Status: in progress — step 2 of 4 (appliance artifacts) done
+Status: in progress — step 3 of 4 (appliance code) done
 Description: Jan's ask: the code base in good shape, YAGNI/KISS, before
 ikea-lys starts. Scope: this repo; the fork is a later option. Decisions
 (interview, 2026-10-20): `sony-dash` is stale and kept for reference (issue
@@ -1284,6 +1284,17 @@ Steps:
    development.md §3 instead of a removed cargo feature; watchdog plan
    header says shipped; issues 1-2 name the real branch (`hardware-ideas`);
    apt landing page names the downloader.
-3. Appliance code: data-deb compat paths, CI triggers, two broken line
-   wraps in the helpers' texts; verified with a desktop launcher run.
+3. Appliance code — done: the launcher resolves `controlpanel.swf`,
+   the alarm-tone link and the intro from `$STATE` only, postinst checks
+   that one path (consumers: launcher 56/169/182/273, postinst 27, a
+   `.gitignore` comment; none in the fork or the decompile); `ci.yml`
+   runs on push to main and dispatch only, the PR guards and the install
+   test's PR wording are gone; one broken line wrap in
+   `chumby-local-widgets`' help text (the downloader on dev has none).
+   Verified with the launcher against a staged tree, player and
+   supervisor stubbed: --check without, unreadable and readable SWF;
+   --seed; full run without intro, with intro, with `/psp/disable_intro`,
+   with an unreadable intro; links idempotent over four runs. The exec
+   lines are unchanged; CI's movie start covers them on the next push to
+   main.
 4. Issue adjudication with Jan; record closed.

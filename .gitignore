@@ -5,8 +5,7 @@
 # tied to the user's own hardware) — never committed.
 /claude-docs/private/
 
-# Deb build staging and output (pkg/build-debs.sh). The staged data deb
-# contains the copyrighted SWFs and tones — never publish it.
+# Deb build staging and output (pkg/build-debs.sh)
 /pkg/build/
 /pkg/out/
 

@@ -46,18 +46,12 @@ CTL="${CHUMBY_CTL:-/tmp/chumby-ctl}"
 RUFFLE="${CHUMBY_RUFFLE:-/usr/lib/chumby-player/ruffle_desktop}"
 SUPERVISOR="${CHUMBY_SUPERVISOR:-/usr/lib/chumby-player/chumby-supervisor}"
 
-# controlpanel.swf: owner copy first; the /usr/share path still serves
-# boxes that installed the retired data deb. Checks readability, not
-# just existence — a sudo cp leaves a root-only file the pi user can
-# stat but not open, and the player then shows a blank white screen.
+# controlpanel.swf: checks readability, not just existence — a sudo cp
+# leaves a root-only file the pi user can stat but not open, and the
+# player then shows a blank white screen.
 check_swf() {
-    SWF="${CHUMBY_SWF:-}"
-    if [ -z "$SWF" ]; then
-        for c in "$STATE/controlpanel.swf" "$SHARE/swf/controlpanel.swf"; do
-            if [ -e "$c" ]; then SWF="$c"; break; fi
-        done
-    fi
-    if [ -z "$SWF" ] || [ ! -e "$SWF" ]; then
+    SWF="${CHUMBY_SWF:-$STATE/controlpanel.swf}"
+    if [ ! -e "$SWF" ]; then
         cat >&2 <<EOF
 chumby-player: controlpanel.swf not found. It is copyrighted chumby
 firmware and not distributed with this package. Copy it from your
@@ -165,11 +159,10 @@ if [ ! -L "$TMP_LINK" ]; then
     ln -s "$PANEL_TMP" "$TMP_LINK"
 fi
 
-# Alarm tones are owner-supplied. Point the fixture path at the owner
-# folder — unless a tree seeded by the retired data deb already carries
-# real tones, which keeps working until its owner deletes them.
+# Alarm tones are owner-supplied: point the fixture path at the owner
+# folder.
 TONES="$STATE/fixtures/rootfs/usr/chumby/alarmtones"
-if [ ! -L "$TONES" ] && ! ls "$TONES"/*.mp3 >/dev/null 2>&1; then
+if [ ! -L "$TONES" ]; then
     rm -rf "$TONES"
     mkdir -p "${TONES%/*}" "$STATE/alarmtones"
     ln -s "$STATE/alarmtones" "$TONES"
@@ -178,13 +171,10 @@ fi
 # The in-panel INTRO button plays the rootfs /usr/widgets/intro.swf;
 # expose the owner copy there. Deliberately dangling until the owner
 # copies the file — the player treats a dangling link as absent and
-# keeps the button disabled (fork ui-policy info-intro). A real file
-# from a data-deb-seeded tree wins and is left alone.
+# keeps the button disabled (fork ui-policy info-intro).
 INTRO_LINK="$STATE/fixtures/rootfs/usr/widgets/intro.swf"
-if [ -L "$INTRO_LINK" ] || [ ! -e "$INTRO_LINK" ]; then
-    mkdir -p "${INTRO_LINK%/*}"
-    ln -sfn "$STATE/intro.swf" "$INTRO_LINK"
-fi
+mkdir -p "${INTRO_LINK%/*}"
+ln -sfn "$STATE/intro.swf" "$INTRO_LINK"
 
 # Owner config (volume cap, chumby.com access — fork FR14/FR15). The
 # player reads <fixtures>/player.toml once at start; the real file is a
@@ -269,12 +259,9 @@ check_swf || exit 1
 # the panel from starting. start_intro's /mnt/usb/intro.swf override is
 # deliberately not reproduced: a factory/debug hook, and auto-running a
 # SWF off whatever stick is inserted is not a behavior to keep.
-# Owner copy at $STATE/intro.swf; the fixtures path still serves trees
-# seeded by the retired data deb.
 INTRO="$STATE/intro.swf"
 warn_unreadable_intro "$INTRO" || INTRO=""
-[ -f "$INTRO" ] || INTRO="$STATE/fixtures/rootfs/usr/widgets/intro.swf"
-if [ -f "$INTRO" ] && [ -r "$INTRO" ] && [ ! -e "$STATE/fixtures/rootfs/psp/disable_intro" ]; then
+if [ -f "$INTRO" ] && [ ! -e "$STATE/fixtures/rootfs/psp/disable_intro" ]; then
     "$RUFFLE" \
         --load-behavior blocking \
         --filesystem-access-mode allow \

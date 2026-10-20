@@ -8,15 +8,13 @@ name: CI
 #
 # controlpanel.swf is copyrighted chumby firmware and never enters any
 # package or artifact. The movie-start part of the install test needs
-# it, so it is skipped by default: only on push to main (and manual
-# dispatch) is the SWF fetched from a private Nextcloud share
+# it, so the SWF is fetched from a private Nextcloud share
 # (RCLONE_CONFIG_RSHARE_* Actions secrets) and mounted into the test
-# container read-only.
+# container read-only. No pull requests exist in this project
+# (CLAUDE.md): the workflow runs on a push to main and on dispatch.
 
 on:
   push:
-    branches: [main]
-  pull_request:
     branches: [main]
   workflow_dispatch:
 
@@ -103,7 +101,6 @@ jobs:
           cargo build --release --target aarch64-unknown-linux-gnu
 
       - name: Fetch controlpanel.swf from the private share
-        if: github.event_name != 'pull_request'
         env:
           RCLONE_CONFIG_RSHARE_TYPE: webdav
           RCLONE_CONFIG_RSHARE_VENDOR: nextcloud
@@ -143,7 +140,6 @@ jobs:
     # leaked .swf by the install test this job depends on.
     name: Publish the site (docs + apt repo) to GitHub Pages
     needs: debs
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     permissions:
       contents: read

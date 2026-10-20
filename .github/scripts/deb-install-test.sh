@@ -1,10 +1,10 @@
 #!/bin/sh
 # Runs INSIDE an arm64 debian:trixie container (the Raspberry Pi OS
-# base) with pkg/out mounted read-only at /debs, and — on main, where CI
-# fetched it — controlpanel.swf mounted at /swf. Proves the deb installs
-# with all dependencies declared and the launcher behaves: refuses
-# helpfully without the owner's controlpanel.swf, and starts the movie
-# from an owner-copied one when /swf provides it (skipped by default).
+# base) with pkg/out mounted read-only at /debs and the controlpanel.swf
+# CI fetched mounted at /swf. Proves the deb installs with all
+# dependencies declared and the launcher behaves: refuses helpfully
+# without the owner's controlpanel.swf, and starts the movie from an
+# owner-copied one when /swf provides it.
 set -eux
 
 export DEBIAN_FRONTEND=noninteractive
@@ -43,8 +43,8 @@ set -e
 test "$status" -eq 1
 grep -q 'controlpanel.swf not found' /tmp/noswf.log
 
-# Movie-start test: needs the copyrighted SWF, so it runs only when CI
-# mounted one (push to main) and is skipped by default — PRs stop here.
+# Movie-start test: needs the copyrighted SWF; a local run without one
+# stops here.
 if [ ! -f /swf/controlpanel.swf ]; then
     echo "no /swf/controlpanel.swf mounted — movie-start test skipped"
     exit 0
