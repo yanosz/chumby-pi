@@ -1006,7 +1006,7 @@ the supervisor logs regardless of `RUST_LOG`.
 Number: 18
 Timestamp: 2026-09-10, 19:57
 Title: Sony Dash panel support — parked on the sony-dash branch.
-Status: parked — steps 1-4 done, step 5 not started
+Status: stale since 2026-10-20 — out of scope for the foreseeable future (Jan); the branch stays as a reference
 Description: The Dash work is on branch `sony-dash`, tip `6f0439a` (pushed to
 origin), whose gitlink is the fork's `sony-dash` tip `0ea50a70b`. dev was
 rewound to `e7aa3ee` so the Pi appliance work continues without the Dash tree
@@ -1034,6 +1034,13 @@ the tips above are gone from the branch and kept as
 is accepted as a known issue (Jan: it concerns the real chumby devices too)
 and no longer gates step 5; fork issue 20 is fixed in this run, then the Dash
 is deployed onto the DSI box with `pkg/deploy-pi.sh` for end-user testing.
+
+UPDATE 2026-10-20: stale. Jan: the Dash is not in scope for the foreseeable
+future. The implemented, box-run state (one panel per install chosen in
+`chumby-download-firmware`, the re-scoped issues 14-17, the fork's `sony-dash`
+with its issues 11-22, 28, 29) stays on the `sony-dash` branches of both repos
+for reference and is not merged. dev carries nothing of it — nothing to
+simplify here. Anyone resuming reads the branch, not this entry.
 
 ---
 
@@ -1220,3 +1227,34 @@ not the Pi appliance; filed here at Jan's choice. Nothing built or tested.
   3. a native Rust widget system.
   Suggested if it is ever taken up: the hybrid on Slint, first slice clock,
   alarms, night mode and streams, alarm engine proven first.
+
+---
+
+Number: 24
+Timestamp: 2026-10-13, 14:58
+Title: Look-and-feel check: the chumby 8 control panel under Ruffle.
+Status: done — look-and-feel only, nothing built; Jan has seen enough
+Description: Jan was unhappy that the Dash looks so different from the
+classic and wanted to see the chumby 8 (silvermoon/opus) panel. It is 800x600,
+SWF v8, 12 fps: on the 1024x600 DSI it fits the height 1:1 with the same 112 px
+side bars as the scaled classic. Its look is flat and light, nearer the Dash
+than the classic. Download URLs:
+
+- Firmware 1.8 build 3883 (`metadata`: platform_name silvermoon, config_name
+  opus; built-in 2011 panel in `rfs.tar.gz` at `usr/widgets/controlpanel.swf`):
+  http://files.chumby.com/resources/chumby8/1-8-2/update.zip
+- Newest panel, 5.0.38b2 (2014), what the server hands out once the query
+  carries the platform (`download_cp` sends `cnplatform`/`configname`; `hw`
+  alone is ignored):
+  https://www.chumby.com/xml/controlpanel?id=00000000-0000-0000-0000-000000000000&hw=10.6&sw=1.8.2&fw=1.8.2&lang=en-us&cnplatform=silvermoon&configname=opus
+  → http://chumbyfiles.s3-website-us-west-2.amazonaws.com/controlpanels/opus-controlpanel-5.0.38b2.tar.gz
+  (md5 `6a0d1626ee0f1a453920d802f428469d`; holds `controlpanel.swf` and
+  `slideshow.swf`)
+
+How it ran (scratch only, no repo change): the fork's debug build against a
+copy of `fixtures-dash/`, `-Ptest=1`. The panel takes its desktop path because
+Ruffle's version string has no "FL" (`com/chumby/Chumby.as:131` in the 5.0.38b2
+decompile); that path reads `data/start_network.xml` next to the SWF and uses a
+hardcoded guid (`Chumby.as:73`), so a canned "eth0 up" file and an
+`http/www.chumby.com/xapis/device/authorize/<that guid>` fixture answering
+`<chumby id="…"><name>chumby</name></chumby>` reach My Streams.
