@@ -1303,4 +1303,7 @@ Steps:
    git history, last present in 6867afb). Still open and
    unchanged: 1-2 (hardware-ideas), 7-8 (pi.nic known behaviours), 14-18
    (Dash, stale), 21-22 (mitigated, cause of 22 unknown), 23 (parked).
-   The fork was not touched; its pass is a later option.
+   The fork pass followed the same day (fork issue 30: old rules file,
+   spike probes, chumby.yml PR trigger, README/mod.rs tables, the mpv
+   lookup and its test, fork issues 3, 7, 10, 23-27 closed, duplicate
+   branches); gitlink bumped to it.
