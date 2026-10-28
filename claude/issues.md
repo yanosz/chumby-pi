@@ -1307,3 +1307,30 @@ Steps:
    spike probes, chumby.yml PR trigger, README/mod.rs tables, the mpv
    lookup and its test, fork issues 3, 7, 10, 23-27 closed, duplicate
    branches); gitlink bumped to it.
+
+Number: 26
+Timestamp: 2026-10-28, 22:30
+Title: Local widget services on the Pi — the stick's debugchumby hook and the socket allow-list.
+Status: open — on dev, hand-patched onto chumby-pi-3 (0.9.8); release pending
+Description: The light widget (chumby-ikea-lys) talks XMLSocket to ikea-lys
+on 127.0.0.1:8091. On the Pi two things were missing (Jan, 2026-10-28):
+the player's socket mode defaults to "ask" (desktop player.rs:234), which
+a kiosk cannot answer, and nothing starts the service. Decisions (Jan): no
+package for the service — emulate the chumby's boot hook instead: rcS:320
+runs `/mnt/usb/debugchumby` before the panel. The launcher now runs
+`$USB_LINK/debugchumby` in the background as pi, with `CHUMBY_STATE`
+exported, when `/etc/default/chumby-player` sets `CHUMBY_USB_HOOK=1`
+(opt-in, in line with the intro.swf decision), and passes `--socket-allow
+127.0.0.1:8091`. The hook (rust-remote/debugchumby, a nested repo) is
+architecture-aware: on arm64 it starts `ikea-lys/ikea-lys.aarch64` beside
+it with the token at the fixtures' `/psp/ikea-lys/token`; on the chumby
+what it did. The tree lives in `/media/chumby-usb` as a plain directory
+(Jan: the mount point is a directory anyway; a real stick would hide it),
+laid out like the chumby's stick, written by chumby-ikea-lys's
+`widget/deploy/deploy-pi.sh`; the panel merges its profile.xml (design §3
+search order). Consumers of the launcher's exec line: chumby-player-run
+only; of debugchumby: the chumby's stick copy (behaviour unchanged there),
+rust-remote/README. chumby-pi-3: `/usr/bin/chumby-player-run` patched by
+hand (backup `.orig-0.9.8`), `CHUMBY_USB_HOOK=1` set; the next release
+carries it. Not verified yet: the hook's start and the widget's
+connection on the Pi (token to be placed by Jan).
