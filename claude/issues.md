@@ -1332,5 +1332,16 @@ search order). Consumers of the launcher's exec line: chumby-player-run
 only; of debugchumby: the chumby's stick copy (behaviour unchanged there),
 rust-remote/README. chumby-pi-3: `/usr/bin/chumby-player-run` patched by
 hand (backup `.orig-0.9.8`), `CHUMBY_USB_HOOK=1` set; the next release
-carries it. Not verified yet: the hook's start and the widget's
-connection on the Pi (token to be placed by Jan).
+carries it. Verified 2026-10-28 23:xx on chumby-pi-3: the hook starts
+ikea-lys (as pi, 2.5 MB RSS), the widget connects over the allowed
+socket and renders (after it learned to paint its own background: the
+widget layer under a loaded movie is black here, light on the chumby),
+X reaches the panel ("Short circuit" → nextWidget). Two findings for
+the record: the panel takes the FIRST profile.xml of its search order,
+so a tree in /media/chumby-usb with a profile.xml hides the fixtures'
+own (chumby-local-widgets' clocks) — the ikea-lys deploy script now
+merges them; and the panel's traces land in the logind session scope,
+`journalctl -u chumby-player` does not show them — use `journalctl`
+without the unit filter. grim installed on the card (dev tool). Open:
+the launcher change ships with the next release; the Pi runs the
+hand-patched 0.9.8 until then.
