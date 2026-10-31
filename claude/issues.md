@@ -1369,3 +1369,17 @@ path or an equivalent host touchpoint that raises `ExtendedEvents`
 IntercomPlayer script at F2:21844); (b) the hook starts a rust-remote
 built for aarch64 with the Pi's paths (`CHUMBY_ROOT`). Not scoped; Jan
 decides when.
+
+Number: 28
+Timestamp: 2026-10-31, 14:10
+Title: The Pi's side bars — a host-drawn panel beside the 320x240 stage.
+Status: open — recorded, not scoped (Jan, 2026-10-31)
+Description: On the 1024x600 DSI box the panel scales 2.5x to 800x600 and
+leaves 112 px black left and right (issue "Black bars around a widget",
+closed: Jan keeps the scaling). Jan's idea (2026-10-31, while scoping the
+Lys widget's clock screen): use that space — a clock, status, light
+buttons — instead of leaving it black. That is player work in ruffle/:
+the panel's stage is 320x240 and a widget is loaded into a 320x240
+proxy, so anything beside it is drawn by the host (the fork), not by a
+widget. The Lys widget's own home screen (chumby-ikea-lys PLAN.md,
+"Clock screen") serves the Pi meanwhile. Not scoped; Jan decides when.
