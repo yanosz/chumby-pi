@@ -1345,3 +1345,27 @@ merges them; and the panel's traces land in the logind session scope,
 without the unit filter. grim installed on the card (dev tool). Open:
 the launcher change ships with the next release; the Pi runs the
 hand-patched 0.9.8 until then.
+
+Number: 27
+Timestamp: 2026-10-31, 12:40
+Title: Widget navigation on the Pi — the player has no soft-event hook, and no chumby-rust-remote runs on aarch64.
+Status: open — recorded, not scoped
+Description: The widget-navigation drop-down (yoga-widget/PLAN.md "Open",
+"Navigation between widgets", 2026-10-31) jumps between widgets through
+chumby-rust-remote, which appends `WidgetPlayer setWidget <name>` to
+`/tmp/flashplayer.event` and sends SIGHUP to the player — the chumby
+firmware's soft-event hook (`/usr/chumby/scripts/signal_soft_event.sh`),
+which the panel receives through the native `ExtendedEvents` class
+(F2:5404, dispatched at F2:5417-5447; `nextWidget`, `prevWidget`,
+`reload`, `setChannel`, `setWidget`, `shuffle`). The fork implements none
+of it: no `flashplayer.event`, no SIGHUP handler, no `ExtendedEvents` in
+ruffle/ (grep over the Rust sources and the fork's docs, 2026-10-31), and
+`rust-remote/debugchumby` starts only ikea-lys on aarch64. So on the Pi
+the widgets' title does nothing (they hide the drop-down when port 8090
+does not answer), and "Nacht"/"Uhr" in the yoga widget do nothing there
+either. To close: (a) player work in ruffle/ — the event file + SIGHUP
+path or an equivalent host touchpoint that raises `ExtendedEvents`
+(consumer list: the panel's five commands above, NightMode, the
+IntercomPlayer script at F2:21844); (b) the hook starts a rust-remote
+built for aarch64 with the Pi's paths (`CHUMBY_ROOT`). Not scoped; Jan
+decides when.
