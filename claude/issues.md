@@ -1358,6 +1358,8 @@ done 2026-11-01 15:33 on chumby-pi-3 (backup
 `/usr/bin/chumby-player-run.bak-20261101`; the player runs with both
 allows, rust-remote and ikea-lys started by the hook). Still 0.9.8 +
 hand patch until the next release.
+Jan's end-user test 2026-11-01, the current Lys on chumby-pi-3: "works
+fine on both devices".
 
 Number: 27
 Timestamp: 2026-10-31, 12:40
