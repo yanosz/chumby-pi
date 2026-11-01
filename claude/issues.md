@@ -1353,7 +1353,11 @@ with `CHUMBY_ROOT` = the fixtures' rootfs, and ikea-lys with
 `--favourites` at the fixtures' `/psp/ikea-lys/favourites.xml`
 (chumby-ikea-lys PLAN.md, "Favourites per device"). Consumers of the
 allow-list: this exec line only (`--socket-allow` is repeatable, fork
-desktop/src/cli.rs:166). The Pi's hand-patched launcher gets the same line.
+desktop/src/cli.rs:166). The Pi's hand-patched launcher gets the same line:
+done 2026-11-01 15:33 on chumby-pi-3 (backup
+`/usr/bin/chumby-player-run.bak-20261101`; the player runs with both
+allows, rust-remote and ikea-lys started by the hook). Still 0.9.8 +
+hand patch until the next release.
 
 Number: 27
 Timestamp: 2026-10-31, 12:40
