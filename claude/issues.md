@@ -1383,3 +1383,19 @@ the panel's stage is 320x240 and a widget is loaded into a 320x240
 proxy, so anything beside it is drawn by the host (the fork), not by a
 widget. The Lys widget's own home screen (chumby-ikea-lys PLAN.md,
 "Clock screen") serves the Pi meanwhile. Not scoped; Jan decides when.
+
+Number: 29
+Timestamp: 2026-10-31, 23:55
+Title: rust-remote's skin store must be a widget data store, not a Lys domain.
+Status: open — documented only, not checked or implemented (Jan, 2026-10-31)
+Description: The Lys widget's clock skin (lcars / deco / funkis, chosen by a
+tap in the lower left corner) is kept by chumby-rust-remote so that it
+survives widget changes, the control panel and reboots (`skin`,
+`skin NAME`, file under /psp; chumby-ikea-lys PLAN.md, "Skins"). Jan's
+note: if rust-remote saves skins, Lys must not corrupt its domain —
+storing must be open to other widgets on the same interface, and for the
+remote it is just data from a widget (an opaque key/value per widget, no
+knowledge of what a skin is). To do: shape the store that way (a
+widget-scoped key/value store on the XMLSocket interface, the skin one
+entry of it) and move the skin names out of the service. Not scoped;
+Jan decides when.
