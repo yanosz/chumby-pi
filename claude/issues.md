@@ -1345,6 +1345,15 @@ merges them; and the panel's traces land in the logind session scope,
 without the unit filter. grim installed on the card (dev tool). Open:
 the launcher change ships with the next release; the Pi runs the
 hand-patched 0.9.8 until then.
+Update 2026-11-01 (Jan: "Deploy current version of lys to chumby-pi";
+interview: rust-remote on aarch64): the launcher also passes
+`--socket-allow 127.0.0.1:8090` (chumby-rust-remote, the Lys widget's skin
+store; issue 29), and the hook starts `rust-remote/chumby-rust-remote.aarch64`
+with `CHUMBY_ROOT` = the fixtures' rootfs, and ikea-lys with
+`--favourites` at the fixtures' `/psp/ikea-lys/favourites.xml`
+(chumby-ikea-lys PLAN.md, "Favourites per device"). Consumers of the
+allow-list: this exec line only (`--socket-allow` is repeatable, fork
+desktop/src/cli.rs:166). The Pi's hand-patched launcher gets the same line.
 
 Number: 27
 Timestamp: 2026-10-31, 12:40
@@ -1369,6 +1378,13 @@ path or an equivalent host touchpoint that raises `ExtendedEvents`
 IntercomPlayer script at F2:21844); (b) the hook starts a rust-remote
 built for aarch64 with the Pi's paths (`CHUMBY_ROOT`). Not scoped; Jan
 decides when.
+Update 2026-11-01: (b) done, for the skin store (issue 26's update). On the
+Pi rust-remote now answers on 8090, so the widgets' drop-down opens and
+lists the channel (the panel's `putFile("/tmp/widget_names")`, F2:3750,
+lands in the fixtures, fork core/src/chumby/fixture.rs:590), but a tap does
+nothing: `widget`, `night` and `screen` answer `error=event` (no pid file,
+no event hook) — no signal is sent. The yoga widget's "Nacht" shows on the
+Pi for the same reason, if yoga is deployed there. (a) stays open.
 
 Number: 28
 Timestamp: 2026-10-31, 14:10

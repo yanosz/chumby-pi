@@ -287,8 +287,8 @@ fi
 # comes back (claude/watchdog-plan.md). It stays cage's only client, so
 # cage survives those restarts.
 # --socket-allow: a local widget's XMLSocket to a service on this box
-# (ikea-lys on 8091) connects without the player's ask dialog, which a
-# kiosk cannot answer.
+# (chumby-rust-remote on 8090, ikea-lys on 8091) connects without the
+# player's ask dialog, which a kiosk cannot answer.
 exec "$SUPERVISOR" --ctl "$CTL" --config /etc/chumby-player/player.toml -- \
     "$RUFFLE" \
     --load-behavior blocking \
@@ -298,6 +298,7 @@ exec "$SUPERVISOR" --ctl "$CTL" --config /etc/chumby-player/player.toml -- \
     ${CHUMBY_QUALITY:+--quality "$CHUMBY_QUALITY"} \
     ${CHUMBY_RENDERER:+--renderer "$CHUMBY_RENDERER"} \
     --fullscreen \
+    --socket-allow 127.0.0.1:8090 \
     --socket-allow 127.0.0.1:8091 \
     -PlocalCache=1 \
     "$SWF"
