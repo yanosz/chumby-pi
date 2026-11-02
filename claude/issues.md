@@ -1421,3 +1421,27 @@ knowledge of what a skin is). To do: shape the store that way (a
 widget-scoped key/value store on the XMLSocket interface, the skin one
 entry of it) and move the skin names out of the service. Not scoped;
 Jan decides when.
+
+Number: 30
+Timestamp: 2026-11-02, 22:40
+Title: The Lys panel skin on the Pi — deploy it, and adapt chumby-rust-remote so its radio plays there.
+Status: open — recorded, not scoped (Jan, 2026-11-02)
+Description: The Lys widget's fourth skin, "panel" (LCARS, the favourite
+scenes, AUS, and a radio: three "My Streams" stations, STOP, volume − / +),
+runs on the hardware chumby since 2026-11-02 (chumby-ikea-lys PLAN.md,
+"LCARS panel overlay" and journal). It is not deployed to chumby-pi-3
+(the Pi runs the Lys of 2026-11-01). Its radio goes through
+chumby-rust-remote (rust-remote/README.md: `radio`, `radio NAME`,
+`radio stop`, `volume up|down`), which hands it to the control panel's own
+player with soft events (`UserPlayer play`, `MusicPlayer stop|setVolume`);
+on the Pi those events fail with `error=event` — the player has no
+soft-event hook and writes no pid file (issue 27). The station mark reads
+the panel's `/tmp/musicsource` and the volume step `/psp/volume`, both
+under the fixtures' root on the Pi. To do: deploy the current Lys and
+rust-remote to the Pi (chumby-ikea-lys `widget/deploy/deploy-pi.sh`), and
+adapt chumby-rust-remote so the radio plays on the Pi. How is open: Jan
+descoped the Pi from the feature and withdrew the first idea (rust-remote
+starting its own mpv beside the player's) — "I think you got the
+architecture wrong". The player already plays streams through mpv
+(fork `core/src/chumby/fixture.rs:242`, `_playAudio`). Not scoped; Jan
+decides when.
