@@ -576,8 +576,12 @@ express and would therefore be player work; (C) leave it. **Jan chose C.**
 Number: 13
 Timestamp: 2026-08-28, 12:30
 Title: A "Birds + SWR3" alarm went silent about 100 s in and stayed silent.
-Status: closed 2026-09-24 — fixed and device-verified (fork issue 10,
-`alarm_guard.rs`); the verbose `RUST_LOG` on chumby-pi-3 is reverted.
+Status: won't fix 2026-11-03 (Jan): the guard is removed from the player, stock
+behaviour kept — "this exists on the chumby, too. We do not need to deviate",
+and "the guard didn't work" (fork issue 10). Was: closed 2026-09-24 — fixed and
+device-verified (fork issue 10, `alarm_guard.rs`); the verbose `RUST_LOG` on
+chumby-pi-3 is reverted. What remains is the configuration workaround: keep
+the nightmode alarm out of a wake alarm's ring window.
 Cause (2026-09-01): the 08:00 nightmode alarm cancels the still-ringing 07:59
 alarm through the panel's own `stopAlarmsExcept`.
 Description: Jan set a one-shot alarm on the "Birds + SWR3" My Streams entry
