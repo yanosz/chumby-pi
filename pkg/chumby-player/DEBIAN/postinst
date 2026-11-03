@@ -23,10 +23,7 @@ if [ "$1" = "configure" ]; then
     # the one place a fresh installer surely reads. Quiet on upgrades
     # where display and firmware are already in place.
     have_swf=no
-    if [ -e /var/lib/chumby/controlpanel.swf ] \
-        || [ -e /usr/share/chumby-player/swf/controlpanel.swf ]; then
-        have_swf=yes
-    fi
+    [ -e /var/lib/chumby/controlpanel.swf ] && have_swf=yes
     have_tft=no
     for card in /dev/dri/by-path/platform-*.spi-cs-*-card; do
         if [ -e "$card" ]; then have_tft=yes; break; fi

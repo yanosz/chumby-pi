@@ -48,6 +48,15 @@ Non-negotiable rules:
   no claim.
 - Never modify controlpanel.swf or any extracted SWF.
 - /home/jan/chumby_backup is read-only ground truth. Never write there.
+  It is the hardware chumby's complete root filesystem (/usr/chumby, /psp, /etc, /bin, …),
+  and that software is static — it hardly ever changes. One known exception: the device's
+  /usr/bin/chumbyflashplayer.x is newer than the backup's (backup Flash Lite 3.1 build
+  1.7.1830, device Flash Lite 4.0 build 1.7.4094; found 2026-09-29) — for questions about
+  the player binary, the device is authoritative. Read device files, scripts and
+  binaries there, together with the panel decompile. Do not survey the live device's
+  environment or versions (uname, firmware, package or binary listings, strings over the
+  device): it is redundant. ssh to the chumby only for runtime state the backup cannot show,
+  and put this rule into every agent prompt about the chumby.
 - Work on ONE step at a time. Do not look ahead or start the next step's
   work while the current step is unfinished.
 - Keep code comments brief. Code should speak for itself; comment only

@@ -173,8 +173,12 @@ Two files, both surviving upgrades:
   `brightness_ctl`. Each key is documented in the file.
 - **`/etc/default/chumby-player`** — environment overrides: pin a
   specific display (`WLR_DRM_DEVICES`), route audio to a specific
-  output (`CHUMBY_AUDIO_DEVICE`), log verbosity (`RUST_LOG`). Also
-  documented in place.
+  output (`CHUMBY_AUDIO_DEVICE`), log verbosity (`RUST_LOG`),
+  `CHUMBY_USB_HOOK` (opt-in: run the USB stick's `debugchumby` before
+  the panel, as the chumby does at boot, for widgets that talk to a
+  service the stick starts — such widgets may then reach ports 8090 and
+  8091 without asking and draw beside the 4:3 stage; off by default,
+  since the stick's script runs unasked). Also documented in place.
 
 Sound needs no setup: it follows the system default output (a USB
 adapter if present).

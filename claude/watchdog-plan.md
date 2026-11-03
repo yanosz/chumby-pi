@@ -1,9 +1,10 @@
 # Panel watchdog — plan
 
 Started 2026-09-24. Motivation: appliance issues 21 (alarms dead after a
-clock step) and 22 (WLAN shown good, unusable). Status: **steps 1
-(requirements) and 2 (design) done and approved 2026-09-24; step 3 not
-started.** Nothing built.
+clock step) and 22 (WLAN shown good, unusable). Status: **done — shipped as
+`chumby-supervisor` in 0.9.8 (released 2026-09-29), device-verified on
+chumby-pi-3.** The sections below are the working record in order; the code
+is `supervisor/`.
 
 ## Ground truth: what the original firmware did
 
@@ -629,3 +630,14 @@ incorrect". Closed; `CLAUDE.md` now forbids PRs (`62727d5`). The code reaches
   warning, upstream's (`core/src/ecma_conversions.rs:48`, `__jcvt`).
 - Push order next: fork `chumby` (force, with the backup branch), then
   `main`, which also publishes 0.9.8 to apt. Jan: I push.
+
+### Release step 3 — pushed and published, 2026-09-29
+
+- Fork: backup `chumby-before-regen-2026-09-29` pushed; `chumby` force-pushed
+  with a lease (`a82bd5501...5dac40c05`); `dev` `5d6aa59f6..513327ff7`.
+  `chumby.yml` run 36561873423 on `chumby`: success (build + movie start).
+- chumby-pi: `main` fast-forwarded `1f3de01..db6703f`; `dev`
+  `acfe375..1808d88`. `ci.yml` run 36561940812: debs + install test on
+  trixie success, Pages publish success. The apt repo's `Packages` lists
+  `chumby-player` 0.9.8.
+- Not on a device from apt yet: chumby-pi-3 runs the locally built 0.9.8.
