@@ -1814,3 +1814,23 @@ print time). No value of the config is in this repo or this record.
   Packages.gz, Release, Release.gpg, the key and both debs; both served
   debs byte-equal to the local builds (sha256). No 404, no MIME issue.
 - Not yet installable on a Pi: both depend on chumby-player 0.9.10.
+Update 2026-11-03, step 4 built locally (Jan: build, device round, then
+push): fork dev 30b8d7642 (issue 10: the guard's removal ships in 0.9.10;
+issue 31 there shipped in 0.9.9) — `cargo test -p ruffle_core --lib
+chumby` 50 passed, 1 ignored; movie start (debug, CI's command line,
+headless cage): exit 124, `_getPlatform` 1, no panic. Pair regenerated on
+8328af42d: C1 e708dc21a (85 additions — alarm_guard.rs gone), C2 d5237b1c1
+(tree equal to fork dev; the same 19-path edit surface), branch
+`chumby-regen-2026-11-03b`, the old tip 19cc439e8 kept as
+`chumby-before-regen-2026-11-03b` (`…-2026-11-03` already holds 0.9.9's
+backup, 5dac40c05). Here: 0.9.10 (b7f1740), the three cross-builds (dist
+player, dist exporter, supervisor; the one upstream `__jcvt` warning),
+chumby-player_0.9.10_arm64.deb (13,920,316 bytes, sha256 204aef1d…):
+Version 0.9.10, Depends as 0.9.9, conf.d and profile.d shipped, launcher and
+conffile byte-equal to the tree, the fresh dist player. Desktop launcher:
+defaults → `… --fullscreen -PlocalCache=1 <swf>`; drop-ins and a packaged
+profile → `… --socket-allow 127.0.0.1:8091 --socket-allow 127.0.0.1:8090
+--letterbox off --background-color 000000 …`, "adding 2 local widget
+instances", Lys loaded; both alive at 45 s, no panic; `CHUMBY_LETTERBOX=maybe`
+→ `--check` and the run exit 1. Release commit on `release-0.9.10`; not
+pushed; the device round comes first.
