@@ -54,8 +54,9 @@ CHUMBY_QUALITY=low
 # Player log filter (output lands in journalctl -u chumby-player).
 #RUST_LOG=warn,chumby_host=info,avm_trace=info
 
-# Run the stick's debugchumby at player start, as the chumby's init script
-# does (chumby-pi/rust-remote/debugchumby is the one in use: it starts
-# ikea-lys, the living room's lights). Off by default: a stick's script
-# runs as pi with no questions asked.
+# Run the stick's debugchumby before the panel, as the chumby does at
+# boot, for widgets that talk to a service the stick starts on this box.
+# Also lets such widgets reach ports 8090 and 8091 without asking and draw
+# beside the 4:3 stage. Off by default: a stick's script runs as pi with
+# no questions asked.
 #CHUMBY_USB_HOOK=1
