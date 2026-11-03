@@ -1881,3 +1881,10 @@ the tree; conf.d and profile.d shipped; ExecStop=-…). Its launcher, the
 8090), letterbox off, Lys merged and loaded, alive at 45 s, no panic.
 chumby-pi-3 runs the first 0.9.10 deb (doubled allows) until this one is
 installed.
+Update 2026-11-03, 23:30: chumby-ikea-lys 0.1.1 published (Jan: entering
+Lys's night switches no scene any more; chumby-ikea-lys 82c9469, its
+PLAN.md). 575,572 bytes, sha256 3156f526…37b68; the fetch check passed
+(InRelease good signature, Packages lists chumby-ikea-lys 0.1.1 and
+chumby-rust-remote 0.1.0, every file 200, the served deb byte-equal). The
+repo keeps the newest version of each package only: rsync --delete removed
+0.1.0 (404 now). chumby-pi-3 still runs 0.1.0 until `apt upgrade`.
