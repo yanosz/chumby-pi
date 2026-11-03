@@ -1531,7 +1531,7 @@ new rust-remote (station mark); Jan decides when.
 Number: 31
 Timestamp: 2026-11-03, 21:40 (plan rewritten 22:30)
 Title: The widget services on the Pi become private debs with systemd units, from a private apt repo on the LAN; the public package drops the debugchumby hook emulation.
-Status: step 1 done on dev (2026-11-03); step 0 answered — Jan's decisions 2026-11-03 (reverses issue 26's "no package for the service"); the public side ships in 0.9.10
+Status: steps 1-2 done (2026-11-03; chumby-pi dev, rust-remote, chumby-ikea-lys); step 0 answered — Jan's decisions 2026-11-03 (reverses issue 26's "no package for the service"); the public side ships in 0.9.10
 Description: Jan: chumby-rust-remote and ikea-lys run on the Pi as systemd
 units, enabled by default, shipped as two private debs from a private apt
 repo on the LAN's lighttpd (the container that serves the yoga videos;
@@ -1709,3 +1709,78 @@ behind an argument-logging wrapper:
   --background-color 000000 …` (the files in name order), alive, no panic;
 - `CHUMBY_LETTERBOX=maybe`: `--check` and the run exit 1 with
   "CHUMBY_LETTERBOX must be on or off, not 'maybe'"; the player never starts.
+Update 2026-11-03, step 2 done (Jan's go): the two private debs, built on
+the PC, nothing installed.
+- The profile placement. The panel merges the first existing of /tmp,
+  /mnt/usb, /mnt/storage, /psp profile.xml (F2:4344, design.md §4).
+  Chosen: the launcher writes the fixtures' /tmp/profile.xml at every
+  start — the profile the panel would have taken plus every profile in
+  /usr/share/chumby-player/profile.d/ (the public deb ships the empty
+  directory; duplicates by instance id skipped) — only when that directory
+  has any; it removes its own file otherwise (marked
+  `generated="chumby-player-run"`) and leaves a foreign one alone. A stick's
+  profile stays the base (stock: it replaces the owner's set) and the
+  packaged widget is added to it; a re-seed cannot delete it (rebuilt from
+  /usr/share at the next start, /tmp is emptied at boot anyway); the
+  owner's /psp profile is the base when no stick has one. The fork hides
+  all four paths alike under `merge_local_remote_widgets = 0`
+  (core/src/chumby/fixture.rs:548-561). Rejected: a profile.xml in
+  /media/chumby-usb (Jan's first idea) — a real stick hides it, and it
+  shadows the /psp profile unless merged by hand (#26); the deb merging
+  into /psp/profile.xml — a re-seed deletes it, chumby-local-widgets
+  overwrites it; Lys as an owner widget in /var/lib/chumby/widgets — the
+  helper is user-run and interactive, a stick still hides /psp; the deb
+  writing /tmp/profile.xml — emptied at boot. Code: chumby-player-run
+  after `mkdir -p "$STATE/widgets"` (python3, a Depends already; the
+  CHUMBY_PROFILED override for desktop runs), dev bda0223.
+- chumby-rust-remote 0.1.0 (rust-remote ab74ad3, `pkg/build-deb.sh`):
+  /usr/lib/chumby-rust-remote/chumby-rust-remote; the unit — User=pi,
+  After= and PartOf=chumby-player.service, WantedBy=chumby-player.service,
+  Restart=on-failure, `CHUMBY_ROOT=/var/lib/chumby/fixtures/rootfs`
+  (STATE chumby-player-run:50, the rootfs as at :177) and
+  `CHUMBY_CTL=/tmp/chumby-ctl` (:51), no PrivateTmp (the panel's /tmp,
+  :188-193); the conffile /etc/chumby-player/conf.d/chumby-rust-remote.conf
+  (8090); postinst enable + restart, prerm disable --now; Depends
+  chumby-player (>= 0.9.10), libc6, libgcc-s1 (its NEEDED). debugchumby
+  is the chumby's alone (the aarch64 branch out) and passes ikea-lys
+  `--hub`; README's Pi paragraph rewritten.
+- chumby-ikea-lys 0.1.0 (chumby-ikea-lys b4c1813): ikea-lys requires
+  `--hub` (the compiled-in living-room address gone, exit 2 without one);
+  /usr/lib/chumby-ikea-lys/ikea-lys; the unit — as above plus
+  `EnvironmentFile=/etc/default/chumby-ikea-lys` (`LYS_HUB=`, the only
+  value it takes from the environment), `ConditionPathExists` the token,
+  `RestartPreventExitStatus=2`, token and favourites in
+  /etc/chumby-ikea-lys/; the conffiles /etc/default/chumby-ikea-lys,
+  /etc/chumby-ikea-lys/favourites.xml, /etc/chumby-player/conf.d/
+  chumby-ikea-lys.conf (8091, letterbox off); the widget in
+  /usr/share/chumby-ikea-lys/ and its entry in
+  /usr/share/chumby-player/profile.d/chumby-ikea-lys.xml (was
+  widget/deploy/profile-pi.xml). The favourites reach the widget only
+  through the service's state (widget 04-state.as:8), so the widget reads
+  no file; the chumby's paths are unchanged. deploy-pi.sh is a dev
+  shortcut (build, the movie over the installed one, restart).
+- Consumers of what went: debugchumby's aarch64 branch — the launcher's
+  hook run (gone in step 1), rust-remote README:229-242 (rewritten),
+  chumby-ikea-lys deploy-pi.sh (rewritten), widget/build/pi/ (an artifact,
+  deleted); ikea-lys's default hub — its README options and the chumby's
+  run line (now `--hub`), debugchumby (passes it), the PC tests (pass
+  `--hub 127.0.0.1` already), PLAN.md's journal (history);
+  deploy/profile-pi.xml — the old deploy-pi.sh only (PLAN.md history).
+- Checked on the PC: both debs' `dpkg-deb -I/-c` (files, conffiles,
+  Depends, the binaries aarch64 PIEs, NEEDED libc and libgcc_s);
+  `systemd-analyze verify` of both units — the only findings were the
+  missing installed binaries, clean with the extracted ones; User=pi was
+  not flagged although this PC has no user pi (verify does not resolve
+  users). lintian is not installed. The launcher's merge through `--seed`:
+  no fragments — no /tmp/profile.xml; a fragment and a /psp profile —
+  ids 1000 and lys-1; with a stick profile — 2000 and lys-1; the fragment
+  gone — the file removed; a foreign /tmp/profile.xml — left alone, said so.
+  A full launcher run in a headless cage with the two drop-ins and the
+  fragment: the player arguments `… --fullscreen --socket-allow
+  127.0.0.1:8091 --socket-allow 127.0.0.1:8090 --letterbox off
+  --background-color 000000 -PlocalCache=1 <swf>`, the panel "found a
+  local profile" at /tmp/profile.xml, "adding 2 local widget instances",
+  loaded Lys from the real-disk path; alive at 45 s, no panic.
+- Next, step 3: pkg/publish-private-apt.sh (reads the five names from
+  ~/.config/chumby-apt/private.env), a dry run into a scratch dir checked
+  with gpgv; the first upload waits for Jan's go.
