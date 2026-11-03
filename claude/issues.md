@@ -576,8 +576,12 @@ express and would therefore be player work; (C) leave it. **Jan chose C.**
 Number: 13
 Timestamp: 2026-08-28, 12:30
 Title: A "Birds + SWR3" alarm went silent about 100 s in and stayed silent.
-Status: closed 2026-09-24 — fixed and device-verified (fork issue 10,
-`alarm_guard.rs`); the verbose `RUST_LOG` on chumby-pi-3 is reverted.
+Status: won't fix 2026-11-03 (Jan): the guard is removed from the player, stock
+behaviour kept — "this exists on the chumby, too. We do not need to deviate",
+and "the guard didn't work" (fork issue 10); the removal ships in 0.9.10. Was: closed 2026-09-24 — fixed and
+device-verified (fork issue 10, `alarm_guard.rs`); the verbose `RUST_LOG` on
+chumby-pi-3 is reverted. What remains is the configuration workaround: keep
+the nightmode alarm out of a wake alarm's ring window.
 Cause (2026-09-01): the 08:00 nightmode alarm cancels the still-ringing 07:59
 alarm through the panel's own `stopAlarmsExcept`.
 Description: Jan set a one-shot alarm on the "Birds + SWR3" My Streams entry
@@ -1311,7 +1315,7 @@ Steps:
 Number: 26
 Timestamp: 2026-10-28, 22:30
 Title: Local widget services on the Pi — the stick's debugchumby hook and the socket allow-list.
-Status: open — ships in 0.9.9 (built and desktop-verified 2026-11-03, not yet pushed); closes with the chumby-pi-3 device round
+Status: closed 2026-11-03 — superseded by issue 31: the hook emulation went in 0.9.10, whose device round on chumby-pi-3 is done (22:4x; Jan's end-user check pending)
 Description: The light widget (chumby-ikea-lys) talks XMLSocket to ikea-lys
 on 127.0.0.1:8091. On the Pi two things were missing (Jan, 2026-10-28):
 the player's socket mode defaults to "ask" (desktop player.rs:234), which
@@ -1523,3 +1527,357 @@ entry (Jan's). Backup before the deploy:
 `~/chumby-pi-3-backup/chumby-backup-20261103-pre-lys.tar.gz`. The chumby
 (hardware) has not been deployed: it needs the refactored widget and the
 new rust-remote (station mark); Jan decides when.
+
+Number: 31
+Timestamp: 2026-11-03, 21:40 (plan rewritten 22:30)
+Title: The widget services on the Pi become private debs with systemd units, from a private apt repo on the LAN; the public package drops the debugchumby hook emulation.
+Status: steps 1-3 done; step 4 built locally and its device round done on chumby-pi-3 (2026-11-03; Jan's end-user check pending); release-0.9.10 respun with the two fixes below (Jan), not pushed; step 0 answered — Jan's decisions 2026-11-03 (reverses issue 26's "no package for the service"); the public side ships in 0.9.10
+Description: Jan: chumby-rust-remote and ikea-lys run on the Pi as systemd
+units, enabled by default, shipped as two private debs from a private apt
+repo on the LAN's lighttpd (the container that serves the yoga videos;
+address, user and path in a private config, never in this public repo —
+the precedent is yoga-widget/PLAN.md, outside this repo). Not GitHub. The
+public chumby-player loses the hook emulation of issue 26 and gains plain
+switches for what the services' widgets need. The chumby keeps its stick
+and debugchumby; only the Pi changes. Public side: 0.9.10. Plan only;
+file:line from the trees of 2026-11-03.
+
+1. The private apt repo.
+   - A signed flat repo, the public recipe (ci.yml:166-184: apt-ftparchive
+     Packages + Release, gpg clearsign InRelease and Release.gpg), in a
+     directory `chumby-apt/` below the server's existing web root, so
+     lighttpd needs no change (URL: <web root URL>/chumby-apt/).
+   - Signing: a separate key, "chumby private archive", that Jan generates
+     and keeps; not the public chumby-archive key (pkg/apt/chumby-archive.gpg),
+     so a leak of either stays contained.
+   - Publish: `pkg/publish-private-apt.sh` here — generic, no address in it:
+     reads `~/.config/chumby-apt/private.env` (HOST, USER, DIR, KEY_ID;
+     Jan writes it), collects the newest deb of each private package from
+     the two repos' pkg/out/, builds and signs the index in a scratch dir,
+     rsyncs it as the web user (the yoga upload's way). A private script
+     elsewhere would also do; here it sits beside the public recipe it
+     mirrors.
+   - The Pi: a second sources entry
+     `/etc/apt/sources.list.d/chumby-private.list` (`deb
+     [signed-by=/usr/share/keyrings/chumby-private.gpg] <URL> ./`) and the
+     keyring, both by hand once (setup.md does not mention them: the
+     public docs know no private repo).
+2. Two private debs, each built where its source lives (both are outside
+   this git: rust-remote/ is ignored, .gitignore:37; ikea-lys is its own
+   repo): `pkg/` in rust-remote and in chumby-ikea-lys, after
+   pkg/build-debs.sh (cross-built binary checked, :25-32, installed,
+   :56-58) and pkg/deploy-pi.sh (always rebuilds, :17-29; installs with
+   `--force-confold`, :39).
+   - chumby-rust-remote: /usr/lib/chumby-rust-remote/chumby-rust-remote
+     (aarch64, rust-remote/README.md:210), unit, drop-in (3).
+   - chumby-ikea-lys: /usr/lib/chumby-ikea-lys/ikea-lys, unit, drop-in,
+     conffile `/etc/default/chumby-ikea-lys` with `LYS_HUB=` as an active
+     line. The living room's compiled-in hub (chumby-ikea-lys
+     src/main.rs:41) goes: `--hub` becomes required, ikea-lys refuses an
+     empty one with a message. Token and favourites move to
+     `/etc/chumby-ikea-lys/` (token root:pi 640, placed by the owner;
+     favourites.xml a conffile seeded from widget/deploy/favourites.xml):
+     today they sit in the fixtures' /psp (chumby-ikea-lys
+     deploy-pi.sh:14), which a re-seed deletes (chumby-player-run:128-135).
+   - Both `Depends: chumby-player (>= 0.9.10)` (the fixtures root, the
+     control FIFO, user pi, the drop-in directory). Versions of their own,
+     0.1.0 first, bumped per change in the repo's build script.
+3. Units and switches.
+   - System units, `User=pi`, `After=` and `PartOf=chumby-player.service`,
+     `WantedBy=multi-user.target`, `Restart=on-failure`, stderr to the
+     journal (no /tmp logs). Enabled by default: postinst daemon-reload,
+     enable, start (postinst:12-15 the pattern); prerm stop, disable
+     (prerm:4-5).
+   - chumby-rust-remote.service: `Environment=CHUMBY_ROOT=/var/lib/chumby/fixtures/rootfs`,
+     `CHUMBY_CTL=/tmp/chumby-ctl` (chumby-player-run:45). No PrivateTmp:
+     the panel's /tmp is /tmp/chumby-panel-tmp, mode 700, pi's
+     (chumby-player-run:154-159).
+   - chumby-ikea-lys.service: `EnvironmentFile=/etc/default/chumby-ikea-lys`,
+     `ExecStart=… --hub ${LYS_HUB} --token /etc/chumby-ikea-lys/token
+     --favourites /etc/chumby-ikea-lys/favourites.xml`,
+     `ConditionPathExists=` the token.
+   - The public side: the launcher's hook block and HOOK_ARGS
+     (chumby-player-run:275-295, used at :310) go. Two active lines in
+     /etc/default/chumby-player instead: `CHUMBY_SOCKET_ALLOW=""` (a list
+     of host:port, one `--socket-allow` each; empty = the player's prompt)
+     and `CHUMBY_LETTERBOX=on` (`off` lets a widget draw beside the 4:3
+     stage and brings `--background-color 000000`, issue 28). A private
+     package turns them on without touching that conffile: the launcher
+     sources `/etc/chumby-player/conf.d/*.conf` (sorted, root-owned, beside
+     player.toml) after it; each private deb ships one there as its own
+     conffile — rust-remote's `CHUMBY_SOCKET_ALLOW="$CHUMBY_SOCKET_ALLOW
+     127.0.0.1:8090"`, ikea-lys's the same for 8091 plus
+     `CHUMBY_LETTERBOX=off` (the Lys panel skin). Unset (an upgraded box
+     that kept its old conffile) means the player's own behaviour.
+   - Unchanged: the fork (the flags exist, desktop/src/cli.rs:166,
+     186-192).
+4. What goes, with its consumers:
+   - The hook run, CHUMBY_USB_HOOK, HOOK_ARGS: chumby-player-run:275-295,
+     :310; chumby-player.default:57-63 (incl. Jan's /media/chumby-usb
+     sentence, 2178872); docs/setup.md:177-182 (the entry) and :183-189
+     (Jan's paragraph: /media/chumby-usb stays a plain directory for a
+     stick's tree and the panel's widgets — only `debugchumby` and
+     `post_alarm_action` leave its list; his wording); this record (#26's
+     history stays; #26 closes with 0.9.10).
+   - rust-remote debugchumby:9-14 (the aarch64 branch; the chumby branch
+     :15-18 stays, and gains `--hub` for ikea-lys, the stick being the
+     chumby's own config); README:229-242 (the Pi paragraph).
+   - chumby-ikea-lys widget/deploy/deploy-pi.sh: the service builds and
+     copies (:16, 24-28, 33-34, 63, 69), the hook text (:2-9), the restart
+     (:85-87); build/pi/ (debugchumby, ikea-lys/, rust-remote/, an
+     artifact); README.md "Build, test on the PC, deploy"; PLAN.md's
+     chumby-pi entries. It keeps the widget: lys/ and profile.xml into
+     /media/chumby-usb, as today.
+   - Unchanged: deploy-chumby.sh, rust-remote/deploy.sh, the chumby's
+     stick.
+5. Steps:
+   0. CHECKPOINT: Jan answers the questions below, creates the private key
+      and writes ~/.config/chumby-apt/private.env himself.
+   1. Public side on dev: launcher (conf.d, the two switches, the hook out),
+      conffile, setup.md, the install test (a drop-in case,
+      .github/scripts/deb-install-test.sh:69); desktop launcher runs with
+      and without drop-ins; the deb's contents. CHECKPOINT.
+   2. Private debs: rust-remote pkg/ + debugchumby + README; ikea-lys
+      `--hub` required + pkg/ + deploy-pi.sh + README + PLAN.md; build,
+      `dpkg-deb -c/-I`, `systemd-analyze verify` of both units. CHECKPOINT.
+   3. publish-private-apt.sh: a dry run into a scratch dir, the index and
+      its signature checked with gpgv; then the first upload (it writes to
+      the server: Jan's go). CHECKPOINT.
+   4. Release 0.9.10 the 0.9.9 way (version, pair regeneration — fork dev
+      also carries 7732e65ce —, release commit). CHECKPOINT before main,
+      chumby, push.
+   5. Device rounds, Jan watching: chumby-pi-3 — backup; take
+      debugchumby, ikea-lys/, rust-remote/ out of /media/chumby-usb and
+      `CHUMBY_USB_HOOK=1` out of the conffile; the private sources and
+      keyring; chumby-player 0.9.10 (`--force-confold`, merge the two new
+      lines), chumby-rust-remote, chumby-ikea-lys; token and hub into /etc;
+      Lys, the lights, the night claim and the alarms. The chumby — the
+      ikea-lys without a compiled hub and debugchumby with `--hub`, after a
+      backup.
+   Open for Jan: (i) the repo below the existing web root, or its own
+   lighttpd alias? (ii) token and favourites to /etc/chumby-ikea-lys/? (iii)
+   the Lys widget stays a stick-tree file put there by deploy-pi.sh, or
+   into the chumby-ikea-lys deb? (iv) the black background tied to
+   letterbox off, or a line of its own? (v) the publish script here
+   (generic, config outside), or in a private place?
+Update 2026-11-03, step 0 answered (Jan): (i) the repo below the existing
+web root; (ii) token and favourites to /etc/chumby-ikea-lys/; (iii) the Lys
+widget's SWF and its profile ship in the chumby-ikea-lys deb, deploy-pi.sh
+becomes a dev shortcut, /media/chumby-usb keeps a profile.xml pointing at
+the installed SWF; (iv) the publish script in pkg/ here, its config only in
+~/.config/chumby-apt/private.env; (v) the black background stays tied to
+`CHUMBY_LETTERBOX=off`. The signing key and the private config exist (made
+at Jan's word): the config holds HOST, USER, DIR, URL and KEY_ID, the
+exported public key sits beside it as chumby-private-archive.gpg; the
+publish script reads those five names, nothing of them goes into this
+repo. The first upload (step 3) waits for Jan's go.
+Update 2026-11-03, step 1 done (dev 320982a; version still 0.9.9 on dev,
+0.9.10 carries it): chumby-player-run sources
+`${CHUMBY_CONFD:-/etc/chumby-player/conf.d}/*.conf` after the
+environment (an empty or missing directory sources nothing; later files
+win), turns `CHUMBY_SOCKET_ALLOW` into one `--socket-allow` per entry and
+`CHUMBY_LETTERBOX=off` into `--letterbox off --background-color 000000`;
+`on` or unset adds nothing, anything else refuses to start (`--check`
+too); the hook block, `CHUMBY_USB_HOOK` and `HOOK_ARGS` are gone. The
+conffile ships `CHUMBY_SOCKET_ALLOW=""` and `CHUMBY_LETTERBOX=on` as active
+lines (the hook comment, Jan's /media/chumby-usb sentence in it included,
+went with the block); the deb ships the empty /etc/chumby-player/conf.d/;
+docs/setup.md names the two switches and the drop-ins, and Jan's paragraph
+keeps the directory and "`profile.xml` and widgets". Consumers of the
+removed names: none left in this repo's tracked files outside this record
+(git grep CHUMBY_USB_HOOK, HOOK_ARGS, debugchumby, post_alarm_action);
+this record's history and fork claude/issues.md:893 stay as history;
+rust-remote debugchumby:3-5 and README:229-242 and chumby-ikea-lys
+widget/deploy/deploy-pi.sh:7-8 still describe the hook — step 2. The
+README never mentioned the hook. Not before step 2: 0.9.10 on chumby-pi-3
+without the private debs would leave its services unstarted (the hook
+started them).
+Verified on the PC: pkg/build-debs.sh with the 0.9.9 dist binaries — the
+deb lists ./etc/chumby-player/conf.d/, its launcher is byte-equal to the
+tree, its conffile ends with the two lines. The launcher against a staged
+tree in a headless cage, the conffile loaded as systemd would, the player
+behind an argument-logging wrapper:
+- defaults: `--check` 0; the player's arguments end `--fullscreen
+  -PlocalCache=1 <swf>`; alive at 45 s, `_getPlatform`, no panic;
+- the conffile with `CHUMBY_SOCKET_ALLOW="127.0.0.1:8090 127.0.0.1:8091"`
+  and `CHUMBY_LETTERBOX=off`: `… --fullscreen --socket-allow 127.0.0.1:8090
+  --socket-allow 127.0.0.1:8091 --letterbox off --background-color 000000
+  -PlocalCache=1 <swf>`, alive, no panic;
+- the shipped conffile plus two drop-ins (chumby-ikea-lys.conf: 8091 and
+  letterbox off; chumby-rust-remote.conf: 8090): `… --socket-allow
+  127.0.0.1:8091 --socket-allow 127.0.0.1:8090 --letterbox off
+  --background-color 000000 …` (the files in name order), alive, no panic;
+- `CHUMBY_LETTERBOX=maybe`: `--check` and the run exit 1 with
+  "CHUMBY_LETTERBOX must be on or off, not 'maybe'"; the player never starts.
+Update 2026-11-03, step 2 done (Jan's go): the two private debs, built on
+the PC, nothing installed.
+- The profile placement. The panel merges the first existing of /tmp,
+  /mnt/usb, /mnt/storage, /psp profile.xml (F2:4344, design.md §4).
+  Chosen: the launcher writes the fixtures' /tmp/profile.xml at every
+  start — the profile the panel would have taken plus every profile in
+  /usr/share/chumby-player/profile.d/ (the public deb ships the empty
+  directory; duplicates by instance id skipped) — only when that directory
+  has any; it removes its own file otherwise (marked
+  `generated="chumby-player-run"`) and leaves a foreign one alone. A stick's
+  profile stays the base (stock: it replaces the owner's set) and the
+  packaged widget is added to it; a re-seed cannot delete it (rebuilt from
+  /usr/share at the next start, /tmp is emptied at boot anyway); the
+  owner's /psp profile is the base when no stick has one. The fork hides
+  all four paths alike under `merge_local_remote_widgets = 0`
+  (core/src/chumby/fixture.rs:548-561). Rejected: a profile.xml in
+  /media/chumby-usb (Jan's first idea) — a real stick hides it, and it
+  shadows the /psp profile unless merged by hand (#26); the deb merging
+  into /psp/profile.xml — a re-seed deletes it, chumby-local-widgets
+  overwrites it; Lys as an owner widget in /var/lib/chumby/widgets — the
+  helper is user-run and interactive, a stick still hides /psp; the deb
+  writing /tmp/profile.xml — emptied at boot. Code: chumby-player-run
+  after `mkdir -p "$STATE/widgets"` (python3, a Depends already; the
+  CHUMBY_PROFILED override for desktop runs), dev bda0223.
+- chumby-rust-remote 0.1.0 (rust-remote ab74ad3, `pkg/build-deb.sh`):
+  /usr/lib/chumby-rust-remote/chumby-rust-remote; the unit — User=pi,
+  After= and PartOf=chumby-player.service, WantedBy=chumby-player.service,
+  Restart=on-failure, `CHUMBY_ROOT=/var/lib/chumby/fixtures/rootfs`
+  (STATE chumby-player-run:50, the rootfs as at :177) and
+  `CHUMBY_CTL=/tmp/chumby-ctl` (:51), no PrivateTmp (the panel's /tmp,
+  :188-193); the conffile /etc/chumby-player/conf.d/chumby-rust-remote.conf
+  (8090); postinst enable + restart, prerm disable --now; Depends
+  chumby-player (>= 0.9.10), libc6, libgcc-s1 (its NEEDED). debugchumby
+  is the chumby's alone (the aarch64 branch out) and passes ikea-lys
+  `--hub`; README's Pi paragraph rewritten.
+- chumby-ikea-lys 0.1.0 (chumby-ikea-lys b4c1813): ikea-lys requires
+  `--hub` (the compiled-in living-room address gone, exit 2 without one);
+  /usr/lib/chumby-ikea-lys/ikea-lys; the unit — as above plus
+  `EnvironmentFile=/etc/default/chumby-ikea-lys` (`LYS_HUB=`, the only
+  value it takes from the environment), `ConditionPathExists` the token,
+  `RestartPreventExitStatus=2`, token and favourites in
+  /etc/chumby-ikea-lys/; the conffiles /etc/default/chumby-ikea-lys,
+  /etc/chumby-ikea-lys/favourites.xml, /etc/chumby-player/conf.d/
+  chumby-ikea-lys.conf (8091, letterbox off); the widget in
+  /usr/share/chumby-ikea-lys/ and its entry in
+  /usr/share/chumby-player/profile.d/chumby-ikea-lys.xml (was
+  widget/deploy/profile-pi.xml). The favourites reach the widget only
+  through the service's state (widget 04-state.as:8), so the widget reads
+  no file; the chumby's paths are unchanged. deploy-pi.sh is a dev
+  shortcut (build, the movie over the installed one, restart).
+- Consumers of what went: debugchumby's aarch64 branch — the launcher's
+  hook run (gone in step 1), rust-remote README:229-242 (rewritten),
+  chumby-ikea-lys deploy-pi.sh (rewritten), widget/build/pi/ (an artifact,
+  deleted); ikea-lys's default hub — its README options and the chumby's
+  run line (now `--hub`), debugchumby (passes it), the PC tests (pass
+  `--hub 127.0.0.1` already), PLAN.md's journal (history);
+  deploy/profile-pi.xml — the old deploy-pi.sh only (PLAN.md history).
+- Checked on the PC: both debs' `dpkg-deb -I/-c` (files, conffiles,
+  Depends, the binaries aarch64 PIEs, NEEDED libc and libgcc_s);
+  `systemd-analyze verify` of both units — the only findings were the
+  missing installed binaries, clean with the extracted ones; User=pi was
+  not flagged although this PC has no user pi (verify does not resolve
+  users). lintian is not installed. The launcher's merge through `--seed`:
+  no fragments — no /tmp/profile.xml; a fragment and a /psp profile —
+  ids 1000 and lys-1; with a stick profile — 2000 and lys-1; the fragment
+  gone — the file removed; a foreign /tmp/profile.xml — left alone, said so.
+  A full launcher run in a headless cage with the two drop-ins and the
+  fragment: the player arguments `… --fullscreen --socket-allow
+  127.0.0.1:8091 --socket-allow 127.0.0.1:8090 --letterbox off
+  --background-color 000000 -PlocalCache=1 <swf>`, the panel "found a
+  local profile" at /tmp/profile.xml, "adding 2 local widget instances",
+  loaded Lys from the real-disk path; alive at 45 s, no panic.
+- Next, step 3: pkg/publish-private-apt.sh (reads the five names from
+  ~/.config/chumby-apt/private.env), a dry run into a scratch dir checked
+  with gpgv; the first upload waits for Jan's go.
+Update 2026-11-03: Jan accepts the profile.d merge in place of his
+"/media/chumby-usb keeps a profile.xml" (answer iii; told, no objection).
+Update 2026-11-03, step 3 done (Jan's go, upload included):
+`pkg/publish-private-apt.sh`. It reads HOST, USER, DIR, URL, KEY_ID from
+~/.config/chumby-apt/private.env (refuses without the file, the public key
+beside it, any of the five, a DIR at or right below /, or the key in gpg;
+USER is read under its own name, not the login's), optionally
+RUST_REMOTE_OUT (default rust-remote/pkg/out) and LYS_OUT (default
+/home/jan/chumby-ikea-lys/pkg/out); takes the newest deb of each package by
+version; builds the flat index in a mktemp dir with the public recipe
+(apt-ftparchive Packages + Packages.gz; Release with Origin/Label
+chumby-private, Suite/Codename stable, Architectures arm64; gpg
+--clearsign → InRelease, --detach-sign → Release.gpg, with KEY_ID), adds
+the public key as chumby-private-archive.gpg, verifies both signatures with
+gpgv; `--dry-run` stops there; otherwise rsync -rlpt --delete into DIR only,
+then the fetch check. `--sources` prints the Pi's setup (keyring
+/usr/share/keyrings/chumby-private-archive.gpg, `deb [signed-by=…] URL ./`
+in /etc/apt/sources.list.d/chumby-private.list, the URL from the config at
+print time). No value of the config is in this repo or this record.
+- Dry run: gpgv "Good signature from "chumby private apt repo …"" for
+  InRelease and Release.gpg.
+- Uploaded: chumby-rust-remote 0.1.0, 151,208 bytes, sha256 89a554b0…;
+  chumby-ikea-lys 0.1.0, 575,080 bytes, sha256 3b06f3f2…; Packages,
+  Packages.gz, Release, InRelease, Release.gpg, the public key.
+- Fetch check: InRelease fetched and gpgv "Good signature"; Packages lists
+  chumby-ikea-lys 0.1.0 and chumby-rust-remote 0.1.0 (Depends chumby-player
+  (>= 0.9.10), libc6, libgcc-s1; Size and SHA256 as above); HTTP 200 for
+  Packages.gz, Release, Release.gpg, the key and both debs; both served
+  debs byte-equal to the local builds (sha256). No 404, no MIME issue.
+- Not yet installable on a Pi: both depend on chumby-player 0.9.10.
+Update 2026-11-03, step 4 built locally (Jan: build, device round, then
+push): fork dev 30b8d7642 (issue 10: the guard's removal ships in 0.9.10;
+issue 31 there shipped in 0.9.9) — `cargo test -p ruffle_core --lib
+chumby` 50 passed, 1 ignored; movie start (debug, CI's command line,
+headless cage): exit 124, `_getPlatform` 1, no panic. Pair regenerated on
+8328af42d: C1 e708dc21a (85 additions — alarm_guard.rs gone), C2 d5237b1c1
+(tree equal to fork dev; the same 19-path edit surface), branch
+`chumby-regen-2026-11-03b`, the old tip 19cc439e8 kept as
+`chumby-before-regen-2026-11-03b` (`…-2026-11-03` already holds 0.9.9's
+backup, 5dac40c05). Here: 0.9.10 (b7f1740), the three cross-builds (dist
+player, dist exporter, supervisor; the one upstream `__jcvt` warning),
+chumby-player_0.9.10_arm64.deb (13,920,316 bytes, sha256 204aef1d…):
+Version 0.9.10, Depends as 0.9.9, conf.d and profile.d shipped, launcher and
+conffile byte-equal to the tree, the fresh dist player. Desktop launcher:
+defaults → `… --fullscreen -PlocalCache=1 <swf>`; drop-ins and a packaged
+profile → `… --socket-allow 127.0.0.1:8091 --socket-allow 127.0.0.1:8090
+--letterbox off --background-color 000000 …`, "adding 2 local widget
+instances", Lys loaded; both alive at 45 s, no panic; `CHUMBY_LETTERBOX=maybe`
+→ `--check` and the run exit 1. Release commit on `release-0.9.10`; not
+pushed; the device round comes first.
+Update 2026-11-03, 22:4x, the device round on chumby-pi-3 (the
+coordinator; Jan's end-user check later): chumby-player 0.9.10 from the
+local deb (`dpkg -i --force-confold`), the conffile swapped for its
+.dpkg-dist; the stick directory's leftovers (debugchumby, profile.xml,
+lys/, ikea-lys/, rust-remote/) in /var/backups/chumby-usb-pre-0.9.10/, the
+hand-patch backups (chumby-player-run .orig-0.9.8/.bak-*,
+ruffle_desktop.bak-20261103) and the old conffile in /var/backups/; the
+private repo configured (the script's --sources, the key copied from the
+PC); chumby-rust-remote and chumby-ikea-lys 0.1.0 installed from it; token
+and favourites in /etc/chumby-ikea-lys/, LYS_HUB set; the three units
+active; the merged /tmp/profile.xml holds 1000, 1001, 1002 and lys-1; Lys
+shows the wide panel skin with favourites and radio, connected to 8091;
+rust-remote's status `claim=1` after `widget Lys`; the sink back at 0.80.
+Findings:
+1. Bug in 0.9.10's launcher: every `--socket-allow` reached the player
+   twice. `--kiosk` re-runs the script inside cage (`exec /usr/bin/cage --
+   "$0"`, chumby-player-run:166 now); `CHUMBY_SOCKET_ALLOW` comes exported
+   from the unit's EnvironmentFile, so the inner run inherited the list the
+   drop-ins had extended and extended it again. Fixed on dev: the drop-ins
+   are sourced once per start (`CHUMBY_CONFD_LOADED`, exported with
+   `CHUMBY_SOCKET_ALLOW` and, if set, `CHUMBY_LETTERBOX`); `--check`, a
+   process of its own, sources them as before. Desktop, the `--kiosk` path
+   in a headless cage with the shipped conffile exported and the two
+   drop-ins: the old launcher (dd60fee) gave 4 `--socket-allow` (8091 8090
+   8091 8090), the fixed one 2 (8091 8090) plus `--letterbox off
+   --background-color 000000`, the panel merged and loaded Lys, alive at
+   45 s, no panic; defaults and `CHUMBY_LETTERBOX=maybe` as before.
+   release-0.9.10 (ea2a205) does not contain this fix: shipping it means
+   a respin (dev's tree again, the same pair) — Jan decides.
+2. Cosmetic: `systemctl stop chumby-player` ends "Control process exited,
+   code=exited, status=1/FAILURE", the unit `failed` instead of `inactive`:
+   its ExecStop, `pkill -TERM -x -u pi chumby-supervis`
+   (chumby-player.service:43), exits 1 when nothing matches. Pre-existing
+   (seen with 0.9.8's unit). One token, so changed on dev: `ExecStop=-…`
+   (systemd ignores the exit status). Not in release-0.9.10 either; not
+   checked on a device.
+Update 2026-11-03, respin (Jan): release-0.9.10 recut from dev's tree with
+both fixes (this record included), the gitlink at the same fork pair
+(d5237b1c1), parent 14ce5c1; the first cut ea2a205 is kept as branch
+`release-0.9.10-first`. The deb rebuilt from dev b9e6dff with the existing
+dist binaries: chumby-player_0.9.10_arm64.deb, 13,920,760 bytes, sha256
+86a1c877…59b09 (Version 0.9.10; launcher, unit and conffile byte-equal to
+the tree; conf.d and profile.d shipped; ExecStop=-…). Its launcher, the
+--kiosk path in a headless cage with the drop-ins: each allow once (8091,
+8090), letterbox off, Lys merged and loaded, alive at 45 s, no panic.
+chumby-pi-3 runs the first 0.9.10 deb (doubled allows) until this one is
+installed.

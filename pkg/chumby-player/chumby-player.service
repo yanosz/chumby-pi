@@ -40,7 +40,7 @@ ExecStart=/usr/bin/chumby-player-run --kiosk
 # so stopping the unit signals cage alone — which then waits for its child,
 # the supervisor, until the stop times out. Stop the supervisor first; it
 # takes the player down and cage follows it out.
-ExecStop=/usr/bin/pkill -TERM -x -u pi chumby-supervis
+ExecStop=-/usr/bin/pkill -TERM -x -u pi chumby-supervis
 Restart=on-failure
 RestartSec=3
 

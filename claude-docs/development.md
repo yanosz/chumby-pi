@@ -131,6 +131,17 @@ ahead of the package until the next install.
 
 Verify the binary's sha256 on both ends. Do not skip the rebuild: see §7.
 
+### Private packages
+
+The widget services for the living room — `chumby-rust-remote` and
+`chumby-ikea-lys` (claude/issues.md #31) — are not in the public apt repo.
+Each builds in its own repository (`pkg/build-deb.sh` there) and
+`pkg/publish-private-apt.sh` publishes them as a signed flat repo on a LAN
+web server: the public repo's recipe, its own signing key. Server, login,
+directory, URL and key live in `~/.config/chumby-apt/private.env`, outside
+this repo, with the public key beside it; `--dry-run` signs and verifies
+locally, `--sources` prints the Pi's one-time keyring and sources setup.
+
 ## 5. Verify
 
 **On the desktop**, from the submodule — see its `claude-docs/development.md`.
@@ -263,6 +274,14 @@ persists this in `~/.local/state/wireplumber/default-routes`
 `pipewire` and reading both back unchanged. `CHUMBY_AUDIO_DEVICE` and
 `CHUMBY_AUDIO_SINK` stay unset, so the player follows whatever PipeWire calls
 default — pin them if the box must not follow a newly plugged card.
+
+**Sink cap, 2026-11-03.** The default sink on chumby-pi-3 runs at 0.80, set
+with `wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.80` (Jan's operating level; it
+was 1.00 since the Lys test earlier that day). WirePlumber keeps it in
+`~/.local/state/wireplumber/default-routes` as above, so it survives
+restarts. For test sessions the sink is still lowered to 0.30 and put back
+to 0.80 afterwards, not to 1.00. `volume_cap` in `player.toml` scales mpv
+only; Flash audio reaches the sink directly, hence the cap on the sink.
 
 Note the division of labour this exposes: the sink is where "how loud is
 loud" is set once, and the panel's slider scales only mpv on top of it — the
