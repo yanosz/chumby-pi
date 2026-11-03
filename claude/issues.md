@@ -1311,7 +1311,7 @@ Steps:
 Number: 26
 Timestamp: 2026-10-28, 22:30
 Title: Local widget services on the Pi — the stick's debugchumby hook and the socket allow-list.
-Status: open — on dev, hand-patched onto chumby-pi-3 (0.9.8); release pending
+Status: open — ships in 0.9.9 (built and desktop-verified 2026-11-03, not yet pushed); closes with the chumby-pi-3 device round
 Description: The light widget (chumby-ikea-lys) talks XMLSocket to ikea-lys
 on 127.0.0.1:8091. On the Pi two things were missing (Jan, 2026-10-28):
 the player's socket mode defaults to "ask" (desktop player.rs:234), which
@@ -1371,6 +1371,29 @@ over it), and the player binary was hot-replaced with the fork's dev build
 5451fe42c (dist, sha256 65e16773…; backup `ruffle_desktop.bak-20261103`).
 Jan chose no release this round (interview 2026-11-03): still 0.9.8 + hand
 patch; the next release ships launcher and binary together.
+Update 2026-11-03, release 0.9.9 (Jan's decisions): `--letterbox off
+--background-color 000000` and both socket allows come only with
+`CHUMBY_USB_HOOK=1`, in the hook's block (`HOOK_ARGS`); a plain install
+keeps the letterbox and the socket prompt. Consumers of those exec-line
+pieces: the launcher (the only place they are passed); its conffile and
+docs/setup.md (reworded: the hook described generically, no private path);
+this record and #27, #28, #30 (history, unchanged); fork desktop/src/cli.rs
+:166, :186-192 and player.rs:327 (the flags, unchanged); chumby-ikea-lys
+PLAN.md, widget/README.md:45, deploy/deploy-pi.sh:8 and its pi/debugchumby
+(they assume the hook is on, which they require anyway); CI's install test
+runs the launcher without the hook, so it now covers the plain line only.
+chumby-pi-3 has `CHUMBY_USB_HOOK=1` (above), so it keeps all four flags.
+Verified on the PC: the deb `chumby-player_0.9.9_arm64.deb` (dist player,
+exporter, supervisor; launcher and conffile byte-equal to the tree); the
+real launcher against a staged tree in a headless cage with a host player
+behind an argument-logging wrapper — with `CHUMBY_USB_HOOK=1` the four
+flags reach the player and a scratch debugchumby ran with `CHUMBY_STATE`
+and `CHUMBY_CTL` set, without it none of them and no hook; both runs alive
+at 45 s, `_getPlatform` logged, no panic. The data-deb fallbacks are gone
+since 6867afb: a box seeded by the retired chumby-player-data keeps working
+only if /var/lib/chumby holds controlpanel.swf — to check on chumby-pi-3 in
+the device round, with the 0.9.9 install (`--force-confold`) and the
+removal of the hand-patch backups.
 
 Number: 27
 Timestamp: 2026-10-31, 12:40
