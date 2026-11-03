@@ -1531,7 +1531,7 @@ new rust-remote (station mark); Jan decides when.
 Number: 31
 Timestamp: 2026-11-03, 21:40 (plan rewritten 22:30)
 Title: The widget services on the Pi become private debs with systemd units, from a private apt repo on the LAN; the public package drops the debugchumby hook emulation.
-Status: steps 1-3 done; step 4 built locally and its device round done on chumby-pi-3 (2026-11-03; Jan's end-user check pending); release-0.9.10 not pushed and without the dedupe fix below — a respin is Jan's call; step 0 answered — Jan's decisions 2026-11-03 (reverses issue 26's "no package for the service"); the public side ships in 0.9.10
+Status: steps 1-3 done; step 4 built locally and its device round done on chumby-pi-3 (2026-11-03; Jan's end-user check pending); release-0.9.10 respun with the two fixes below (Jan), not pushed; step 0 answered — Jan's decisions 2026-11-03 (reverses issue 26's "no package for the service"); the public side ships in 0.9.10
 Description: Jan: chumby-rust-remote and ikea-lys run on the Pi as systemd
 units, enabled by default, shipped as two private debs from a private apt
 repo on the LAN's lighttpd (the container that serves the yoga videos;
@@ -1870,3 +1870,14 @@ Findings:
    (seen with 0.9.8's unit). One token, so changed on dev: `ExecStop=-…`
    (systemd ignores the exit status). Not in release-0.9.10 either; not
    checked on a device.
+Update 2026-11-03, respin (Jan): release-0.9.10 recut from dev's tree with
+both fixes (this record included), the gitlink at the same fork pair
+(d5237b1c1), parent 14ce5c1; the first cut ea2a205 is kept as branch
+`release-0.9.10-first`. The deb rebuilt from dev b9e6dff with the existing
+dist binaries: chumby-player_0.9.10_arm64.deb, 13,920,760 bytes, sha256
+86a1c877…59b09 (Version 0.9.10; launcher, unit and conffile byte-equal to
+the tree; conf.d and profile.d shipped; ExecStop=-…). Its launcher, the
+--kiosk path in a headless cage with the drop-ins: each allow once (8091,
+8090), letterbox off, Lys merged and loaded, alive at 45 s, no panic.
+chumby-pi-3 runs the first 0.9.10 deb (doubled allows) until this one is
+installed.
