@@ -1460,7 +1460,7 @@ Jan decides when.
 Number: 30
 Timestamp: 2026-11-02, 22:40
 Title: The Lys panel skin on the Pi — deploy it, and adapt chumby-rust-remote so its radio plays there.
-Status: deployed to chumby-pi-3 2026-11-03 — Jan's device round pending
+Status: closed 2026-11-03 — Jan's end-user test on chumby-pi-3 passed
 Description: The Lys widget's fourth skin, "panel" (LCARS, the favourite
 scenes, AUS, and a radio: three "My Streams" stations, STOP, volume − / +),
 runs on the hardware chumby since 2026-11-02 (chumby-ikea-lys PLAN.md,
@@ -1489,7 +1489,11 @@ follows the player process (rust-remote `radio` reports a station only while
 mpv / btplayd lives), and the player passes mpv ffmpeg's reconnect options
 for http streams (fork issue 31) — both from the 2026-11-03 interview.
 Smoke-tested over the sockets (issue 27's list); the look on the display is
-Jan's round. The Pi's sink was capped at 30 % for the test and left there.
+Jan's round: passed 2026-11-03 ("test fine"). The Pi's sink was capped at
+30 % for the test and set back to 100 % afterwards, its value before the cap
+(the backup's WirePlumber state). Follow-up requirements (night screen:
+a button per favourite, a sleep timer in rust-remote, full width on the
+Pi) are noted in chumby-ikea-lys PLAN.md, not scoped.
 Stations four and five on the wide panel are the Pi's My Streams entries
 `Groove Salad` and `Def Con Radio`; a third favourite is a `favourites.xml`
 entry (Jan's). Backup before the deploy:
