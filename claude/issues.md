@@ -1360,11 +1360,22 @@ allows, rust-remote and ikea-lys started by the hook). Still 0.9.8 +
 hand patch until the next release.
 Jan's end-user test 2026-11-01, the current Lys on chumby-pi-3: "works
 fine on both devices".
+Update 2026-11-03 (Lys panel skin on the Pi, issues 27/28/30): the launcher
+exports `CHUMBY_CTL` (the control FIFO) to the stick hook, so
+chumby-rust-remote can hand the panel soft events, and runs the player with
+`--letterbox off --background-color 000000` (why: issue 28). chumby-pi-3's
+hand-patched launcher got the same two chunks (backup
+`/usr/bin/chumby-player-run.bak-20261103`; its 0.9.8 file also carries the
+retired-data-deb fallbacks dev no longer has, so dev's file was NOT copied
+over it), and the player binary was hot-replaced with the fork's dev build
+5451fe42c (dist, sha256 65e16773…; backup `ruffle_desktop.bak-20261103`).
+Jan chose no release this round (interview 2026-11-03): still 0.9.8 + hand
+patch; the next release ships launcher and binary together.
 
 Number: 27
 Timestamp: 2026-10-31, 12:40
 Title: Widget navigation on the Pi — the player has no soft-event hook, and no chumby-rust-remote runs on aarch64.
-Status: open — recorded, not scoped
+Status: closed 2026-11-03 — the player has a soft-event path on the control FIFO, chumby-rust-remote uses it on the Pi; verified on chumby-pi-3
 Description: The widget-navigation drop-down (yoga-widget/PLAN.md "Open",
 "Navigation between widgets", 2026-10-31) jumps between widgets through
 chumby-rust-remote, which appends `WidgetPlayer setWidget <name>` to
@@ -1391,11 +1402,26 @@ lands in the fixtures, fork core/src/chumby/fixture.rs:590), but a tap does
 nothing: `widget`, `night` and `screen` answer `error=event` (no pid file,
 no event hook) — no signal is sent. The yoga widget's "Nacht" shows on the
 Pi for the same reason, if yoga is deployed there. (a) stays open.
+Update 2026-11-03: (a) done in the fork (issue 31 there, commit 5451fe42c):
+`ExtendedEvents` exists for the panel's nine listener kinds, and the control
+FIFO takes `event KIND VALUE [COMMENT]`, delivered to the listeners once per
+frame; the FIFO is held open read-write (the reopen-after-EOF reader lost
+lines: 79 of 100 in a burst test on the PC, 100 of 100 after the fix).
+chumby-rust-remote (nested repo, 2ddafca) writes those lines to `CHUMBY_CTL`
+when the launcher exports it (issue 26), the event-file + SIGHUP path on the
+chumby unchanged. Verified on chumby-pi-3 2026-11-03 14:0x: `event NightMode
+on|off` over the FIFO flips the panel's nightmode file 0→1→0; through
+rust-remote `widget Lys` → ok=1 and the widget shows, `radio SWR3` → mpv with
+the stream, `/tmp/musicsource` written, `volume up` 16→21 in `/psp/volume`,
+`radio stop` → mpv gone and musicsource erased (the fork now really deletes
+it on `rm /tmp/musicsource`, which the exec manifest had faked). Backlight
+events reach `setDim` too, so the night screen's lease now works on the Pi
+(not watched on the display).
 
 Number: 28
 Timestamp: 2026-10-31, 14:10
 Title: The Pi's side bars — a host-drawn panel beside the 320x240 stage.
-Status: open — recorded, not scoped (Jan, 2026-10-31)
+Status: closed 2026-11-03 — superseded: the Lys widget draws into the margins itself
 Description: On the 1024x600 DSI box the panel scales 2.5x to 800x600 and
 leaves 112 px black left and right (issue "Black bars around a widget",
 closed: Jan keeps the scaling). Jan's idea (2026-10-31, while scoping the
@@ -1405,6 +1431,15 @@ the panel's stage is 320x240 and a widget is loaded into a 320x240
 proxy, so anything beside it is drawn by the host (the fork), not by a
 widget. The Lys widget's own home screen (chumby-ikea-lys PLAN.md,
 "Clock screen") serves the Pi meanwhile. Not scoped; Jan decides when.
+Update 2026-11-03: no host-drawn panel. The player runs with `--letterbox
+off` (issue 26), so a widget may draw outside the 320x240 stage, and the Lys
+panel skin detects the display's aspect from `System.capabilities` and lays
+itself out 410 stage px wide (chumby-ikea-lys PLAN.md, "The panel skin at
+full width on the chumby-pi"); the other skins and every other widget stay
+320 wide. Without the letterbox the margins would show the panel's stage
+colour 0x333333, hence `--background-color 000000` (fork issue 31). The
+panel does not clip the widget proxy (checked in the fork's control panel on
+the PC); taps in the margins reach the widget.
 
 Number: 29
 Timestamp: 2026-10-31, 23:55
@@ -1425,7 +1460,7 @@ Jan decides when.
 Number: 30
 Timestamp: 2026-11-02, 22:40
 Title: The Lys panel skin on the Pi — deploy it, and adapt chumby-rust-remote so its radio plays there.
-Status: open — recorded, not scoped (Jan, 2026-11-02)
+Status: deployed to chumby-pi-3 2026-11-03 — Jan's device round pending
 Description: The Lys widget's fourth skin, "panel" (LCARS, the favourite
 scenes, AUS, and a radio: three "My Streams" stations, STOP, volume − / +),
 runs on the hardware chumby since 2026-11-02 (chumby-ikea-lys PLAN.md,
@@ -1445,3 +1480,19 @@ starting its own mpv beside the player's) — "I think you got the
 architecture wrong". The player already plays streams through mpv
 (fork `core/src/chumby/fixture.rs:242`, `_playAudio`). Not scoped; Jan
 decides when.
+Update 2026-11-03: done. The fork's soft-event path and chumby-rust-remote's
+FIFO transport (issue 27), the launcher (issue 26), the widget at full width
+(issue 28) and the Lys deploy to chumby-pi-3 (`deploy-pi.sh`, 14:01: lys.swf
+90,141 bytes md5 9488f342…, ikea-lys b8cbe618…, rust-remote f119034d…; the
+services restarted by the hook with `CHUMBY_CTL`). The station mark now
+follows the player process (rust-remote `radio` reports a station only while
+mpv / btplayd lives), and the player passes mpv ffmpeg's reconnect options
+for http streams (fork issue 31) — both from the 2026-11-03 interview.
+Smoke-tested over the sockets (issue 27's list); the look on the display is
+Jan's round. The Pi's sink was capped at 30 % for the test and left there.
+Stations four and five on the wide panel are the Pi's My Streams entries
+`Groove Salad` and `Def Con Radio`; a third favourite is a `favourites.xml`
+entry (Jan's). Backup before the deploy:
+`~/chumby-pi-3-backup/chumby-backup-20261103-pre-lys.tar.gz`. The chumby
+(hardware) has not been deployed: it needs the refactored widget and the
+new rust-remote (station mark); Jan decides when.

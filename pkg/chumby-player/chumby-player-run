@@ -278,8 +278,10 @@ fi
 # default to keep, see the intro.swf note above. Backgrounded, as user pi;
 # the hook finds the state root in CHUMBY_STATE (its /psp is
 # $CHUMBY_STATE/fixtures/rootfs/psp).
+# CHUMBY_CTL: the control FIFO below, so a service the hook starts can hand
+# the panel soft events (`event KIND VALUE [COMMENT]`; chumby-rust-remote).
 if [ "${CHUMBY_USB_HOOK:-0}" = 1 ] && [ -x "$USB_LINK/debugchumby" ]; then
-    CHUMBY_STATE="$STATE" "$USB_LINK/debugchumby" </dev/null >/dev/null 2>&1 &
+    CHUMBY_STATE="$STATE" CHUMBY_CTL="$CTL" "$USB_LINK/debugchumby" </dev/null >/dev/null 2>&1 &
 fi
 
 # The supervisor owns the player from here on: restarts it after a crash,
@@ -289,6 +291,11 @@ fi
 # --socket-allow: a local widget's XMLSocket to a service on this box
 # (chumby-rust-remote on 8090, ikea-lys on 8091) connects without the
 # player's ask dialog, which a kiosk cannot answer.
+# --letterbox off: a widget may draw beside the 320x240 stage into the
+# display's side margins (the Lys panel skin on a 1024x600 display,
+# claude/issues.md #30); the player's default covers them with black bars.
+# --background-color: without the bars the margins would show the panel's
+# stage colour (0x333333); black keeps them as they were.
 exec "$SUPERVISOR" --ctl "$CTL" --config /etc/chumby-player/player.toml -- \
     "$RUFFLE" \
     --load-behavior blocking \
@@ -298,6 +305,8 @@ exec "$SUPERVISOR" --ctl "$CTL" --config /etc/chumby-player/player.toml -- \
     ${CHUMBY_QUALITY:+--quality "$CHUMBY_QUALITY"} \
     ${CHUMBY_RENDERER:+--renderer "$CHUMBY_RENDERER"} \
     --fullscreen \
+    --letterbox off \
+    --background-color 000000 \
     --socket-allow 127.0.0.1:8090 \
     --socket-allow 127.0.0.1:8091 \
     -PlocalCache=1 \
