@@ -1315,7 +1315,7 @@ Steps:
 Number: 26
 Timestamp: 2026-10-28, 22:30
 Title: Local widget services on the Pi — the stick's debugchumby hook and the socket allow-list.
-Status: open — shipped in 0.9.9, superseded by issue 31 (the hook emulation goes in 0.9.10); closes with the chumby-pi-3 device round of 0.9.10
+Status: closed 2026-11-03 — superseded by issue 31: the hook emulation went in 0.9.10, whose device round on chumby-pi-3 is done (22:4x; Jan's end-user check pending)
 Description: The light widget (chumby-ikea-lys) talks XMLSocket to ikea-lys
 on 127.0.0.1:8091. On the Pi two things were missing (Jan, 2026-10-28):
 the player's socket mode defaults to "ask" (desktop player.rs:234), which
@@ -1531,7 +1531,7 @@ new rust-remote (station mark); Jan decides when.
 Number: 31
 Timestamp: 2026-11-03, 21:40 (plan rewritten 22:30)
 Title: The widget services on the Pi become private debs with systemd units, from a private apt repo on the LAN; the public package drops the debugchumby hook emulation.
-Status: steps 1-3 done, step 4 built locally (2026-11-03; release-0.9.10 not pushed); step 0 answered — Jan's decisions 2026-11-03 (reverses issue 26's "no package for the service"); the public side ships in 0.9.10
+Status: steps 1-3 done; step 4 built locally and its device round done on chumby-pi-3 (2026-11-03; Jan's end-user check pending); release-0.9.10 not pushed and without the dedupe fix below — a respin is Jan's call; step 0 answered — Jan's decisions 2026-11-03 (reverses issue 26's "no package for the service"); the public side ships in 0.9.10
 Description: Jan: chumby-rust-remote and ikea-lys run on the Pi as systemd
 units, enabled by default, shipped as two private debs from a private apt
 repo on the LAN's lighttpd (the container that serves the yoga videos;
@@ -1834,3 +1834,39 @@ profile → `… --socket-allow 127.0.0.1:8091 --socket-allow 127.0.0.1:8090
 instances", Lys loaded; both alive at 45 s, no panic; `CHUMBY_LETTERBOX=maybe`
 → `--check` and the run exit 1. Release commit on `release-0.9.10`; not
 pushed; the device round comes first.
+Update 2026-11-03, 22:4x, the device round on chumby-pi-3 (the
+coordinator; Jan's end-user check later): chumby-player 0.9.10 from the
+local deb (`dpkg -i --force-confold`), the conffile swapped for its
+.dpkg-dist; the stick directory's leftovers (debugchumby, profile.xml,
+lys/, ikea-lys/, rust-remote/) in /var/backups/chumby-usb-pre-0.9.10/, the
+hand-patch backups (chumby-player-run .orig-0.9.8/.bak-*,
+ruffle_desktop.bak-20261103) and the old conffile in /var/backups/; the
+private repo configured (the script's --sources, the key copied from the
+PC); chumby-rust-remote and chumby-ikea-lys 0.1.0 installed from it; token
+and favourites in /etc/chumby-ikea-lys/, LYS_HUB set; the three units
+active; the merged /tmp/profile.xml holds 1000, 1001, 1002 and lys-1; Lys
+shows the wide panel skin with favourites and radio, connected to 8091;
+rust-remote's status `claim=1` after `widget Lys`; the sink back at 0.80.
+Findings:
+1. Bug in 0.9.10's launcher: every `--socket-allow` reached the player
+   twice. `--kiosk` re-runs the script inside cage (`exec /usr/bin/cage --
+   "$0"`, chumby-player-run:166 now); `CHUMBY_SOCKET_ALLOW` comes exported
+   from the unit's EnvironmentFile, so the inner run inherited the list the
+   drop-ins had extended and extended it again. Fixed on dev: the drop-ins
+   are sourced once per start (`CHUMBY_CONFD_LOADED`, exported with
+   `CHUMBY_SOCKET_ALLOW` and, if set, `CHUMBY_LETTERBOX`); `--check`, a
+   process of its own, sources them as before. Desktop, the `--kiosk` path
+   in a headless cage with the shipped conffile exported and the two
+   drop-ins: the old launcher (dd60fee) gave 4 `--socket-allow` (8091 8090
+   8091 8090), the fixed one 2 (8091 8090) plus `--letterbox off
+   --background-color 000000`, the panel merged and loaded Lys, alive at
+   45 s, no panic; defaults and `CHUMBY_LETTERBOX=maybe` as before.
+   release-0.9.10 (ea2a205) does not contain this fix: shipping it means
+   a respin (dev's tree again, the same pair) — Jan decides.
+2. Cosmetic: `systemctl stop chumby-player` ends "Control process exited,
+   code=exited, status=1/FAILURE", the unit `failed` instead of `inactive`:
+   its ExecStop, `pkill -TERM -x -u pi chumby-supervis`
+   (chumby-player.service:43), exits 1 when nothing matches. Pre-existing
+   (seen with 0.9.8's unit). One token, so changed on dev: `ExecStop=-…`
+   (systemd ignores the exit status). Not in release-0.9.10 either; not
+   checked on a device.

@@ -56,11 +56,18 @@ SUPERVISOR="${CHUMBY_SUPERVISOR:-/usr/lib/chumby-player/chumby-supervisor}"
 # environment): a package that needs a switch ships its own file here
 # instead of editing that conffile; later files win, and a list may extend
 # itself (CHUMBY_SOCKET_ALLOW="$CHUMBY_SOCKET_ALLOW 127.0.0.1:8090").
+# Once per start: --kiosk re-runs this script inside cage with the
+# environment exported, and a list that extends itself would grow twice.
 CHUMBY_SOCKET_ALLOW="${CHUMBY_SOCKET_ALLOW:-}"
-for _conf in "${CHUMBY_CONFD:-/etc/chumby-player/conf.d}"/*.conf; do
-    [ -e "$_conf" ] || continue
-    . "$_conf"
-done
+if [ "${CHUMBY_CONFD_LOADED:-}" != 1 ]; then
+    for _conf in "${CHUMBY_CONFD:-/etc/chumby-player/conf.d}"/*.conf; do
+        [ -e "$_conf" ] || continue
+        . "$_conf"
+    done
+    CHUMBY_CONFD_LOADED=1
+    export CHUMBY_CONFD_LOADED CHUMBY_SOCKET_ALLOW
+    [ -z "${CHUMBY_LETTERBOX+set}" ] || export CHUMBY_LETTERBOX
+fi
 
 # The player arguments of those switches. A widget beside the 4:3 stage
 # (claude/issues.md #28) wants the letterbox off; the margins then stay black
