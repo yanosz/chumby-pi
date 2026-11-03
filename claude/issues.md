@@ -578,7 +578,7 @@ Timestamp: 2026-08-28, 12:30
 Title: A "Birds + SWR3" alarm went silent about 100 s in and stayed silent.
 Status: won't fix 2026-11-03 (Jan): the guard is removed from the player, stock
 behaviour kept — "this exists on the chumby, too. We do not need to deviate",
-and "the guard didn't work" (fork issue 10). Was: closed 2026-09-24 — fixed and
+and "the guard didn't work" (fork issue 10); the removal ships in 0.9.10. Was: closed 2026-09-24 — fixed and
 device-verified (fork issue 10, `alarm_guard.rs`); the verbose `RUST_LOG` on
 chumby-pi-3 is reverted. What remains is the configuration workaround: keep
 the nightmode alarm out of a wake alarm's ring window.
@@ -1315,7 +1315,7 @@ Steps:
 Number: 26
 Timestamp: 2026-10-28, 22:30
 Title: Local widget services on the Pi — the stick's debugchumby hook and the socket allow-list.
-Status: open — ships in 0.9.9 (built and desktop-verified 2026-11-03, not yet pushed); closes with the chumby-pi-3 device round
+Status: open — shipped in 0.9.9, superseded by issue 31 (the hook emulation goes in 0.9.10); closes with the chumby-pi-3 device round of 0.9.10
 Description: The light widget (chumby-ikea-lys) talks XMLSocket to ikea-lys
 on 127.0.0.1:8091. On the Pi two things were missing (Jan, 2026-10-28):
 the player's socket mode defaults to "ask" (desktop player.rs:234), which
@@ -1531,7 +1531,7 @@ new rust-remote (station mark); Jan decides when.
 Number: 31
 Timestamp: 2026-11-03, 21:40 (plan rewritten 22:30)
 Title: The widget services on the Pi become private debs with systemd units, from a private apt repo on the LAN; the public package drops the debugchumby hook emulation.
-Status: steps 1-3 done (2026-11-03; chumby-pi dev, rust-remote, chumby-ikea-lys; the private repo published); step 0 answered — Jan's decisions 2026-11-03 (reverses issue 26's "no package for the service"); the public side ships in 0.9.10
+Status: steps 1-3 done, step 4 built locally (2026-11-03; release-0.9.10 not pushed); step 0 answered — Jan's decisions 2026-11-03 (reverses issue 26's "no package for the service"); the public side ships in 0.9.10
 Description: Jan: chumby-rust-remote and ikea-lys run on the Pi as systemd
 units, enabled by default, shipped as two private debs from a private apt
 repo on the LAN's lighttpd (the container that serves the yoga videos;
