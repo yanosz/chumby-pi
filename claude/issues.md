@@ -1527,3 +1527,112 @@ entry (Jan's). Backup before the deploy:
 `~/chumby-pi-3-backup/chumby-backup-20261103-pre-lys.tar.gz`. The chumby
 (hardware) has not been deployed: it needs the refactored widget and the
 new rust-remote (station mark); Jan decides when.
+
+Number: 31
+Timestamp: 2026-11-03, 21:40
+Title: The widget services on the Pi move to systemd units in the package; the debugchumby hook emulation goes.
+Status: planned, not started — Jan's decision 2026-11-03 (reverses issue 26's "no package for the service")
+Description: Jan: chumby-rust-remote and ikea-lys run on the Pi as systemd
+units shipped by the chumby-pi package; the launcher stops emulating the
+chumby's `/mnt/usb/debugchumby` hook (issue 26). (A real stick could not
+carry it anyway: chumby-usb-mount@ mounts `noexec`, claude-docs
+development.md:631.) Release 0.9.10. Plan only; touchpoints and consumers
+below are read from the trees of 2026-11-03.
+
+1. Where the binaries come from. Today neither source reaches CI:
+   `rust-remote/` is a nested repo without remote, ignored here
+   (.gitignore:37); ikea-lys is /home/jan/chumby-ikea-lys, its own repo,
+   one branch, no remote (its CLAUDE.md). ci.yml checks out recursively
+   (ci.yml:33-35) and builds the supervisor from the tree (ci.yml:95-100;
+   cache ci.yml:49-51). Options:
+   (a) both as tracked source trees here, brought in with `git subtree`
+       from the local repos (history kept, no remote needed), built like the
+       supervisor in build-debs' prerequisites, pkg/deploy-pi.sh:17-29 and
+       ci.yml; the standalone repos stay where work happens and are pulled
+       in at a release;
+   (b) git submodules — needs remotes (Jan's action; ikea-lys's CLAUDE.md
+       forbids creating one unasked) and, for private ones, Actions
+       credentials;
+   (c) prebuilt aarch64 binaries committed here — CI just packages them;
+       the stale-binary trap of development.md §7, binaries in git;
+   (d) a second, local-only deb built by chumby-ikea-lys — never in CI or
+       apt.
+   Recommendation: (a). Open: whether ikea-lys belongs in the public apt
+   package at all — it serves one hub, and its default hub address is the
+   living room's (chumby-ikea-lys src/main.rs:41).
+2. The units: two system units, `User=pi` like chumby-player.service, in
+   /lib/systemd/system (build-debs.sh:68, beside the kiosk unit):
+   - chumby-rust-remote.service: `ExecStart=/usr/lib/chumby-player/chumby-rust-remote`,
+     `Environment=CHUMBY_ROOT=/var/lib/chumby/fixtures/rootfs` and
+     `CHUMBY_CTL=/tmp/chumby-ctl` (the launcher's FIFO, chumby-player-run:45;
+     the fixtures' /tmp is /tmp/chumby-panel-tmp, mode 700, owned by pi,
+     chumby-player-run:154-159 — so no PrivateTmp, and User=pi).
+   - chumby-ikea-lys.service: `ExecStart=/usr/lib/chumby-player/ikea-lys
+     --token /var/lib/chumby/fixtures/rootfs/psp/ikea-lys/token --favourites
+     …/favourites.xml --hub $CHUMBY_LYS_HUB`, `ConditionPathExists=` the
+     token: the secret stays where the owner puts it (as today,
+     chumby-ikea-lys widget/deploy/deploy-pi.sh:14), not a conffile.
+   - Both `PartOf=chumby-player.service` and `WantedBy=chumby-player.service`:
+     they start and stop with the kiosk, and `systemctl disable --now
+     chumby-player` (the escape hatch, control) stops them too; a supervisor
+     restart of the player does not touch them. `Restart=on-failure`,
+     `RestartSec=5`; stderr to the journal instead of /tmp/*.log.
+   - Enabling: shipped disabled (an owner without the hub or the widgets
+     needs neither); `sudo systemctl enable --now chumby-rust-remote
+     chumby-ikea-lys`. postinst: daemon-reload exists (postinst:12);
+     prerm: disable both beside the kiosk (prerm:4-5).
+   - Order is not critical: Lys retries both sockets (ikea-lys every 5 s,
+     the claim every 5 s).
+3. The hook gating. The launcher's hook block and HOOK_ARGS
+   (chumby-player-run:275-294, used at :310) go. In its place two active
+   lines in /etc/default/chumby-player (no silent defaults; unset means the
+   player's own default):
+   - `CHUMBY_SOCKET_ALLOW=` — empty: the player's prompt; with the services
+     `127.0.0.1:8090 127.0.0.1:8091`; one `--socket-allow` per entry;
+   - `CHUMBY_LETTERBOX=on` — `off` lets a widget draw beside the 4:3 stage
+     (the Lys panel skin, issue 28), and brings `--background-color 000000`.
+   `CHUMBY_USB_HOOK` goes. Consumers, each to change: chumby-player-run:
+   275-294, 310; chumby-player.default:57-63 (Jan's /media/chumby-usb
+   sentence, 2178872, reworded without debugchumby); docs/setup.md:177-182
+   (the entry) and :183-189 (Jan's paragraph: drop `debugchumby` and
+   `post_alarm_action` from its list — his words, his call); this record
+   (#26 history stays); rust-remote debugchumby:8-14 (the aarch64 branch)
+   and its README:229-240; chumby-ikea-lys widget/deploy/deploy-pi.sh:2-9,
+   16, 28, 33, 63, 69, 85-87, its widget/README.md and PLAN.md mentions.
+   Unchanged: the fork (the flags exist, desktop/src/cli.rs:166, 186-192).
+   An upgraded box that keeps its old conffile (`--force-confold`,
+   pkg/deploy-pi.sh:39) lacks the new lines, i.e. prompt and letterbox
+   until the owner merges the .dpkg-dist.
+4. /media/chumby-usb on the Pi keeps what a stick carries for the panel:
+   profile.xml and lys/ (lys.swf, thumb.jpg); favourites.xml and the token
+   stay in the fixtures' /psp/ikea-lys/. chumby-ikea-lys's deploy-pi.sh
+   stops building and copying the two services and debugchumby (:24-28,
+   33-34, 63, 69), restarts the kiosk unit only (:85-87 → `systemctl
+   restart chumby-player`, PartOf restarts the services), and its header
+   says so.
+5. Steps:
+   0. CHECKPOINT: Jan answers the open questions below.
+   1. Sources per (1); build-debs.sh (:25-32 binaries checks, :56-58
+      installs), pkg/deploy-pi.sh:17-29, ci.yml (build + cache); the
+      install test (.github/scripts/deb-install-test.sh:20) checks the two
+      units and that chumby-rust-remote starts and answers `status`.
+   2. Units, launcher, conffile, postinst/prerm, docs/setup.md, this record;
+      desktop launcher run with both switch values; `systemd-analyze
+      verify` of the units; the deb's contents. CHECKPOINT.
+   3. rust-remote debugchumby + README; chumby-ikea-lys deploy-pi.sh,
+      README, PLAN.md.
+   4. Release 0.9.10 the 0.9.9 way (version, pair regeneration — fork dev
+      also carries 7732e65ce —, release commit). CHECKPOINT before main,
+      chumby, push.
+   5. Device round on chumby-pi-3 at Jan's time: data backup; remove
+      debugchumby, ikea-lys/ and rust-remote/ from /media/chumby-usb and
+      `CHUMBY_USB_HOOK=1` from the conffile, stop the hook-started
+      services; install 0.9.10 (`--force-confold`), set the two new lines,
+      enable the units; Lys, the lights, the night claim and the alarms
+      as Jan checks them.
+   Open for Jan: (i) sources — (a) subtrees, (b) submodules, (c) vendored;
+   (ii) ikea-lys in the public package, and where its hub address lives
+   (`CHUMBY_LYS_HUB` in the conffile?); (iii) units shipped disabled and
+   enabled by hand, or enabled by a switch; (iv) the switch names and
+   whether letterbox and the socket allows stay separate; (v) his
+   setup.md paragraph's wording.
