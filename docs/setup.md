@@ -180,6 +180,13 @@ Two files, both surviving upgrades:
   8091 without asking and draw beside the 4:3 stage; off by default,
   since the stick's script runs unasked). Also documented in place.
 
+The chumby's USB stick is `/media/chumby-usb` on the Pi. It is a plain
+directory, shipped by the package; a stick that is plugged in mounts over
+it (read-only) and hides it. The panel sees it as `/mnt/usb`, so anything
+laid out as it would be on a chumby's stick works from there without a
+stick: `profile.xml`, widgets, `debugchumby` and the files the panel
+looks for on the stick, such as `post_alarm_action`.
+
 Sound needs no setup: it follows the system default output (a USB
 adapter if present).
 

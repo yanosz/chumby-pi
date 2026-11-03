@@ -58,5 +58,6 @@ CHUMBY_QUALITY=low
 # boot, for widgets that talk to a service the stick starts on this box.
 # Also lets such widgets reach ports 8090 and 8091 without asking and draw
 # beside the 4:3 stage. Off by default: a stick's script runs as pi with
-# no questions asked.
+# no questions asked. The stick is /media/chumby-usb: a plain directory
+# laid out like a chumby's stick, or a mounted stick over it.
 #CHUMBY_USB_HOOK=1
