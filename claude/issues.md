@@ -1584,7 +1584,7 @@ below are read from the trees of 2026-11-03.
    - Order is not critical: Lys retries both sockets (ikea-lys every 5 s,
      the claim every 5 s).
 3. The hook gating. The launcher's hook block and HOOK_ARGS
-   (chumby-player-run:275-294, used at :310) go. In its place two active
+   (chumby-player-run:275-295, used at :310) go. In its place two active
    lines in /etc/default/chumby-player (no silent defaults; unset means the
    player's own default):
    - `CHUMBY_SOCKET_ALLOW=` — empty: the player's prompt; with the services
@@ -1592,7 +1592,7 @@ below are read from the trees of 2026-11-03.
    - `CHUMBY_LETTERBOX=on` — `off` lets a widget draw beside the 4:3 stage
      (the Lys panel skin, issue 28), and brings `--background-color 000000`.
    `CHUMBY_USB_HOOK` goes. Consumers, each to change: chumby-player-run:
-   275-294, 310; chumby-player.default:57-63 (Jan's /media/chumby-usb
+   275-295, 310; chumby-player.default:57-63 (Jan's /media/chumby-usb
    sentence, 2178872, reworded without debugchumby); docs/setup.md:177-182
    (the entry) and :183-189 (Jan's paragraph: drop `debugchumby` and
    `post_alarm_action` from its list — his words, his call); this record
