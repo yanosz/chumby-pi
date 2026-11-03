@@ -1597,7 +1597,7 @@ below are read from the trees of 2026-11-03.
    (the entry) and :183-189 (Jan's paragraph: drop `debugchumby` and
    `post_alarm_action` from its list — his words, his call); this record
    (#26 history stays); rust-remote debugchumby:8-14 (the aarch64 branch)
-   and its README:229-240; chumby-ikea-lys widget/deploy/deploy-pi.sh:2-9,
+   and its README:229-242; chumby-ikea-lys widget/deploy/deploy-pi.sh:2-9,
    16, 28, 33, 63, 69, 85-87, its widget/README.md and PLAN.md mentions.
    Unchanged: the fork (the flags exist, desktop/src/cli.rs:166, 186-192).
    An upgraded box that keeps its old conffile (`--force-confold`,
