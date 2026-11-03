@@ -131,6 +131,17 @@ ahead of the package until the next install.
 
 Verify the binary's sha256 on both ends. Do not skip the rebuild: see §7.
 
+### Private packages
+
+The widget services for the living room — `chumby-rust-remote` and
+`chumby-ikea-lys` (claude/issues.md #31) — are not in the public apt repo.
+Each builds in its own repository (`pkg/build-deb.sh` there) and
+`pkg/publish-private-apt.sh` publishes them as a signed flat repo on a LAN
+web server: the public repo's recipe, its own signing key. Server, login,
+directory, URL and key live in `~/.config/chumby-apt/private.env`, outside
+this repo, with the public key beside it; `--dry-run` signs and verifies
+locally, `--sources` prints the Pi's one-time keyring and sources setup.
+
 ## 5. Verify
 
 **On the desktop**, from the submodule — see its `claude-docs/development.md`.

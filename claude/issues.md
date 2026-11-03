@@ -1531,7 +1531,7 @@ new rust-remote (station mark); Jan decides when.
 Number: 31
 Timestamp: 2026-11-03, 21:40 (plan rewritten 22:30)
 Title: The widget services on the Pi become private debs with systemd units, from a private apt repo on the LAN; the public package drops the debugchumby hook emulation.
-Status: steps 1-2 done (2026-11-03; chumby-pi dev, rust-remote, chumby-ikea-lys); step 0 answered — Jan's decisions 2026-11-03 (reverses issue 26's "no package for the service"); the public side ships in 0.9.10
+Status: steps 1-3 done (2026-11-03; chumby-pi dev, rust-remote, chumby-ikea-lys; the private repo published); step 0 answered — Jan's decisions 2026-11-03 (reverses issue 26's "no package for the service"); the public side ships in 0.9.10
 Description: Jan: chumby-rust-remote and ikea-lys run on the Pi as systemd
 units, enabled by default, shipped as two private debs from a private apt
 repo on the LAN's lighttpd (the container that serves the yoga videos;
@@ -1784,3 +1784,33 @@ the PC, nothing installed.
 - Next, step 3: pkg/publish-private-apt.sh (reads the five names from
   ~/.config/chumby-apt/private.env), a dry run into a scratch dir checked
   with gpgv; the first upload waits for Jan's go.
+Update 2026-11-03: Jan accepts the profile.d merge in place of his
+"/media/chumby-usb keeps a profile.xml" (answer iii; told, no objection).
+Update 2026-11-03, step 3 done (Jan's go, upload included):
+`pkg/publish-private-apt.sh`. It reads HOST, USER, DIR, URL, KEY_ID from
+~/.config/chumby-apt/private.env (refuses without the file, the public key
+beside it, any of the five, a DIR at or right below /, or the key in gpg;
+USER is read under its own name, not the login's), optionally
+RUST_REMOTE_OUT (default rust-remote/pkg/out) and LYS_OUT (default
+/home/jan/chumby-ikea-lys/pkg/out); takes the newest deb of each package by
+version; builds the flat index in a mktemp dir with the public recipe
+(apt-ftparchive Packages + Packages.gz; Release with Origin/Label
+chumby-private, Suite/Codename stable, Architectures arm64; gpg
+--clearsign → InRelease, --detach-sign → Release.gpg, with KEY_ID), adds
+the public key as chumby-private-archive.gpg, verifies both signatures with
+gpgv; `--dry-run` stops there; otherwise rsync -rlpt --delete into DIR only,
+then the fetch check. `--sources` prints the Pi's setup (keyring
+/usr/share/keyrings/chumby-private-archive.gpg, `deb [signed-by=…] URL ./`
+in /etc/apt/sources.list.d/chumby-private.list, the URL from the config at
+print time). No value of the config is in this repo or this record.
+- Dry run: gpgv "Good signature from "chumby private apt repo …"" for
+  InRelease and Release.gpg.
+- Uploaded: chumby-rust-remote 0.1.0, 151,208 bytes, sha256 89a554b0…;
+  chumby-ikea-lys 0.1.0, 575,080 bytes, sha256 3b06f3f2…; Packages,
+  Packages.gz, Release, InRelease, Release.gpg, the public key.
+- Fetch check: InRelease fetched and gpgv "Good signature"; Packages lists
+  chumby-ikea-lys 0.1.0 and chumby-rust-remote 0.1.0 (Depends chumby-player
+  (>= 0.9.10), libc6, libgcc-s1; Size and SHA256 as above); HTTP 200 for
+  Packages.gz, Release, Release.gpg, the key and both debs; both served
+  debs byte-equal to the local builds (sha256). No 404, no MIME issue.
+- Not yet installable on a Pi: both depend on chumby-player 0.9.10.
