@@ -41,6 +41,8 @@
 #                        player's prompt; empty or unset ⇒ none
 #   CHUMBY_LETTERBOX     on/off; unset ⇒ player default (on)
 #   CHUMBY_CONFD         drop-in directory (default /etc/chumby-player/conf.d)
+#   CHUMBY_PROFILED      packages' widget profiles (default
+#                        /usr/share/chumby-player/profile.d)
 
 set -eu
 
@@ -217,6 +219,50 @@ ln -sf /etc/chumby-player/player.toml "$STATE/fixtures/player.toml"
 # user-run chumby-local-widgets helper writes /psp/profile.xml from this
 # folder. Here only make sure the folder exists to be found.
 mkdir -p "$STATE/widgets"
+
+# Widgets that packages bring (one profile each in profile.d) join the
+# channel through the same merge. The panel takes the first of /tmp, /mnt/usb,
+# /mnt/storage, /psp profile.xml (F2:4344); /tmp/profile.xml, written here at
+# every start, is the one it would have taken plus theirs — so a stick, a
+# re-seed or chumby-local-widgets' /psp profile neither hides nor loses them,
+# and nothing is written without them (claude/issues.md #31).
+python3 - "$STATE/fixtures/rootfs" "${CHUMBY_PROFILED:-/usr/share/chumby-player/profile.d}" <<'PY' || true
+import glob, sys
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+root, profiled = Path(sys.argv[1]), sys.argv[2]
+out = root / "tmp/profile.xml"
+MARK = "chumby-player-run"
+
+def instances(path):
+    try:
+        found = ET.parse(path).getroot().find("widget_instances")
+    except (ET.ParseError, OSError) as e:
+        print(f"chumby-player: {path}: {e}, skipped", file=sys.stderr)
+        return []
+    return [] if found is None else list(found)
+
+if out.is_file() and ET.parse(out).getroot().get("generated") != MARK:
+    sys.exit(f"chumby-player: {out} is not ours, left alone")
+extra = sorted(glob.glob(profiled + "/*.xml"))
+if not extra:
+    out.unlink(missing_ok=True)
+    sys.exit()
+base = next((p for p in ("mnt/usb", "mnt/storage", "psp") if (root / p / "profile.xml").is_file()), None)
+merged = instances(root / base / "profile.xml") if base else []
+ids = {i.get("id") for i in merged}
+for path in extra:
+    for inst in instances(path):
+        if inst.get("id") not in ids:
+            merged.append(inst)
+            ids.add(inst.get("id"))
+profile = ET.Element("profile", generated=MARK)
+ET.SubElement(profile, "widget_instances").extend(merged)
+tmp = out.with_name("profile.xml.new")
+ET.ElementTree(profile).write(tmp, encoding="unicode")
+tmp.replace(out)
+PY
 
 # --seed: state prepared (everything above) without starting anything —
 # for chumby-local-widgets / chumby-download-firmware on a box whose

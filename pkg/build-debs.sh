@@ -40,7 +40,7 @@ P="$BUILD/chumby-player"
 mkdir -p "$P/DEBIAN" "$P/usr/bin" "$P/usr/lib/chumby-player" \
          "$P/lib/systemd/system" "$P/usr/lib/udev/rules.d" \
          "$P/media/chumby-usb" "$P/etc/chumby-player/conf.d" \
-         "$P/etc/default" "$P/usr/share/chumby-player" \
+         "$P/etc/default" "$P/usr/share/chumby-player/profile.d" \
          "$P/usr/share/plymouth/themes/chumby"
 sed "s/@VERSION@/$VERSION/" chumby-player/DEBIAN/control > "$P/DEBIAN/control"
 install -m 755 chumby-player/DEBIAN/postinst chumby-player/DEBIAN/prerm "$P/DEBIAN/"

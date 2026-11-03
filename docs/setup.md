@@ -179,7 +179,8 @@ Two files, both surviving upgrades:
   `CHUMBY_LETTERBOX` (`on`, the default: the 4:3 stage between black
   bars; `off`: a widget may draw beside it). A package that brings a
   widget service sets what it needs in a file of its own in
-  `/etc/chumby-player/conf.d/` instead. Also documented in place.
+  `/etc/chumby-player/conf.d/` instead, and its widget joins the channel
+  from `/usr/share/chumby-player/profile.d/`. Also documented in place.
 
 The chumby's USB stick is `/media/chumby-usb` on the Pi. It is a plain
 directory, shipped by the package; a stick that is plugged in mounts over
