@@ -1531,7 +1531,7 @@ new rust-remote (station mark); Jan decides when.
 Number: 31
 Timestamp: 2026-11-03, 21:40 (plan rewritten 22:30)
 Title: The widget services on the Pi become private debs with systemd units, from a private apt repo on the LAN; the public package drops the debugchumby hook emulation.
-Status: planned, not started — Jan's decisions 2026-11-03 (reverses issue 26's "no package for the service")
+Status: step 1 done on dev (2026-11-03); step 0 answered — Jan's decisions 2026-11-03 (reverses issue 26's "no package for the service"); the public side ships in 0.9.10
 Description: Jan: chumby-rust-remote and ikea-lys run on the Pi as systemd
 units, enabled by default, shipped as two private debs from a private apt
 repo on the LAN's lighttpd (the container that serves the yoga videos;
@@ -1660,3 +1660,52 @@ file:line from the trees of 2026-11-03.
    into the chumby-ikea-lys deb? (iv) the black background tied to
    letterbox off, or a line of its own? (v) the publish script here
    (generic, config outside), or in a private place?
+Update 2026-11-03, step 0 answered (Jan): (i) the repo below the existing
+web root; (ii) token and favourites to /etc/chumby-ikea-lys/; (iii) the Lys
+widget's SWF and its profile ship in the chumby-ikea-lys deb, deploy-pi.sh
+becomes a dev shortcut, /media/chumby-usb keeps a profile.xml pointing at
+the installed SWF; (iv) the publish script in pkg/ here, its config only in
+~/.config/chumby-apt/private.env; (v) the black background stays tied to
+`CHUMBY_LETTERBOX=off`. The signing key and the private config exist (made
+at Jan's word): the config holds HOST, USER, DIR, URL and KEY_ID, the
+exported public key sits beside it as chumby-private-archive.gpg; the
+publish script reads those five names, nothing of them goes into this
+repo. The first upload (step 3) waits for Jan's go.
+Update 2026-11-03, step 1 done (dev 320982a; version still 0.9.9 on dev,
+0.9.10 carries it): chumby-player-run sources
+`${CHUMBY_CONFD:-/etc/chumby-player/conf.d}/*.conf` after the
+environment (an empty or missing directory sources nothing; later files
+win), turns `CHUMBY_SOCKET_ALLOW` into one `--socket-allow` per entry and
+`CHUMBY_LETTERBOX=off` into `--letterbox off --background-color 000000`;
+`on` or unset adds nothing, anything else refuses to start (`--check`
+too); the hook block, `CHUMBY_USB_HOOK` and `HOOK_ARGS` are gone. The
+conffile ships `CHUMBY_SOCKET_ALLOW=""` and `CHUMBY_LETTERBOX=on` as active
+lines (the hook comment, Jan's /media/chumby-usb sentence in it included,
+went with the block); the deb ships the empty /etc/chumby-player/conf.d/;
+docs/setup.md names the two switches and the drop-ins, and Jan's paragraph
+keeps the directory and "`profile.xml` and widgets". Consumers of the
+removed names: none left in this repo's tracked files outside this record
+(git grep CHUMBY_USB_HOOK, HOOK_ARGS, debugchumby, post_alarm_action);
+this record's history and fork claude/issues.md:893 stay as history;
+rust-remote debugchumby:3-5 and README:229-242 and chumby-ikea-lys
+widget/deploy/deploy-pi.sh:7-8 still describe the hook — step 2. The
+README never mentioned the hook. Not before step 2: 0.9.10 on chumby-pi-3
+without the private debs would leave its services unstarted (the hook
+started them).
+Verified on the PC: pkg/build-debs.sh with the 0.9.9 dist binaries — the
+deb lists ./etc/chumby-player/conf.d/, its launcher is byte-equal to the
+tree, its conffile ends with the two lines. The launcher against a staged
+tree in a headless cage, the conffile loaded as systemd would, the player
+behind an argument-logging wrapper:
+- defaults: `--check` 0; the player's arguments end `--fullscreen
+  -PlocalCache=1 <swf>`; alive at 45 s, `_getPlatform`, no panic;
+- the conffile with `CHUMBY_SOCKET_ALLOW="127.0.0.1:8090 127.0.0.1:8091"`
+  and `CHUMBY_LETTERBOX=off`: `… --fullscreen --socket-allow 127.0.0.1:8090
+  --socket-allow 127.0.0.1:8091 --letterbox off --background-color 000000
+  -PlocalCache=1 <swf>`, alive, no panic;
+- the shipped conffile plus two drop-ins (chumby-ikea-lys.conf: 8091 and
+  letterbox off; chumby-rust-remote.conf: 8090): `… --socket-allow
+  127.0.0.1:8091 --socket-allow 127.0.0.1:8090 --letterbox off
+  --background-color 000000 …` (the files in name order), alive, no panic;
+- `CHUMBY_LETTERBOX=maybe`: `--check` and the run exit 1 with
+  "CHUMBY_LETTERBOX must be on or off, not 'maybe'"; the player never starts.
