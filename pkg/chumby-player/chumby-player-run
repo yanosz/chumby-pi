@@ -37,6 +37,10 @@
 #   LP_NUM_THREADS       lavapipe worker threads; unset ⇒ lavapipe default (NFR4)
 #   CHUMBY_QUALITY       Flash stage quality (low/medium/high); unset ⇒ player default
 #   CHUMBY_RENDERER      render backend (wgpu/tiny-skia); unset ⇒ player default
+#   CHUMBY_SOCKET_ALLOW  host:port list whose XMLSocket connects without the
+#                        player's prompt; empty or unset ⇒ none
+#   CHUMBY_LETTERBOX     on/off; unset ⇒ player default (on)
+#   CHUMBY_CONFD         drop-in directory (default /etc/chumby-player/conf.d)
 
 set -eu
 
@@ -45,6 +49,34 @@ STATE="${CHUMBY_STATE:-/var/lib/chumby}"
 CTL="${CHUMBY_CTL:-/tmp/chumby-ctl}"
 RUFFLE="${CHUMBY_RUFFLE:-/usr/lib/chumby-player/ruffle_desktop}"
 SUPERVISOR="${CHUMBY_SUPERVISOR:-/usr/lib/chumby-player/chumby-supervisor}"
+
+# Drop-ins after /etc/default/chumby-player (which systemd has read into the
+# environment): a package that needs a switch ships its own file here
+# instead of editing that conffile; later files win, and a list may extend
+# itself (CHUMBY_SOCKET_ALLOW="$CHUMBY_SOCKET_ALLOW 127.0.0.1:8090").
+CHUMBY_SOCKET_ALLOW="${CHUMBY_SOCKET_ALLOW:-}"
+for _conf in "${CHUMBY_CONFD:-/etc/chumby-player/conf.d}"/*.conf; do
+    [ -e "$_conf" ] || continue
+    . "$_conf"
+done
+
+# The player arguments of those switches. A widget beside the 4:3 stage
+# (claude/issues.md #28) wants the letterbox off; the margins then stay black
+# instead of the panel's stage colour 0x333333. A kiosk cannot answer the
+# socket prompt, so a local service's port is allowed by name.
+PLAYER_ARGS=""
+for _allow in $CHUMBY_SOCKET_ALLOW; do
+    PLAYER_ARGS="$PLAYER_ARGS --socket-allow $_allow"
+done
+case "${CHUMBY_LETTERBOX:-}" in
+    ""|on) ;;
+    off) PLAYER_ARGS="$PLAYER_ARGS --letterbox off --background-color 000000" ;;
+    *)
+        echo "chumby-player: CHUMBY_LETTERBOX must be on or off, not '$CHUMBY_LETTERBOX'" \
+             "(/etc/default/chumby-player or /etc/chumby-player/conf.d)" >&2
+        exit 1
+        ;;
+esac
 
 # controlpanel.swf: checks readability, not just existence — a sudo cp
 # leaves a root-only file the pi user can stat but not open, and the
@@ -272,28 +304,6 @@ if [ -f "$INTRO" ] && [ ! -e "$STATE/fixtures/rootfs/psp/disable_intro" ]; then
         "$INTRO" || true
 fi
 
-# A boot hook from the stick, as the chumby's rcS runs /mnt/usb/debugchumby
-# before the panel (rcS:320) — opt-in here (CHUMBY_USB_HOOK=1 in
-# /etc/default/chumby-player): running whatever a stick carries is not a
-# default to keep, see the intro.swf note above. Backgrounded, as user pi;
-# the hook finds the state root in CHUMBY_STATE (its /psp is
-# $CHUMBY_STATE/fixtures/rootfs/psp).
-# CHUMBY_CTL: the control FIFO below, so a service the hook starts can hand
-# the panel soft events (`event KIND VALUE [COMMENT]`; chumby-rust-remote).
-# HOOK_ARGS, for the widgets of those services only: their XMLSocket to this
-# box (8090, 8091) connects without the player's ask dialog, which a kiosk
-# cannot answer; with the letterbox off a widget may draw into the display's
-# side margins (claude/issues.md #28, #30), kept black instead of the panel's
-# stage colour 0x333333.
-HOOK_ARGS=""
-if [ "${CHUMBY_USB_HOOK:-0}" = 1 ]; then
-    HOOK_ARGS="--letterbox off --background-color 000000"
-    HOOK_ARGS="$HOOK_ARGS --socket-allow 127.0.0.1:8090 --socket-allow 127.0.0.1:8091"
-    if [ -x "$USB_LINK/debugchumby" ]; then
-        CHUMBY_STATE="$STATE" CHUMBY_CTL="$CTL" "$USB_LINK/debugchumby" </dev/null >/dev/null 2>&1 &
-    fi
-fi
-
 # The supervisor owns the player from here on: restarts it after a crash,
 # and asks it to restart when idle after a clock step or when the network
 # comes back (claude/watchdog-plan.md). It stays cage's only client, so
@@ -307,6 +317,6 @@ exec "$SUPERVISOR" --ctl "$CTL" --config /etc/chumby-player/player.toml -- \
     ${CHUMBY_QUALITY:+--quality "$CHUMBY_QUALITY"} \
     ${CHUMBY_RENDERER:+--renderer "$CHUMBY_RENDERER"} \
     --fullscreen \
-    $HOOK_ARGS \
+    $PLAYER_ARGS \
     -PlocalCache=1 \
     "$SWF"

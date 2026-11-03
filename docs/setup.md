@@ -174,18 +174,18 @@ Two files, both surviving upgrades:
 - **`/etc/default/chumby-player`** — environment overrides: pin a
   specific display (`WLR_DRM_DEVICES`), route audio to a specific
   output (`CHUMBY_AUDIO_DEVICE`), log verbosity (`RUST_LOG`),
-  `CHUMBY_USB_HOOK` (opt-in: run the USB stick's `debugchumby` before
-  the panel, as the chumby does at boot, for widgets that talk to a
-  service the stick starts — such widgets may then reach ports 8090 and
-  8091 without asking and draw beside the 4:3 stage; off by default,
-  since the stick's script runs unasked). Also documented in place.
+  `CHUMBY_SOCKET_ALLOW` (the local ports a widget may reach without the
+  player's prompt, which a kiosk cannot answer; none by default) and
+  `CHUMBY_LETTERBOX` (`on`, the default: the 4:3 stage between black
+  bars; `off`: a widget may draw beside it). A package that brings a
+  widget service sets what it needs in a file of its own in
+  `/etc/chumby-player/conf.d/` instead. Also documented in place.
 
 The chumby's USB stick is `/media/chumby-usb` on the Pi. It is a plain
 directory, shipped by the package; a stick that is plugged in mounts over
 it (read-only) and hides it. The panel sees it as `/mnt/usb`, so anything
 laid out as it would be on a chumby's stick works from there without a
-stick: `profile.xml`, widgets, `debugchumby` and the files the panel
-looks for on the stick, such as `post_alarm_action`.
+stick: `profile.xml` and widgets.
 
 Sound needs no setup: it follows the system default output (a USB
 adapter if present).
