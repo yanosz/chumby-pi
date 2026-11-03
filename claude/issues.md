@@ -1888,3 +1888,9 @@ PLAN.md). 575,572 bytes, sha256 3156f526…37b68; the fetch check passed
 chumby-rust-remote 0.1.0, every file 200, the served deb byte-equal). The
 repo keeps the newest version of each package only: rsync --delete removed
 0.1.0 (404 now). chumby-pi-3 still runs 0.1.0 until `apt upgrade`.
+Update 2026-11-03, 23:31: chumby-pi-3 upgraded chumby-ikea-lys 0.1.0 →
+0.1.1 from the private repo (lys.swf c8c55274…), the unit active. 0.9.10's
+push: in progress — the fork's backup branch and dev are pushed; the
+forced push of chumby (19cc439e8 → d5237b1c1) waits for Jan (the
+coordinator's permission layer blocks it tonight); chumby-pi main
+(release-0.9.10) and dev follow after it.
