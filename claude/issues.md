@@ -1520,7 +1520,10 @@ Jan's round: passed 2026-11-03 ("test fine"). The Pi's sink was capped at
 30 % for the test and set back to 100 % afterwards, its value before the cap
 (the backup's WirePlumber state). Follow-up requirements (night screen:
 a button per favourite, a sleep timer in rust-remote, full width on the
-Pi) are noted in chumby-ikea-lys PLAN.md, not scoped.
+Pi) are noted in chumby-ikea-lys PLAN.md; the sleep timer is specified
+there since 2026-11-04 (Requirements, "Night mode: the scenes and a sleep
+timer": rust-remote gets `sleep N` / `sleep cancel` / `sleep`, `playing`
+and `sleep` in the status), not built.
 Stations four and five on the wide panel are the Pi's My Streams entries
 `Groove Salad` and `Def Con Radio`; a third favourite is a `favourites.xml`
 entry (Jan's). Backup before the deploy:
