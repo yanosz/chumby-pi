@@ -1536,6 +1536,29 @@ The Lys widget's prompt and countdown line: chumby-ikea-lys PLAN.md,
 journal "The sleep timer built (2026-11-04)". PC only: `cargo test`, nc on
 a fake root (event file and control FIFO), the widget in the fork's
 release Ruffle against the real service.
+Update 2026-11-04, 21:53-22:01: published and deployed (Jan: "can you the
+publish and deploy?", both devices). chumby-ikea-lys 0.1.2 (lys.swf
+5f26c1c4…, 576,980 bytes) and chumby-rust-remote 0.1.2 (152,580 bytes)
+published to the LAN repo (fetch check: good signature, both 0.1.2, every
+file 200). chumby-pi-3: 0.1.1 → 0.1.2 both, from the repo, units active,
+`status` ends `playing=0&sleep=0`, `sleep` answers `duration=15`, sink
+0.80 untouched. The backup BEFORE the upgrade failed unnoticed (the tar's
+`-C /` after the paths, its stderr hidden: a 45-byte empty archive) — a
+backup of the chumby files was taken right AFTER it instead
+(~/chumby-pi-3-backup/chumby-backup-20261104-post-sleep-upgrade.tar.gz,
+136 entries, token and favourites inside); the pre-upgrade files are the
+0.1.1 debs, no longer local but in the 2026-11-03 backups' lineage, and
+the upgrade kept every conffile (--force-confold). The chumby (.83):
+backup first, ~/chumby-backup/20261104-2159-pre-sleep/ (chumby-rust-remote
+02bb6130…, debugchumby bef30ec8…, lys.swf c8c55274…, profile.xml
+5e459512…, alarms, favourites.xml); rust-remote's deploy.sh put the 0.1.2
+binary fdc3d31b… on the stick (debugchumby unchanged), the old service
+(pid 28051) killed, the new one (pid 17002) started with debugchumby's
+line — `sleep` there answers `duration=10`: the chumby already has a
+/psp/music_timer_duration of its own, the panel's; deploy-chumby.sh put
+lys.swf 5f26c1c4… and thumb.jpg on the stick, favourites kept, the panel
+restarted 22:00-22:01, widgets Space Clock, Lys, Yoga. Jan's end-user
+round pending on both.
 Stations four and five on the wide panel are the Pi's My Streams entries
 `Groove Salad` and `Def Con Radio`; a third favourite is a `favourites.xml`
 entry (Jan's). Backup before the deploy:
