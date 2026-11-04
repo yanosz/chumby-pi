@@ -1524,6 +1524,18 @@ Pi) are noted in chumby-ikea-lys PLAN.md; the sleep timer is specified
 there since 2026-11-04 (Requirements, "Night mode: the scenes and a sleep
 timer": rust-remote gets `sleep N` / `sleep cancel` / `sleep`, `playing`
 and `sleep` in the status), not built.
+Update 2026-11-04 (evening): the sleep timer is built, not deployed; Jan's
+device round pending. chumby-rust-remote (its own repository in
+`rust-remote/`, README "Appendix: commands"): `sleep N` (5-240 min, N into
+the panel's `/psp/music_timer_duration`), `sleep cancel`, `sleep`
+(`duration=N&`, 15 when unset or below 5); every status gains `playing`
+and `sleep` (seconds left); the poll stops the music at the end
+(`MusicPlayer stop`) and clears a timer whose music has ended; `radio
+stop` clears it. Package 0.1.2 built (`pkg/build-deb.sh`), not published.
+The Lys widget's prompt and countdown line: chumby-ikea-lys PLAN.md,
+journal "The sleep timer built (2026-11-04)". PC only: `cargo test`, nc on
+a fake root (event file and control FIFO), the widget in the fork's
+release Ruffle against the real service.
 Stations four and five on the wide panel are the Pi's My Streams entries
 `Groove Salad` and `Def Con Radio`; a third favourite is a `favourites.xml`
 entry (Jan's). Backup before the deploy:
