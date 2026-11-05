@@ -1,5 +1,9 @@
 # `/tmp/nightmode` — whose night it is
 
+> **BROKEN, parked 2026-11-05 — do not implement from this.** The model is
+> wrong: see `claude/nightmode-spec-broken.md`. Kept only as a record of the
+> file's observed behaviour and its file:line references.
+
 The spec for the one record of the night, and the automaton over it
 (chumby-pi issue 32). The state **is** the file; there is no second copy
 anywhere, and no component keeps a private notion of "it is night".
@@ -12,7 +16,7 @@ Who acts on it:
 | **the remote** | `chumby-rust-remote`, the only writer of `2` |
 | **the supervisor** | the player's parent process, which notices a restart |
 | **Lys** | the light widget — it never touches the file, it acts through the remote's commands |
-
+I do
 ## The automaton
 
 ```mermaid

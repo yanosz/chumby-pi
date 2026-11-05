@@ -2114,8 +2114,9 @@ one device round on chumby-pi-3 at Jan's time — a real Lys night, a
 SIGKILL of the player child for the crash path, and the journal surviving
 it.
 
-State spec: claude/nightmode-spec.md (Jan asked for the automaton,
-2026-11-05, as mermaid in markdown so it renders as a spec). It holds the
+State spec: claude/nightmode-spec.md — BROKEN and parked on 2026-11-05,
+see claude/nightmode-spec-broken.md for why and for where the code stands.
+It was written as the automaton Jan asked for (mermaid in markdown). It holds the
 three states, every transition with the actor that writes it, the six
 invariants, and the four consequences worth knowing before judging it. It
 is the single copy — do not restate the automaton here.
