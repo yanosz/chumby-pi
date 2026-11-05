@@ -2114,79 +2114,8 @@ one device round on chumby-pi-3 at Jan's time — a real Lys night, a
 SIGKILL of the player child for the crash path, and the journal surviving
 it.
 
-State spec for the record (Jan asked for the automaton, 2026-11-05). The
-state IS the file `/tmp/nightmode`; there is no second copy anywhere. Three
-actors write or read it: P the panel (controlpanel.swf), R chumby-rust-remote,
-S the supervisor. L, the Lys widget, acts only through R's commands.
-
-                    boot: tmpfs empty
-                            |
-                            v
-        +------------------ 0 Day --------------------+
-        |                 ^  |  ^                     |
-        |   P: touch /    |  |  |  L: "Nacht"         |
-        |   key / bend    |  |  |  (screen dim|off    |
-        |   on the night  |  |  |  while claiming)    |
-        |   screen        |  |  |  => R writes 2      |
-        |   (F2:19606-    |  |  |                     |
-        |   19628)        |  |  v                     |
-        |            +----+--+-------+                |
-        |            |  2 Widget     |<---------------+
-        |            +---+-----------+   P: alarm action=nightmode on,
-        |                |   ^            or the Night button, writes 1
-        |   L: "Tag"     |   |            => 1 Panel (below)
-        |   (screen      |   |
-        |   bright)      |   |  R: watch() sees a live claim or stay-awake
-        |   => R writes 0|   |  => sends NightMode off; P writes 0; R hands
-        |                |   |  night to L, whose screen dim writes 2
-        |   R: alarm scan|   |  (so Panel -> Day -> Widget, <=5 s in Day)
-        |   nightmode-off|   |
-        |   due => R     |   |
-        |   writes 0 and |   |
-        |   hands day    |   |
-        v                v   |
-        +------------- 1 Panel ------------------------+
-                         ^  |
-          R: NightMode   |  |  P: alarm action=nightmode off, or a
-          on (the night  |  |  NightMode off event => P writes 0 => Day
-          command, or S's|  |
-          panel-start    |  |  player restart => P reads 1 at startup
-          with the record|  |  (F2:359) and restores its own night: the
-          at 2)          |  |  state is unchanged
-                         |  v
-
-Transitions in full, each with its trigger and its writer:
-
-| From | Trigger | Writer | To |
-|---|---|---|---|
-| (none) | boot | — (tmpfs) | 0 |
-| 0 | alarm action=nightmode on (F2:11094-11108), the panel's Night button (DefineSprite_1766/frame_2:43-56), or R's `night` command via the NightMode soft event (F6:107-110) | P, `1` (F2:19751) | 1 |
-| 0 | L enters its night: `screen dim`/`screen off` while claiming (08-night.as:76-82) | R, `2` | 2 |
-| 1 | R sees a live claim or stay-awake, sends NightMode off (main.rs handover) | P, `0` (F2:19757) | 0, then 2 as soon as L's `screen dim` arrives (<=5 s) |
-| 1 | touch, key or bend on the night screen (F2:19606-19628, 19659, 19729) | P, `0` | 0 |
-| 1 | alarm action=nightmode off, or a NightMode off event | P, `0` | 0 |
-| 1 | player restart | P reads `1` (F2:359), writes nothing | 1 |
-| 2 | L's "Tag": `screen bright` (08-night.as:89-94) | R, `0` | 0 |
-| 2 | R's alarm scan: an enabled nightmode-off alarm due this minute | R, `0` + handoff=day | 0 |
-| 2 | the panel enters its own night (alarm at 23:00, Night button) | P, `1` | 1 (and the handover takes it back to 2 if a claim is live) |
-| 2 | the widget is unloaded — bend into the control panel, a widget change, the channel's rotation, a player restart | nobody | **2, unchanged** |
-| 2 | player restart, S sends `panel-start` | R sends NightMode on; P writes `1` | 1 (and back to 2 by the handover if L still claims) |
-
-Invariants:
-- I1. Only P ever writes `1`. R writes `2` only over a `0` and `0` only over
-  a `2`, so a panel night is never clobbered and a `1` never becomes a `2`
-  behind the panel's back.
-- I2. A boot means day: the file is on the tmpfs (R6/D8).
-- I3. `2` is invisible to P (two `== "1"` compares), so a widget night never
-  drags the panel into its night screen.
-- I4. The record says WHOSE night it is, not how dark the screen is. The
-  backlight stays the widget's 15 s `screen` lease in state 2, so the
-  control panel is usable at night and a crashed widget leaves no dark box.
-- I5. While the record is `2`, every `claim` reply carries handoff=night.
-  This is what makes state 2 survive an unload: a reloaded Lys starts with
-  `night = false` (08-night.as:10) and is put back into its night mode by
-  the next renewal, at most 5 s later. The handler is idempotent
-  (08-night.as:56-61), so repeating it costs nothing; only a change is
-  logged.
-- I6. A day handoff wins over I5 in the same reply: the alarm's one-shot
-  comes with R's own clear of the record, so the two cannot disagree.
+State spec: claude/nightmode-spec.md (Jan asked for the automaton,
+2026-11-05, as mermaid in markdown so it renders as a spec). It holds the
+three states, every transition with the actor that writes it, the six
+invariants, and the four consequences worth knowing before judging it. It
+is the single copy — do not restate the automaton here.
