@@ -2036,3 +2036,80 @@ panel's night screen mid-evening. The persistence belongs to rust-remote,
 which re-establishes the night when it sees a fresh panel.
 Status: cause of the night-mode loss established; the restart's own trigger
 remains unknown. No fix scoped yet.
+
+Fix plan (Jan, 2026-11-05 — semantics his, decided in this order):
+The record is `/tmp/nightmode`, one byte, on the tmpfs as today, so a boot
+still starts by day (R6):
+- `0` no night. Written by the panel (F2:19757) and by rust-remote when
+  Lys's night ends.
+- `1` panel-owned night. The panel's own value (F2:19751), untouched by
+  anyone else. It already survives a player restart (F2:359), so it needs
+  no work.
+- `2` Lys-owned night. rust-remote's value, and inert to the panel: both
+  panel reads are `== "1"` string compares (F2:359,
+  DefineSprite_1766/frame_1:149), with no int() anywhere — unlike
+  /psp/dimlevel, which IS int()-parsed (F2:9060). A `1` could not be used
+  for this: exitNightMode ends at gotoAndStop("idle") (F2:19622), the idle
+  frame re-reads the file and a `1` would pull the panel back into its
+  night screen, which rust-remote would hand over again — a flip-flop at
+  POLL = 2 s.
+rust-remote needs no widget change to keep it: Lys's showNight() sends
+`screen dim` and endNight() sends `screen bright`
+(chumby-ikea-lys widget/frame_1/08-night.as:76-94), and `claim` + `screen`
+is Lys alone — yoga only ever sends `awake 2`
+(yoga-widget widget/frame_1/07-screens.as:126).
+
+Step 1 — rust-remote keeps the record. night() returns Day | Panel | Widget
+instead of a bool; the handover branch (night && (awake || claimed), 
+main.rs:566-575) stays as it is for Panel, and Widget behaves like Day for
+the screen path, since Lys's own lease governs the backlight. Writes: `2`
+when a claiming widget sends `screen dim`/`screen off`, re-asserted on each
+renewal so a lost write heals within 5 s; `0` on `screen bright`, on a
+handoff=day alarm, and when the claim lapses (which is what navigating away
+from Lys does today — the lease expires and the screen goes bright).
+rust-remote never writes `1` and never writes `0` over a `1` it did not
+cause, so a panel night from the 23:00 alarm is never clobbered.
+
+Step 2 — the panel start is pushed, not polled. The supervisor owns both
+ends of a restart: it asks over the FIFO (supervisor/src/main.rs:233-239,
+the player yields when idle — fork core/src/chumby/restart.rs) and it
+spawns the replacement. After the spawn it connects to 127.0.0.1:8090 and
+sends `panel-start <reason>`, the reason from its own state
+(`requested:Clock,Network`, or `unexpected` for a crash or the panel's own
+quit). rust-remote's handle() gains the command: record `2` → send
+NightMode on, nothing otherwise. That is the whole restore (Jan: "it only
+needs to know, if lys was in night mode before") — the panel's night screen
+holds the dark, and if Lys is still the widget behind it, its claim
+triggers the existing handover and the night is Lys's again within a poll.
+A boot needs no case of its own: the tmpfs is empty, so the record is `0`.
+Ordering: the notification arrives within a second of the spawn, well
+inside the 15 s claim lapse that would otherwise clear the record.
+
+Step 3 — a night holds a requested restart (Jan: "resetting the panel came
+with good intentions, but did more harm than good"). The fork's restart.rs
+already refuses to yield while an audio alarm rings or the screen was
+pressed within TAP_QUIET — Hold::Alarm, Hold::Tap. A third hold,
+Hold::Night (the record is `1` or `2`), puts the decision in the same
+place, the process that holds the state. A triggered restart then waits for
+the night to end instead of interrupting it; a crash still restarts at
+once, which steps 1 and 2 are the backstop for.
+
+Step 4 — every restart and its reason stay readable. The reason is already
+logged (supervisor/src/main.rs:221-228); the journal loses it, and the
+cause is Raspberry Pi OS's own
+/usr/lib/systemd/journald.conf.d/40-rpi-volatile-storage.conf
+(`Storage=volatile`), so everything lives in /run — `journalctl
+--disk-usage` 16.3 M in a 182 M tmpfs, and the stroking flood rotated the
+night of the incident away. The deb ships an /etc/systemd/journald.conf.d/
+override (Storage=persistent, SystemMaxUse capped) and
+/etc/default/chumby-player gains an active
+RUST_LOG=warn,tiny_skia=error,chumby_host=info line as the interim mute
+(Jan, 2026-11-05: mute it and open an issue). The stroking failure itself
+is its own issue: a path tiny-skia cannot stroke is a rendering defect, not
+noise to silence for good.
+
+Verification: PC runs for steps 1-3 (fixtures, unit tests in the existing
+style, the handover and the restore driven over the control channel), then
+one device round on chumby-pi-3 at Jan's time — a real Lys night, a
+SIGKILL of the player child for the crash path, and the journal surviving
+it.
