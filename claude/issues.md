@@ -2094,19 +2094,13 @@ place, the process that holds the state. A triggered restart then waits for
 the night to end instead of interrupting it; a crash still restarts at
 once, which steps 1 and 2 are the backstop for.
 
-Step 4 — every restart and its reason stay readable. The reason is already
-logged (supervisor/src/main.rs:221-228); the journal loses it, and the
-cause is Raspberry Pi OS's own
-/usr/lib/systemd/journald.conf.d/40-rpi-volatile-storage.conf
-(`Storage=volatile`), so everything lives in /run — `journalctl
---disk-usage` 16.3 M in a 182 M tmpfs, and the stroking flood rotated the
-night of the incident away. The deb ships an /etc/systemd/journald.conf.d/
-override (Storage=persistent, SystemMaxUse capped) and
-/etc/default/chumby-player gains an active
-RUST_LOG=warn,tiny_skia=error,chumby_host=info line as the interim mute
-(Jan, 2026-11-05: mute it and open an issue). The stroking failure itself
-is its own issue: a path tiny-skia cannot stroke is a rendering defect, not
-noise to silence for good.
+Step 4 — DROPPED (Jan, 2026-11-05). It was to make the Pi's journal keep
+every restart and its reason: an /etc/systemd/journald.conf.d/ override for
+Storage=persistent against Raspberry Pi OS's own
+40-rpi-volatile-storage.conf, an interim RUST_LOG mute of the tiny-skia
+stroking flood, and a separate issue for the stroking defect itself. None
+of it is wanted; no issue was opened for the stroking warning either. The
+reason a restart happened therefore stays unrecoverable after the fact.
 
 Verification: PC runs for steps 1-3 (fixtures, unit tests in the existing
 style, the handover and the restore driven over the control channel), then

@@ -39,11 +39,6 @@ probably with proper UML rather than an ad-hoc state diagram.
   the remote through `screen dim` and `screen bright`; and the supervisor
   can push a panel-start instead of anyone polling. Those survive whatever
   the model turns out to be.
-- Still true and still unfixed: the Pi's journal is volatile
-  (`/usr/lib/systemd/journald.conf.d/40-rpi-volatile-storage.conf`), so the
-  reason for the next restart will be lost the same way. That is step 4 of
-  the plan and it does not depend on the model at all — it could be done on
-  its own.
 
 ## For the next session
 
