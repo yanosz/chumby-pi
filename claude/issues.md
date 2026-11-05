@@ -1989,15 +1989,31 @@ tmpfs and its mtimes reach back to 2026-10-28):
   (`== "2"`) is false too and restoreDimFromFile gives int("") =
   DIM_FULL_ON. (The `/psp/dimlevel` seed at fork fixture.rs:778 is a unit
   test's, not the shipped tree's.)
-The chain: the "Daily at 23:00" alarm (action=nightmode on, enabled=1) put
-the panel in its own night mode and wrote `1`. At 23:58:14 the sleep timer
-arrived over Lys's claim; rust-remote's watch() saw `night && claimed`,
-sent NightMode off and kept HANDOFF_NIGHT (main.rs:566-575), the panel's
-restoreDisplay wrote `0` (F2:19753-19759), and the night became Lys's — its
-own night screen plus the 15 s `screen` lease. That is the designed
-contract (main.rs:248-252; chumby-ikea-lys widget/frame_1/08-night.as:1-7),
-and the claim is renewed in every mode (08-night.as:53-62), so a panel
-night mode cannot coexist with Lys on screen.
+What is forced by the code, and what is not (Jan, 2026-11-05: "we
+speculate a lot, because logs were not available" — correcting an earlier
+version of this entry, which told the chain below as established):
+- Forced: a `0` in that file means the panel's restoreDisplay ran
+  (F2:19757 is its only writer of `0`), so at 23:58:15.864 the panel left,
+  or believed it left, its night mode. On this box the only triggers
+  available are a touch on the dim night screen (F2:19606-19628, which
+  calls restoreDisplay and goes to `idle`) or a NightMode-off soft event
+  (F6:119-122) — there is no bend sensor and no keyboard, and `bend down`
+  only reaches the player over the control channel (fork
+  core/src/chumby/input.rs:93).
+- Forced: the sleep command at 23:58:14.880 came from the Lys widget, the
+  only sender of `sleep` (chumby-ikea-lys widget/frame_1/08-night.as), so
+  Lys was loaded and running then. A widget keeps running behind the
+  panel's night screen, which is why its claim is renewed in every mode
+  (08-night.as:53-62).
+- NOT established: whether the `0` came from rust-remote's handover
+  (watch() sees `night && claimed`, sends NightMode off, keeps
+  HANDOFF_NIGHT — main.rs:566-575) or from a touch, and whether the "Daily
+  at 23:00" alarm's night mode was still running at 23:58. The journal that
+  would say is gone. Both readings end in the same state, which is the one
+  that matters: `0` on disk, and the night held by Lys (its own night
+  screen plus the 15 s `screen` lease) — the designed contract
+  (main.rs:248-252; 08-night.as:1-7), under which a panel night mode cannot
+  coexist with Lys on screen.
 Why nothing restored it at 04:22:22: the panel read `0` → startupMode(),
 day brightness, and widget mode's first widget (/tmp/widget_names line 1 =
 Chumby Analog Clock (white)); Lys was unloaded, so no claim renewed;
