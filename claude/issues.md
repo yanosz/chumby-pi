@@ -1974,3 +1974,49 @@ triggered restart while night mode or a widget's night claim is active;
 land on Lys after a restart (channel order, or a rust-remote re-jump to the
 claimant); silence or rate-limit the tiny-skia stroking warning and make
 journald persistent, so the next occurrence is diagnosable.
+
+Update, 2026-11-05 (Jan's hypothesis, confirmed on the box): the night mode
+lost at 04:22 was never the panel's — it was Lys's, and nothing on disk
+records a widget-held night. Read-only off chumby-pi-3 (up 7 d 23 h, so the
+tmpfs and its mtimes reach back to 2026-10-28):
+- /tmp/chumby-panel-tmp/nightmode holds `0`, mtime 2026-11-04
+  23:58:15.864 — 4 h 24 min before the restart, and no write after it (the
+  day branch of F2:359 writes nothing).
+- /psp/music_timer_duration holds `15`, mtime 2026-11-04 23:58:14.880 —
+  0.98 s earlier: the sleep timer set from the Lys widget
+  (rust-remote/src/main.rs:210-221).
+- /psp/dimlevel does not exist on this box, so F2:359's second trigger
+  (`== "2"`) is false too and restoreDimFromFile gives int("") =
+  DIM_FULL_ON. (The `/psp/dimlevel` seed at fork fixture.rs:778 is a unit
+  test's, not the shipped tree's.)
+The chain: the "Daily at 23:00" alarm (action=nightmode on, enabled=1) put
+the panel in its own night mode and wrote `1`. At 23:58:14 the sleep timer
+arrived over Lys's claim; rust-remote's watch() saw `night && claimed`,
+sent NightMode off and kept HANDOFF_NIGHT (main.rs:566-575), the panel's
+restoreDisplay wrote `0` (F2:19753-19759), and the night became Lys's — its
+own night screen plus the 15 s `screen` lease. That is the designed
+contract (main.rs:248-252; chumby-ikea-lys widget/frame_1/08-night.as:1-7),
+and the claim is renewed in every mode (08-night.as:53-62), so a panel
+night mode cannot coexist with Lys on screen.
+Why nothing restored it at 04:22:22: the panel read `0` → startupMode(),
+day brightness, and widget mode's first widget (/tmp/widget_names line 1 =
+Chumby Analog Clock (white)); Lys was unloaded, so no claim renewed;
+rust-remote (pid 46495, never restarted, up since 2026-11-04 21:54) reads
+`night()` from the panel's `0`, let the claim and the lease lapse and sent
+bright. Its HANDOFF_NIGHT is deliverable only on a claimant's next reply
+(main.rs:258-264) and is dropped as stale at the next fresh claim
+(main.rs:254-256).
+So the loss is structural, not a lost journal: while a widget holds the
+night, the only night state in the system is in the widget's RAM. Why the
+supervisor restarted is still unrecoverable — the journal now begins at
+07:48:40, the stroking flood having rotated the rest away.
+Constraint on the fix (Jan's direction is to persist it): the record must
+NOT be `/tmp/nightmode` set to `1` while a widget owns the night. Frame 1
+of DefineSprite_1766 is the `idle` label (tag-dump 7993-7995) and re-reads
+that file on every return to widget mode — widgetMode()
+(DefineSprite_1766/frame_1:1-4), the alarm path F2:11124, exitNightMode's
+gotoAndStop("idle") F2:19622 — so a `1` there would evict Lys into the
+panel's night screen mid-evening. The persistence belongs to rust-remote,
+which re-establishes the night when it sees a fresh panel.
+Status: cause of the night-mode loss established; the restart's own trigger
+remains unknown. No fix scoped yet.
