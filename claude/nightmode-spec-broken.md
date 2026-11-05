@@ -23,9 +23,11 @@ probably with proper UML rather than an ad-hoc state diagram.
 ## Where things stand
 
 - **Nothing is implemented, deployed or pushed.** Step 1's half-finished
-  code is parked on branch `dev` of the `rust-remote` repo (commit
-  `a35e507`, "WIP, do not build"); `main` there is clean, so a build or a
-  deploy from `main` cannot pick it up.
+  code was discarded at Jan's request (2026-11-05): the `rust-remote` repo
+  is back to `b627f0e` on `main` with a clean working tree, and the branch
+  that held the work-in-progress is deleted. It is recoverable from the
+  reflog as `a35e507` for about 90 days, but it implements the rejected
+  model and should be rewritten rather than revived.
 - On chumby-pi `dev`: the research under issue 32, the fix plan, and the
   spec with its revisions — commits `48e0090`, `1be1d6d`, `3ec5742`,
   `a698e7d`, `3b93ca1`, `352e121`, `08df86b`, `e423003`. Nothing pushed.
