@@ -1932,3 +1932,45 @@ push: in progress — the fork's backup branch and dev are pushed; the
 forced push of chumby (19cc439e8 → d5237b1c1) waits for Jan (the
 coordinator's permission layer blocks it tonight); chumby-pi main
 (release-0.9.10) and dev follow after it.
+
+---
+
+Number: 32
+Timestamp: 2026-11-05, 09:00
+Title: The supervisor's restart at 04:22 woke Jan — night mode lost, the
+channel's first widget bright, and the reason gone with the journal.
+Status: open — recorded only, no fix scoped (Jan, 2026-11-05)
+Description: Jan woke between 5 and 6 on 2026-11-05 to chumby-pi-3 showing
+the native clock widget, bright; Lys had left its night mode. No alarm was
+involved: the only enabled alarms in
+/var/lib/chumby/fixtures/rootfs/psp/alarms are "Daily at 7:55"
+(action=nightmode off, time=475) and "Daily at 23:00" (nightmode on,
+time=1380).
+What happened: the supervisor restarted the player child at 04:22:22.
+`ps -eo lstart` — ruffle_desktop pid 55418 started Thu Nov 5 04:22:22,
+chumby-supervisor pid 19803 and cage pid 19789 since 2026-11-03 23:18:28,
+systemd `NRestarts=0` for chumby-player; the panel's own startup writes
+agree (/tmp/controlpanelversion and /psp/hostname mtime 04:22:23.8). A
+fresh panel has night mode off, day brightness, and loads the channel's
+first widget: chumbypi-channel is Chumby Analog Clock (white), RoboClock,
+Space Clock, Lys (/tmp/widget_names) — the bright clock Jan saw. It stayed
+there until the 7:55 alarm: `WARN tiny_skia::painter: path stroking failed`
+runs at 4320 lines/minute (72/s) from 07:47 to 07:55:00, then stops.
+Why the supervisor restarted is NOT established and cannot be recovered.
+supervisor/src/policy.rs:119-132 has three triggers — Clock (step >15 s),
+Network (NM connectivity back to full after a drop), ChumbyCom (off here:
+access_chumby_com = 0 in /etc/chumby-player/player.toml). The reason is
+logged (supervisor/src/main.rs:221-228) but journald on this box is
+volatile (/var/log/journal empty, `--list-boots` retains only the current
+boot from 07:47:58) and the 16.6 MB of stroking warnings rotated the night
+away. A crash-restart (policy.rs Backoff) would look the same from the
+outside; systemd-coredump is not installed, so there is no core either.
+Circumstantial only: chumby-pi-3 is on wifi (wlan0, eth0 unavailable) and
+its brcmfmac logged SDIO drops on other nights (dmesg: 2026-10-30 01:32 and
+06:18, 2026-11-01 11:21) — a blip returning to `full` is exactly the
+Network trigger, but nothing ties one to 04:22.
+Follow-ups offered and declined for now (Jan, 2026-11-05): defer a
+triggered restart while night mode or a widget's night claim is active;
+land on Lys after a restart (channel order, or a rust-remote re-jump to the
+claimant); silence or rate-limit the tiny-skia stroking warning and make
+journald persistent, so the next occurrence is diagnosable.
