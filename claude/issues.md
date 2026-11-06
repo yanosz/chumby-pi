@@ -364,7 +364,7 @@ expensive to re-find and independent of the modelling:
 Number: 33
 Timestamp: 2026-11-06, 09:30
 Title: Housekeeping — fewer documents, so the project is easier to understand.
-Status: in progress — steps 1 and 2 done
+Status: closed 2026-11-06 — all four steps done
 Description: Jan's ask: reduce the complexity of understanding this project.
 Candidates he named: closed issues, loose ends, short tests, ditched features.
 Decisions (interview, 2026-11-06):
@@ -381,9 +381,10 @@ Decisions (interview, 2026-11-06):
   R-number.
 - Adjudicated: close #21 and #31, keep #22 open as the unknown cause with its
   probe list, compress #18 and #23 to pointers.
-- A dangling pointer in the frozen `claude-docs/development.md:815` is fixed
-  rather than left (Jan): it named the deleted fork plan, and now names
-  `render/tiny_skia/`.
+- A dangling pointer in the frozen `claude-docs` is fixed rather than left
+  (Jan): `development.md:815` named the deleted fork plan and now names
+  `render/tiny_skia/`. `design.md`'s distribution paragraph got the same
+  treatment for `docs/index.adoc` once the sweep found it.
 
 Step 1 — whole files (chumby-pi baefaeb, fork 4bc40bd89, rust-remote 67685f2
 and 297367a). 1012 lines of documents went in the first round, 843 of them in
@@ -403,9 +404,22 @@ push to main, and every live reference — `docs/setup.md:82,84`,
 never at the root. The site root will 404 after the next push; `/apt` is
 untouched.
 
-Step 2 — this file. The settled issues became the register at the end; #22 and
-#23 were compressed in place; #1, #2, #7, #8, #29 and #32 are unchanged.
-2117 lines before, with 62 % of them settled.
+Step 2 — this file (30b1d43). 2117 lines → 508: the twenty settled issues
+became the register at the end, #22 and #23 were compressed in place, and #1,
+#2, #7, #8, #29 and #32 are unchanged — checked byte-identical against
+baefaeb rather than assumed.
+
+Step 3 — the fork's `claude/issues.md` (fork a77e42692, its issue 32):
+896 lines → 443, same treatment, with 1, 2, 4, 5, 6 and 8 verified unchanged.
+`ruffle/claude/` is now the register plus `patch-surface.md`.
+
+Step 4 — this record, the gitlink bump, and a sweep for pointers into
+deleted files: one was left, `claude-docs/design.md`'s docs-site paragraph,
+fixed as above. `git grep` over both repos finds no other.
+
+What the pass removed, in lines of document: 2019 here, 1418 in the fork, 610
+in rust-remote — 4047 deleted against 351 written, and twelve files gone.
+Nothing was pushed; main, chumby and the two release branches are untouched.
 
 ---
 

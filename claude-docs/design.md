@@ -255,10 +255,11 @@ unit would not — the unit's `PAMName=login` session is what makes
 (`https://yanosz.github.io/chumby-pi/apt`, sources line
 `deb [signed-by=…] …/apt ./` — under `/apt`, not the site root, so the
 root never breaks configured sources lines; Pages serves one artifact per
-repo, so the whole site is assembled in the `apt-repo` job). Since
-2026-07-13 the root is the **asciidoctor-rendered docs site**: source
-`docs/index.adoc` (content hand-written by Jan), rendered by the same job;
-`pkg/apt/index.html` (the apt install instructions) moved under `/apt/`.
+repo, so the whole site is assembled in the `apt-repo` job). From
+2026-07-13 the root was an asciidoctor-rendered docs site, source
+`docs/index.adoc`; it never got content and both it and its render step were
+deleted in the 2026-11-06 housekeeping (issue 33), so the root is now unused.
+`pkg/apt/index.html` (the apt install instructions) lives under `/apt/`.
 The `apt-repo` CI job runs on push to main after the install test:
 `apt-ftparchive` over the built deb, `InRelease`/`Release.gpg` signed with
 the dedicated ed25519 key (fingerprint
