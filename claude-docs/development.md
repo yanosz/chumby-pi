@@ -812,7 +812,7 @@ stage-native, not the naive 4×, fixed per-frame costs don't shrink.
 3B+, 480×320 SPI TFT, cage on pixman; panel started as the service does, CPU
 from `/proc` over a 15 s steady-state window, fps from cage's atomic commits
 measured outside that window because strace slows what it traces). The fork's
-CPU renderer (`--renderer tiny-skia`, fork `claude/tiny-skia-backend-plan.md`)
+CPU renderer (`--renderer tiny-skia`, fork `render/tiny_skia/`)
 rasterises into a pixmap and hands it to the compositor through shared memory,
 so no Vulkan is loaded at all:
 

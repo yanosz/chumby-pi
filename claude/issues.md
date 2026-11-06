@@ -1,7 +1,9 @@
-# Open issues
+# Issues
 
-One block per issue: Number, Timestamp, Title, Status, Description.
+One block per open issue: Number, Timestamp, Title, Status, Description.
 Appliance-side issues only; player issues live in ruffle/claude/issues.md.
+Settled issues are one line each in the register at the end — the full blocks
+are in git history, named there. Numbers are never reused.
 
 ---
 
@@ -52,400 +54,6 @@ daughtercard itself (unassessed).
 
 ---
 
-Number: 3
-Timestamp: 2026-07-17, 02:00 (updated 2026-07-17, 17:00)
-Title: Plymouth boot animation, replacing the dropped Ruffle boot-opening.
-Status: closed 2026-10-20 — good enough (Jan): the animation ships, the
-handoff gap and the alt_opening audio question are accepted as they are
-Description: The 0.9.1 attempt to reproduce real hardware's opening.swf via
-a sequential Ruffle run was dropped (design.md §5, "not worth the
-complexity") because the animation never exits itself and a kill-timeout
-approach has no good slot on a Pi 3B+. Plymouth's own model — run during
-boot, get told to quit by something else — matches the original hardware
-behavior (animation in parallel with boot, killed externally on
-completion) far better than a sequential player ever could. Frame data
-confirmed from /home/jan/chumby_backup: opening.swf is 320x240 @ 12fps, 132
-frames (~11s, FWS v6, plain octopus-logo/text-typing animation, held end
-frame) — matches development.md's timing notes exactly. alt_opening.swf
-(320x240 @ 12fps, 145 frames) has six separate audio streams per ffprobe
-and is out of scope for this pass (see audio note below). No new SWF
-decoder was needed: ruffle/exporter (this repo's own submodule, built for
-test fixtures) rasterizes opening.swf's 132 frames to PNG 1:1 via
-`--frames all` — verified locally, frame 060 and 131 visually confirmed as
-the chumby logo. Plymouth's script engine exposes `Plymouth.SetRefreshRate`
-(confirmed present in the installed libplymouth5/script.so, unused by any
-shipped theme but real), so the theme sets it to exactly 12 Hz — one
-callback tick per source frame, no time-based indexing or modulo frame-skip
-math needed (supersedes the earlier "~50Hz tick, hold ~4 ticks" guess from
-the initial investigation).
-
-Built (this session, audio dropped from scope per Jan):
-- pkg/chumby-player/plymouth-theme-chumby/chumby.plymouth + chumby.script —
-  loads frames/frame-0.png..frame-131.png (not shipped), SetRefreshRate(12).
-- pkg/chumby-player/chumby-download-firmware — opening.swf added to
-  FIRMWARE_FILES (saved to $STATE like intro.swf); new install_boot_theme()
-  runs the bundled ruffle-exporter, renames its zero-padded output to
-  frame-N.png, and sudos the frames + `plymouth-set-default-theme chumby`
-  into place (the one privileged step — decided over chat: the downloader
-  sudos internally rather than splitting into a second root-only tool or
-  requiring the whole script run as root).
-- pkg/chumby-player/chumby-player-run — backgrounded, non-fatal `plymouth
-  quit` right before `exec cage` in --kiosk, replacing wait_for_opening's
-  external-kill role. This is a proxy for "cage is about to start," not a
-  true window-mapped signal — DRM handoff timing (does cage reliably get
-  DRM master right after plymouth releases it?) is unverified.
-- pkg/build-debs.sh + DEBIAN/control — cross-builds & bundles
-  ruffle-exporter alongside ruffle_desktop, installs the theme (script +
-  config only, no frames), adds `plymouth` to Depends. Full build verified
-  locally (dpkg-deb succeeds, contents checked with dpkg-deb -c).
-- Docs updated: design.md §5, development.md §3 (exporter cross-build),
-  requirements.md.
-
-On-device pass (2026-07-19, second test Pi 192.168.210.159 — plain
-Raspbian Lite trixie, HDMI 640x480 touchscreen WaveShare WS170120,
-reset button GPIO3+GND, bend button GPIO5+GND):
-- Step 0 suspicion CONFIRMED twice over: Lite ships without plymouth at
-  all (our Depends pulls it in), AND two more pieces were missing —
-  `splash` was absent from the kernel cmdline (Plymouth never draws
-  without it; Full has `quiet splash plymouth.ignore-serial-consoles`),
-  and the theme must be REBUILT INTO THE INITRAMFS (auto_initramfs=1;
-  apt's rebuild predates the frames, leaving only the text fallback in
-  early boot). Both fixes now automated in chumby-download-firmware:
-  plymouth-set-default-theme gained -R, and a new ask-first
-  enable_splash() appends the three cmdline args (backup kept).
-- Full downloader pipeline verified e2e ON DEVICE: real 30 MB fetch →
-  opening.swf extracted (NB: 1.7.3 image's copy is 31374 bytes vs
-  31297 in Jan's backup — 77-byte variance, same 132-frame structure,
-  count check passed) → ruffle-exporter rasterized 132 frames on the
-  Pi → sudo install → Theme=chumby active → initramfs carries all
-  frames after -u.
-- Same install repeated on the 5" DSI box 2026-08-24 (development.md §6,
-  third test box) with nothing left to fix by hand: 132 frames rasterized
-  on the Pi, theme activated (`/etc/plymouth/plymouthd.conf` →
-  `Theme=chumby`), both initramfs images rebuilt (v8 and 2712 —
-  `lsinitramfs` counts 132 frame files), and `enable_splash()` appended
-  `quiet splash plymouth.ignore-serial-consoles` (backup
-  `cmdline.txt.bak-chumby`). Watched the same day and it works: Jan
-  confirmed the animation on the DSI panel ("animation loads"), and the
-  handoff left no trace of trouble — `chumby-player` active 28.2 s into a
-  30.9 s boot, with no DRM, cage or plymouth complaint in the journal. The
-  animation runs ~11 s (132 frames at 12 fps), so Plymouth holds its end
-  frame until the launcher's `plymouth quit`; the proxy signal is early
-  enough in practice on this hardware. The initramfs hook's
-  `label-pango.so` warning does not apply — `chumby.script` uses only
-  Image/Sprite/SetRefreshRate, so `plymouth-themes` is not a missing
-  dependency.
-- BOOT ANIMATION CONFIRMED BY JAN AT THE SCREEN ("I saw plymouth
-  showing the chumby"). Touch confirmed too (he tapped through the
-  intro tour). Handoff-quality (black gap?), bend-button and
-  power-button presses still awaiting his observation.
-- TRAP found and hit: dtoverlay lines sed-inserted before `[all]`
-  landed inside the preceding `[pi5]` filter section and silently do
-  not load on non-Pi5 boxes — APPEND to config.txt instead. postinst
-  guidance now says so explicitly.
-- Power button: `dtoverlay=gpio-shutdown` (defaults = GPIO3,
-  active-low, pull-up — exactly the button-to-GND wiring). Wake needs
-  NO configuration: a halted Pi always wakes on a GPIO3 short
-  (firmware). postinst now prints this guidance when the overlay is
-  absent. Guidance only — the package never edits config.txt itself.
-- Bend button: ZERO NEW CODE. FR3's designed gpio-key path composes
-  with the fork's existing Home-key→tap_bend mapping:
-  `dtoverlay=gpio-key,gpio=5,keycode=102,label=chumby-bend` makes the
-  button a keyboard-class evdev device (name "button@5" — the label
-  param does NOT name the device), cage forwards KEY_HOME (verified in
-  the key-capability bitmap: 0x4000000000 in word 2 = bit 102) to the
-  player like any keyboard. Pin is per-device config: FR3 says GPIO17,
-  issue 2 proposes GPIO24/25, this box uses GPIO5 — docs should settle
-  on one recommendation eventually.
-
-- Bend press VERIFIED by Jan after one fix in the fork (dev 715a60f3c):
-  the panel polls _bent per frame (~83 ms) and a crisp GPIO tap is
-  shorter — level-only set_bent lost it ("sometimes does not fire,
-  sometimes takes seconds" = re-pressing until a poll caught one). The
-  Home-key handler now also latches tap_bend() on the press edge.
-  No kernel-side debounce/hold was involved (gpio-keys default 5 ms).
-- Power button RESOLVED (2026-07-19, later the same day): the wired
-  chumby reset button never fired because the press never reached
-  GPIO3 (debugfs pin watch: level never left hi). A direct short of Pi
-  pins 5–6 shuts down and wakes cleanly — the whole software chain is
-  good. Root cause was on the chumby side: the reset switch's
-  chumbilical pair is physical 5↔6, not the guessed pins — found via
-  the mainboard schematic ("reset switch on DC / reset pulls up",
-  sheet 2) plus Jan's continuity measurement, which also exposed a
-  one-row misread in the recorded pin table. Full corrected table
-  (provenance-tagged, refined against pstrick2's 2019 forum survey —
-  numbering convention comes from that post, not a board marking) and
-  the P33VBKUP-role question: hardware-ideas branch, commit 7a1f3ef
-  (hardware/chumby-hat/accelerometer.md §3). Wiring: chumbilical 5 →
-  Pi GPIO3, chumbilical 6 → Pi GND; stock gpio-shutdown, wake
-  included — the mainboard's active-high biasing was its own affair.
-
-Still outstanding:
-- Jan's at-screen observation of handoff quality (black gap?)
-  (asked 2026-07-19).
-- The original test Pi (192.168.42.51, SPI TFT ILI9486): does the DRM
-  handoff behave with the SPI panel, where plymouth's drm renderer and
-  cage contend for a much slower device? Untested — box offline.
-- No-firmware-downloaded case: a box that never runs the downloader
-  must still boot cleanly with no half-built theme (theme chrome ships
-  but is never activated — believed safe by construction, unverified).
-- pkg changes since the 0.9.1 deb build (postinst guidance, -R,
-  enable_splash) need a rebuild + re-test of the deb itself; the
-  on-device run used the 0.9.1 deb plus manual equivalents of the new
-  steps.
-
----
-
-Number: 4
-Timestamp: 2026-07-26, 19:45 (updated 2026-07-26, 22:40)
-Title: Find a display: 3.5", 4:3, real brightness control, and 12 fps.
-Status: closed 2026-10-20 — the 5" DSI panel is the answer (Jan): brightness
-works there (issue 5), 3.5" and 4:3 were given up with its 1024x600 (issue
-12). On SPI, criterion 4 was never met: every SPI clock above the overlay's
-nominal 24 MHz visibly corrupts the picture; the honest clean ceiling is 8.4
-fps, reached by pinning the core clock alone.
-Description: With the CPU renderer shipped (fork
-claude/tiny-skia-backend-plan.md; CHUMBY_RENDERER=tiny-skia), the player is no
-longer what limits the panel: it draws the control panel using 37 % of one core
-and leaves ~90 % of that core idle, while the achieved rate stays ~6-7 fps. On
-the current ILI9486 SPI TFT the *display* is the ceiling, so choosing a panel is
-now the same decision as choosing a frame rate. Four criteria, all required:
-
-1. **3.5"** — the enclosure and the original device's size (design.md §8).
-2. **4:3** — the control panel and every widget were authored for 320x240.
-   Note that the usual Pi 3.5" panels are 480x320, which is 3:2, not 4:3; the
-   Waveshare 3.5" HDMI LCD (E) already on the second box is 640x480 and *is*
-   4:3.
-3. **Brightness control in hardware** — FR16 ships and is inert without it.
-   The current clone ties its backlight rail to 3.3 V; on the (E) every
-   software path was probed dead (no kernel backlight, vendor USB command
-   accepted but ignored, no DDC/CI — design.md §8), leaving its PWM solder pad.
-4. **12 fps** — the movie's own rate, and what the original hardware did.
-
-Why this looked like a purchase: one 480x320 RGB565 frame is 307 200 bytes,
-i.e. ~2.46 Mbit, so at the overlay's original `speed=24000000` the link caps at
-~9.8 fps before any overhead — below the movie's rate however good the player
-gets. That framing was right about the arithmetic and wrong about the premise:
-`speed=` is a free variable, and the panel tolerated being asked for more (see
-"The SPI clock was simply set too low" below). For reference, the same
-arithmetic on other geometries: 320x240 needs 153 600 bytes/frame, 640x480
-needs 614 400.
-
-Measured 2026-07-26, 21:40-21:50 (first test Pi, 3B+, ILI9486 SPI TFT, 0.9.1
-deb, CHUMBY_RENDERER=tiny-skia; fps as cage's DRM_IOCTL_MODE_ATOMIC commits
-over 8 s under strace, development.md §6's method — strace overhead is in every
-number, so the ratios are the finding, not the absolutes):
-
-**The panel was never running at 24 MHz.** No `core_freq` was pinned, and the
-SPI baud divisor derives from the core clock, which the firmware scales down
-when the SoC is idle: `vcgencmd measure_clock core` sampled 400, 287.5, 268.75,
-250, 268.75 MHz over five seconds at idle, while the kernel clock tree reports
-`vpu` at a flat 400 MHz (what the driver divides from). Shipping the CPU
-renderer made the box idle, and the idle box clocked its own display link down
-— part of the measured ~6-7 fps was self-inflicted.
-
-| condition | core | ARM | commits/8 s | fps |
-|---|---|---|---|---|
-| stock, idle (`ondemand`) | 250-400, scaling | 1100 MHz | 52-53 | ~6.5 |
-| stock + 2 busy cores | 400 MHz | — | 67 | ~8.4 |
-| stock + `performance` governor | 400 MHz | 1400 MHz | 67 | ~8.4 |
-| **`core_freq_min=400` + `ondemand`** | **400 MHz** | 1400 MHz | **67-68** | **~8.5** |
-| `core_freq_min=400` + `powersave` | 400 MHz | 600 MHz | 66 | ~8.25 |
-
-**+29 % for one config.txt line, and the cause is isolated.** The last row is
-the control: forcing the ARM cores 2.3x slower (1400 -> 600 MHz) costs ~2 %, so
-the gain is SPI baud, not the ili9486 driver's CPU-side XRGB8888->RGB565
-conversion. Applied to the box as `core_freq_min=400`, appended inside `[all]`
-(backup `/boot/firmware/config.txt.bak-corefreq`); after the change, 47.8 C,
-`get_throttled` 0x0, box 88 % idle. Not packaged — whether this becomes postinst
-guidance like the other config.txt lines is open.
-
-The numbers fit the divisor model, though this is INFERENCE and was not checked
-against spi-bcm2835's source: an even CDIV of 18 gives 400/18 = 22.2 MHz
-(ceiling 9.0 fps, measured ~8.5) pinned, and ~280/18 = 15.6 MHz (ceiling 6.3,
-measured ~6.5) at the pre-pin sampled average.
-
-**The SPI clock was simply set too low** (measured 2026-07-26, 22:10-22:40,
-same box and method, `core_freq_min=400` throughout, one reboot per step):
-
-| `speed=` | implied effective SPI | predicted ceiling | commits/8 s | fps |
-|---|---|---|---|---|
-| 24 MHz | 22.2 MHz (CDIV 18) | 9.0 fps | 67-68 | ~8.5 |
-| 32 MHz | 28.6 MHz (CDIV 14) | 11.6 fps | 85-86 | ~10.7 |
-| **40 MHz** | **40 MHz (CDIV 10)** | 16.3 fps | **95-96** | **12.0** |
-
-At 40 MHz the frame counter reads **exactly the movie's 12 fps** — 144 commits
-over a 12 s window — at 49 % of one core, 120 MB RSS, 48.9 C, `get_throttled`
-0x0 and no SPI or DRM errors in `dmesg` at any step.
-
-**And it was measuring a corrupted picture.** Jan at the screen, 2026-07-26:
-
-| `speed=` | core | effective SPI | fps | picture on the glass |
-|---|---|---|---|---|
-| 24 MHz | unpinned, 250-400 | ~14-22, wandering | 6.5 | clean |
-| **24 MHz** | **pinned 400** | **22.2 constant** | **8.4** | **clean — shippable** |
-| 32 MHz | pinned 400 | 28.6 | 10.6 | artifacts |
-| 40 MHz | pinned 400 | 40 | 12.0 | artifacts |
-
-The artifacts read as "super-high contrast, with a small bright border around
-every symbol", "anti-aliasing going mad". They appear at 28.6 MHz and above and
-vanish below, with the renderer held constant — so they are the SPI bus, not
-tiny-skia. Note what this means for instrumentation: `dmesg` was clean at every
-step, the atomic-commit counter was honest, and both were counting frames that
-arrived at the panel damaged. Neither can see this class of fault, and neither
-can `grim`, which captures the compositor's buffer rather than the glass. Only
-eyes on the screen closed this.
-
-**The clean win is the core-clock pin by itself.** `speed=24000000` with
-`core_freq_min=400` holds a constant 22.2 MHz — not an overclock at all, since
-it is *below* the 24 MHz the overlay has always requested and merely stops the
-rate sagging to ~14 whenever the SoC idles. 6.5 -> 8.4 fps, verified clean at
-the screen, one config.txt line, no hardware change. That is the configuration
-to ship, and whether it becomes postinst guidance alongside the other
-config.txt lines is the open packaging question.
-
-**What it changes.** Criterion 4 is unreachable on this panel: the ILI9486
-clone does not tolerate a faster bus, and 8.4 fps is its honest clean ceiling
-against the movie's 12. Bandwidth is therefore still the reason to buy — but
-for a panel with *fewer pixels*, not a faster link. 320x240 is half this
-panel's bytes per frame, so it clears 12 fps at the same safe 22 MHz this one
-tops out at. That makes the QVGA candidate class below the strongest option on
-throughput as well as on aspect and fidelity.
-
-Cheapest experiments first, before buying anything:
-- DONE, and they closed criterion 4 negatively. Pinning the core clock is worth
-  +29 % and is clean; every `speed=` above nominal is fast and corrupt. See the
-  measurement blocks above.
-- Measure the (E) at 640x480 with tiny-skia on the second box (192.168.210.159,
-  offline on 2026-07-26). It is the only 4:3 3.5" panel here, HDMI so no SPI
-  bandwidth limit, and §6 measured ~11-12 fps on it with the *old* renderer;
-  with the CPU renderer it should clear 12 fps with headroom. If it does, the
-  whole question reduces to brightness — i.e. to the PWM solder-pad mod.
-- Only then survey panels, now against 4:3 and brightness rather than all four.
-  design.md §8's existing candidates (Adafruit PiTFT Plus 3.5" 2441, Waveshare
-  3.5" (C)) were chosen for dimming and driver support and are both 480x320
-  3:2. DPI panels stay out: they consume the GPIO header, killing SPI and the
-  bend button.
-
-The class not yet considered, and the best fit on paper: a **3.5" 320x240
-(QVGA) SPI TFT**. It is exactly 4:3 and exactly the content's pixel grid, so
-the movie maps 1:1 with no scaling; it is period-correct, since the original
-chumby's screen was 3.5" QVGA; it halves the bytes per frame, putting 12 fps
-well inside budget even at 24 MHz; and ILI9341-class controllers have mainline
-`drm/tiny` drivers, so the DRM+cage stack of design.md §5/§6 carries over the
-way piscreen does — which is the part that took the most effort to get right.
-Brightness then reduces to whether the module breaks its backlight LED pin out
-separately instead of tying it to 3.3 V, which is usually readable from the
-pinout. UNVERIFIED and the reason this is an idea and not a recommendation:
-whether such a part is actually purchasable today. 3.5" is overwhelmingly sold
-as 480x320, and most 320x240 modules are 2.4"/2.8"; no specific part has been
-identified, priced, or checked for a mainline-supported controller.
-
-Decision to make: keep 4:3 and accept the (E) plus a soldering mod, take a 3:2
-panel with clean dimming and letterbox the 4:3 content, or find a 3.5" QVGA
-panel and get aspect, fidelity and bandwidth in one part.
-
----
-
-Number: 5
-Timestamp: 2026-08-20, 22:05
-Title: Implement backlight brightness on the 5" DSI box.
-Status: closed — brightness confirmed working 2026-08-24; the udev rule
-verified on a plain install
-Description: The 5" Waveshare DSI LCD (C) (1024x600, overlay
-`dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC` appended after `[all]`) on
-the new 3B+ exposes a real kernel backlight: `/sys/class/backlight/10-0045`,
-`max_brightness` 255. Writes are accepted with no I2C errors and Jan confirmed
-visible dimming at the screen (sweep 255 -> 10 -> 255, held 8 s at the bottom).
-This is the first display in the project with working brightness, so FR16 —
-player-ready since 2026-07-13 and blocked on hardware ever since
-(requirements.md §3, and issue 4's third criterion) — can be closed on a
-device.
-Already shipped, needs verifying end to end rather than building: the deb's
-`90-chumby-backlight.rules` (chgrp video + g+w on `brightness`, re-run from
-postinst), the fork's FR16 sliders, and the `settings-brightness` ui-policy
-rule that lifts by itself once a backlight exists. Unverified on this box:
-whether the pi user really gets write access through that rule (every write in
-this session went through sudo), whether the Settings button un-dims, and how
-the panel's slider range and night mode map onto 0-255.
-
-Closed 2026-08-24 on the reflashed box (development.md §6, third test box):
-Jan confirms brightness works. The write-access question is answered
-independently — after a bare `apt install chumby-player` and a reboot,
-`/sys/class/backlight/10-0045/brightness` is `root:video 0664` and `pi` can
-write it with no sudo, so the shipped `90-chumby-backlight.rules` does fire on
-a real install. `brightness_ctl` stays unset, so the player takes the
-auto-detect path and `10-0045` is the lone backlight it finds. FR16 is
-satisfied on hardware.
-
----
-
-Number: 6
-Timestamp: 2026-08-20, 22:45
-Title: CI shipped the player with Ruffle's mock clock (deterministic feature).
-Status: closed — CI split into two cargo invocations, guarded; verified on
-the DSI box 2026-08-24
-Description: `5c9b2dd` taught the workflow to cross-build the exporter the
-deb bundles, and did it in the same cargo invocation as the player:
-`cargo build -p ruffle_desktop -p exporter --profile dist --target ...`.
-`exporter/Cargo.toml` asks `ruffle_core` for `features = ["deterministic"]`,
-and cargo unifies features across packages built together, so
-`ruffle_desktop` linked a `ruffle_core` whose
-`locale::get_current_date_time()` is frozen at the test constant
-2001-02-03 04:05:06 (`core/src/locale.rs`, `MOCK_TIME`). Every `new Date()`
-in the panel returned that. Confirmed with
-`cargo tree -e features -p ruffle_desktop -i ruffle_core`: clean alone,
-`feature "deterministic"` present the moment `-p exporter` joins.
-Visible as the built-in clock reporting February with no digits (ruffle
-issue 3 — the frozen seconds make `BuiltinClock.update()` run exactly once,
-before the digit strips are class-linked, so all six park blank forever).
-The local cross-build in claude-docs/development.md §3 was always two
-separate commands, which is why this only ever appeared on a CI-built deb.
-Fix: the workflow builds the two binaries in separate invocations (costing
-a second `ruffle_core` build) and a preceding guard step fails the run if
-`ruffle_desktop` ever resolves `deterministic` again — the failure is
-otherwise silent, since a wrong clock is the only outward sign.
-`pkg/deploy-pi.sh` gained the missing exporter build as its own invocation
-too — it built only the player and then called `build-debs.sh`, which
-requires the exporter, so a clean tree could not deploy at all.
-
-Corrected 2026-08-20, 23:10 — the first pass here named only
-`deterministic`, which was the half of the leak that happened to be
-visible. `exporter/Cargo.toml` asks for `features = ["deterministic",
-"default_font"]` and cargo unified **both**. Full diff of the two
-resolutions (`cargo tree -e features -p ruffle_desktop [-p exporter]`,
-feature edges compared):
-
-| feature | reaches the player when merged | consequence |
-|---|---|---|
-| `deterministic` | yes | mock clock, 2001-02-03 04:05:06 |
-| `default_font` | yes | fallback font embedded in `ruffle_core` |
-
-`ruffle_core` is the only *shared* crate that changes; everything else the
-merged graph adds (`console`, `indicatif`, `rayon`, `portable-atomic`,
-`unit-prefix`, `crossbeam-utils`) is exporter's own subtree and is not
-linked into the player. The guard step now covers both names.
-
-`default_font` caused nothing. It crossed on the same bad invocation, but
-it has no symptom and no consequence, and an earlier revision of this entry
-was wrong to raise one: it claimed that dropping the leak *takes a fallback
-font away from the player*. It does not. Every build before `66cd1db` — so
-every release the project ever shipped — ran `cargo build -p ruffle_desktop`
-alone, with no exporter and therefore no `default_font`. The split restores
-that exact configuration. The only build that ever carried the feature is
-the broken one from 2026-08-20 18:06, which is not a baseline. Nothing about
-fonts or `Depends` is open; the guard covers the second name only so the
-leak cannot reopen unnoticed.
-
-Verified on a device 2026-08-24: the apt repo's `chumby-player_0.9.3` — built
-by CI run 32510824744 (main, 2026-08-21), whose "Guard against exporter's
-features reaching the player" step passed and whose player and exporter built
-in separate invocations — installed on a freshly bootstrapped 3B+ with the 5"
-DSI panel. Jan confirmed at the screen that the built-in clock loads correctly:
-no February 2001, all digit strips drawn. Nothing left open here.
-
----
-
 Number: 7
 Timestamp: 2026-08-22, 23:45
 Title: A Pi reboot orphans the chumby's gadget link.
@@ -484,703 +92,26 @@ reproduces it. chumby.com itself is currently answering (232 bytes,
 
 ---
 
-Number: 9
-Timestamp: 2026-08-23, 00:15
-Title: Direct stream entries in /psp/url_streams need mimetype="audio/mpeg".
-Status: fixed 2026-08-23 — SWR3 plays
-Description: The standalone "SWR3" entry in `/psp/url_streams` carried
-`mimetype="audio/x-mpegurl"` — the *playlist* type — while its `url` pointed
-straight at an MP3 stream, so the player fetched it expecting an m3u and got
-raw MP3 frames. Nothing played. The URL was never wrong: it is byte-identical
-to the one in `/psp/list.m3u`, and the chumby pulled 1.52 MB from it in six
-seconds over plain HTTP (no TLS, no redirect — an earlier theory that the 2006
-player could not reach a modern endpoint was wrong).
-
-The rule: `audio/mpeg` for a direct stream, `audio/x-mpegurl` only when the
-`url` really is a playlist. Every working station on the list (1live, wdr-2,
-wdr-3, wdr-5, NRK P3 Jazz, Radio Norge) uses `audio/mpeg`; the sole correct
-`x-mpegurl` entry is "Birds + SWR3", which points at `file:////psp/list.m3u`.
-The broken entry looks copy-pasted from that one with the mimetype left
-behind — which is also why the playlist version played while the direct one
-did not, a confusing pair of symptoms worth remembering when adding stations.
-
-Fix: one attribute. Backup kept at `/psp/url_streams.bak-swr3`; `/psp` is
-jffs2, so it persists.
-
----
-
-Number: 10
-Timestamp: 2026-08-24, 13:40
-Title: Playlist entries in an m3u must be absolute chumby paths, not relative.
-Status: fixed 2026-08-24 — birds.mp3 plays on the Pi
-Description: The "Birds + SWR3" stream entry (`mimetype="audio/x-mpegurl"`,
-issue 9) points at a local playlist. The panel — not the host — fetches and
-parses that m3u and hands the host ONE chosen entry: `pgrep -a mpv` showed
-mpv launched straight with the SWR3 URL, so a first line reading `birds.mp3`
-had been discarded silently. Rewriting that line as the chumby's own absolute
-form `/psp/birds.mp3` makes it play, birds first, then SWR3.
-
-So relative entries are dropped and absolute chumby paths survive; the host's
-`resolve_url` (fork `core/src/chumby/audio.rs`) then maps the leading `/`
-through the virtual rootfs to
-`/var/lib/chumby/fixtures/rootfs/psp/birds.mp3`. A real chumby's `list.m3u`
-therefore needs no editing to work on the Pi — copy it verbatim, and copy the
-media it names into the same fixtures `psp/` directory.
-
-Ruled out on the way: mpv's unsafe-playlist filter. `mpv --load-unsafe-playlists`
-changes nothing here, and mpv given the playlist directly resolves and plays
-the relative entry fine — the filtering is the panel's, above the host.
-
----
-
-Number: 11
-Timestamp: 2026-08-24, 13:45
-Title: The Tagesschau widget's video source is gone (502, not our stack).
-Status: closed — external; widget deleted from the box 2026-08-24
-Description: The widget (5.4 KB, fetched from chumby.com's guide, GUID
-5D9DAB9E-D7E3-11DF-9EC6-0021288E6F90) hardcodes a single endpoint played
-through `NetStream`: `http://welttheorie.de/tagesschau.flv` — a fan-made
-widget pointing at a private server. The domain still resolves (IPv6 only,
-2a00:17d8:100:1::1361) and the Pi reaches it, but the server answers 502 for
-that file and for its root, so pressing "Wiedergabe" has nothing to play.
-Untested, and now moot: whether our player decodes FLV video through
-`NetStream` at all, and what that would cost on a 3B+.
-
----
-
-Number: 12
-Timestamp: 2026-08-24, 13:50
-Title: Black bars around a widget on the 1024x600 DSI panel — accepted.
-Status: closed — Jan chose to leave the scaling alone (2026-08-24)
-Description: On the 5" DSI box, RoboClock reads as framed in black on all
-four sides. Two independent causes, measured rather than guessed:
-- The widget's own artwork. Rasterizing frame 0 with the shipped
-  `ruffle-exporter` gives 15 px of black at the top and 14 px at the bottom
-  of its 320x240 stage; the content band is 211 px tall. All four widgets
-  fetched this session are exactly 320x240, the panel's native stage, so
-  nothing is being letterboxed *into* the widget area.
-- Our fit. 320x240 on 1024x600 under the default show-all scales 2.5x to
-  800x600, leaving 112 px black to the left and right.
-
-Options put to Jan: (A) `--scale no-border --force-scale`, which fills the
-screen but crops 26 stage px off the top and bottom of *everything* — the
-control-panel bar and clock edges included; (B) a fractional zoom lever in
-the fork, tunable to crop just the ~15 px, which `StageScaleMode` cannot
-express and would therefore be player work; (C) leave it. **Jan chose C.**
-4:3 content on this panel letterboxes somewhere regardless; a 4:3 display
-(issue 4) would remove the side bars but never the widget's own artwork.
-
-
----
-
-Number: 13
-Timestamp: 2026-08-28, 12:30
-Title: A "Birds + SWR3" alarm went silent about 100 s in and stayed silent.
-Status: won't fix 2026-11-03 (Jan): the guard is removed from the player, stock
-behaviour kept — "this exists on the chumby, too. We do not need to deviate",
-and "the guard didn't work" (fork issue 10); the removal ships in 0.9.10. Was: closed 2026-09-24 — fixed and
-device-verified (fork issue 10, `alarm_guard.rs`); the verbose `RUST_LOG` on
-chumby-pi-3 is reverted. What remains is the configuration workaround: keep
-the nightmode alarm out of a wake alarm's ring window.
-Cause (2026-09-01): the 08:00 nightmode alarm cancels the still-ringing 07:59
-alarm through the panel's own `stopAlarmsExcept`.
-Description: Jan set a one-shot alarm on the "Birds + SWR3" My Streams entry
-(the m3u of device issue 10) for 07:59 and left it to ring. The birds played,
-SWR3 took over, and after roughly a minute and a quarter the sound stopped.
-He did not snooze and did not dismiss — he wanted the radio. Nothing played
-again until he started the same entry by hand at 08:09:35, which worked
-normally. Box: chumby-pi-3 (192.168.42.24), 0.9.4, wlan0.
-
-No player log exists for it. `chumby-player-run:229` defaults `RUST_LOG=warn`
-and every trace that would settle this is at info, so the unit's journal holds
-four systemd lines for the whole boot.
-
-What the box does record, from rtkit's RT-thread grants — each new pid that
-gets an RT audio thread is one mpv spawn:
-
-    07:59:01  pid 2129        alarm rings, birds.mp3 (30.07 s, measured)
-    07:59:33  pid 2148  +32 s SWR3 takes over
-    08:00:48  pid 2168  +75 s
-    08:00:53  pid 2186  +5 s
-      (8 m 42 s with no mpv at all)
-    08:09:35  pid 2208        Jan's manual replay: birds.mp3
-    08:10:07  pid 2227  +32 s   and SWR3
-
-**This evidence has a hole that matters:** an mpv that spawns but never opens
-an audio device asks rtkit for nothing and leaves no line here. There may have
-been further mpv processes in the silent stretch that this timeline cannot
-show.
-
-Read against the panel, the first four fit exactly. `/psp/list.m3u` ends with
-a newline, so `M3U` (F2:15009, which pushes every line whose first character
-is not `#`) yields **three** tracks — birds, SWR3, and an empty string. birds
-ends at 30 s and is correctly treated as finished; SWR3 ends at 75 s, likewise;
-the empty third track is spawned at 08:00:48, dies at once, and
-`DirectURLPlayer.doStepTrack` (F2:15579) removes it under THRESHOLD = 5000 ms
-and wraps the list — so 08:00:53 is birds starting over. The trailing newline
-is the trap already recorded in fork issue 5; here it costs one dead spawn and
-about five seconds, and is **not** why SWR3 stopped (without it the list would
-have wrapped to birds anyway).
-
-Two questions remain, and they are separate:
-
-1. **Why did mpv exit 75 s into SWR3?** Not the panel's 2 s liveness gate:
-   `poll_state` (fork `core/src/chumby/audio.rs:165`) reports Stopped only
-   once the mpv *process* has exited, so a slow start reads as PLAYING here.
-   Not the network either — no wpa_supplicant, dhcp, carrier or resolver event
-   anywhere between 07:30 and 08:30. And not the stream: replayed from the
-   same box at 12:15 with `--ao=null`, it ran the full 150 s asked of it with
-   ICY titles updating, exiting only on our own `--length`. Our own spawn
-   (`audio.rs:82`) sets no length, cache or timeout. The exit status is logged
-   at info (`audio.rs:170`) and was therefore discarded.
-
-2. **Why did nothing play for the next 8 m 42 s,** on an alarm with
-   `duration="15"` and no dismissal? Leading hypothesis, unverified: birds
-   replayed to its end at ~08:01:23, the panel advanced to SWR3 again, and
-   that mpv stayed alive without ever producing audio — which our `poll_state`
-   reports as PLAYING for as long as the process lives, so the panel's track
-   supervision never fires and the alarm sits silent with the panel believing
-   it is playing. That shape matches an eight-minute silence, and it would be
-   ours, not the panel's. It also explains the missing rtkit line. Nothing
-   confirms it yet.
-
-Armed 2026-08-28 for the next occurrence: `RUST_LOG` set as an active line in
-`/etc/default/chumby-player` (previous file kept at
-`/etc/default/chumby-player.bak-preverbose`) to
-`warn,chumby_host=info,chumby_audio=info,avm_trace=info`, and the box upgraded
-to 0.9.5 and restarted. That captures `mpv pid=… url=…`, `mpv exited: …`,
-`doStepTrack(): track ended at N secs`, `track dead, removing` and
-`setTracks(): got N tracks` — between them enough to answer both questions.
-Journald is at its defaults here (≈5.9 GB cap on a 59 G card, 2.9 MB used), so
-the volume is safe; revert the line once this is closed.
-
-Not fixed, deliberately: the trailing newline in `/psp/list.m3u`. It is a
-one-byte change on a live box and would move the evidence under our feet
-before the next ring is captured.
-
-Update 2026-08-28, 18:30 — a control run, and the experiment it sets up.
-
-With `RUST_LOG` raised and 0.9.5 installed, the identical alarm was armed for
-18:10, deliberately far from the three enabled daily alarms (00:00, 08:00,
-23:00). Every field but time and name was copied from the failing one — same
-stream param, `duration="15"`, `snooze="5"`, `auto_dismiss="1"`,
-`action="nightmode"`. It ran clean:
-
-    18:10:00  playAsAlarm(): <stream url="/psp/list.m3u" … name="Birds + SWR3"/>
-    18:10:00  TrackedPlayer.setTracks(): got 3 tracks
-    18:10:00  mpv pid=3684 url="/psp/birds.mp3" vol=0 loops=1
-    18:10:01  WARN IPC socket not ready — volume control limited to spawn-time
-    18:10:01  IPC socket connected late
-    18:10:31  mpv exited: exit status: 0
-    18:10:31  doStepTrack(): track ended at 30.835 secs
-    18:10:31  mpv pid=3714 url="http://liveradio.swr.de/…/play.mp3" vol=44
-
-SWR3 then played unbroken from 18:10:31 until the service was stopped by hand
-at 18:16:56 — 6 min 25 s, no `doStepTrack` intervention, no track death, no
-`stopAlarmsExcept`. **Away from 08:00 this alarm does not fail**, which is the
-first hard evidence that the morning's failure is not intrinsic to playing
-this stream as an alarm.
-
-Confirmed on the device, no longer inferred: `setTracks(): got 3 tracks` —
-the trailing newline in `/psp/list.m3u` really does yield the phantom empty
-third track.
-
-Eliminated since the first pass:
-- **The station.** Jan restarted the same entry by hand minutes after the
-  failure and SWR3 played on. Same URL, same box, same build.
-- **The periodic alarm reload.** `AlarmSet.step` (F2:12030) reloads
-  `/psp/alarms` on a timer and calls `stopAlarmsExcept(undefined)` first,
-  which would stop every ringing alarm — but the interval is
-  `_root.alarmReloadInterval * ONE_MINUTE` **or `ONE_YEAR` when the FlashVar
-  is absent** (F2:11784), and our launcher passes only `-PlocalCache=1`. Inert
-  for us.
-
-Leading hypothesis, Jan's: **the 08:00 nightmode alarm stopped it.**
-`Alarm.ringAlarm` (F2:11182) opens with `_alarmSet.stopAlarmsExcept(this)`,
-and `stopAlarmsExcept` (F2:12039) calls `stopAlarm(true)` on every *other*
-ringing alarm. `"Daily at 8:00"` (`time="480"`, daily, enabled, `type="none"`,
-`action="nightmode" action_param="off"`) would do exactly that to an alarm
-still ringing from 07:59 — two alarms one minute apart. Unexplained detail,
-recorded rather than argued away: `Alarm.step` (F2:10910) rings only when
-`now - alarmTime` is within `RING_WINDOW = 15000` ms (F2:10186) and
-`AlarmSet.step` takes a fresh `new Date()` every frame, so that alarm fired
-between 08:00:00 and 08:00:15 or not at all — while SWR3's mpv was still alive
-until ~08:00:47. The ~32 s gap is close to birds.mp3's length (30.07 s), which
-may mean the spawn-to-track mapping is off by one somewhere. Not resolved.
-
-Armed for 2026-08-29 07:59: the same one-shot alarm, with `"Daily at 8:00"`
-still enabled, so the two ring a minute apart exactly as they did. The panel
-traces `AlarmSet.stopAlarmsExcept(): cancelling <alarm>` (F2:12049) whenever
-that path fires, so the outcome is binary — either that line appears at ~08:00
-and settles it, or mpv's own exit status is captured at the moment of death.
-
-Box state left behind on chumby-pi-3: 0.9.5, `RUST_LOG` active in
-`/etc/default/chumby-player`, the 07:59 alarm armed, `/psp/alarms` backed up
-at `/psp/alarms.bak-20260828`, `/psp/list.m3u` still carrying its trailing
-newline on purpose.
-
-Update 2026-08-29, 16:00 — session closed, retry moved to Monday
-2026-08-31. Jan deleted the 07:59 test alarm before it could ring, so the
-experiment did not run; the entry is gone from `/psp/alarms` (not merely
-disabled) and Monday needs a fresh one. Its exact XML is preserved in the
-backup `/psp/alarms.bak-20260828` and in the first block of this issue.
-
-One measurement did come out of the morning, from a run where the test alarm
-was not armed at all:
-
-    Aug 29 08:00:00.065  avm_trace: Alarm.step(): ringing Daily at 8:00
-
-The nightmode alarm fires within 65 ms of 08:00:00, on the device, exactly as
-`RING_WINDOW` (F2:10186) predicts. **This strains the leading hypothesis
-rather than supporting it.** `stopAlarm(true)` → `stopAlarmSoundContinuous`
-→ `MusicPlayer.stopMusic(false)` reaches our `stop()` with no delay, so had
-`stopAlarmsExcept` killed the 07:59 alarm on 2026-08-28 it would have died at
-08:00:00, not at ~08:00:47. The 47 s is now measured to be unexplained, not
-merely assumed to be. The hypothesis is not dead — nothing else found so far
-stops a ringing alarm from outside — but it no longer accounts for the
-timeline on its own.
-
-To resume on Monday:
-1. Re-arm the alarm for 07:59 with `"Daily at 8:00"` left enabled. `time` for
-   a `when="once"` alarm is **minutes since the Unix epoch, local time**
-   (verified: 29798279 = 2026-08-28 07:59 CEST); copy every other attribute
-   from the block at the head of this issue. The panel reads `/psp/alarms`
-   only at start, so restart `chumby-player` after writing it.
-2. Confirm it is scheduled: the log prints
-   `Alarm heartbeat <name> rings in N seconds, at:<time>` for each alarm.
-3. After the ring, pull `journalctl --since "<date> 07:55:00"` and grep for
-   `chumby_audio`, `setTracks`, `doStepTrack`, `stopAlarmsExcept`,
-   `Alarm.step(): ringing`. Expect `got 3 tracks` — the phantom empty track
-   is normal here and is not the failure.
-4. Note journalctl on this box rejects relative timestamps ("today",
-   "-1 min"); use absolute ones, and query without `-u chumby-player`, since
-   the player's lines carry the `chumby-player-run` identifier.
-
-Left armed on chumby-pi-3 for Monday: 0.9.5, `RUST_LOG` active in
-`/etc/default/chumby-player`, `/psp/list.m3u` still ending in a newline on
-purpose. Revert the `RUST_LOG` line once this issue closes.
-
-Also seen and deliberately not pursued, worth its own issue later: the alarm
-fade spawns mpv at `vol=0` and ramps over IPC, and on 2026-08-28 the socket
-was not ready at spawn ("IPC socket not ready", then "connected late" 160 ms
-after). It won the race that time. It is the same race behind the 2026-07-06
-"alarm fade-in muted forever" note in `audio.rs:228`, and losing it means a
-silent alarm.
-
-Update 2026-09-01, 09:15 — **reproduced and fully traced. Jan's hypothesis
-was right.** The alarm rang again at 07:59 and went silent as the 8 o'clock
-news started; this time the box was still on 0.9.5 with `RUST_LOG` raised and
-the player process running unbroken since 2026-08-28 18:17:20, so the whole
-morning is in the journal. The decisive lines, verbatim:
-
-    07:59:00.063  Alarm.step(): ringing Sep 01 2026,  7:59
-    07:59:00.077  DirectURLPlayer.playAsAlarm(): <stream url="/psp/list.m3u" …/>
-    07:59:00.091  TrackedPlayer.setTracks(): got 3 tracks
-    07:59:00.094  mpv pid=9282 url="/psp/birds.mp3" vol=0 loops=1
-    07:59:31.686  mpv exited: exit status: 0
-    07:59:31.686  doStepTrack(): track ended at 30.69 secs
-    07:59:31.689  mpv pid=9300 url="http://liveradio.swr.de/…/play.mp3" vol=44
-    08:00:00.083  Alarm.step(): ringing Daily at 8:00
-    08:00:00.084  Alarm.ringAlarm() Daily at 8:00
-    08:00:00.085  AlarmSet.stopAlarmsExcept(): cancelling Sep 01 2026,  7:59
-    08:00:00.086  Alarm.stopAlarm() Sep 01 2026,  7:59 isCancel:true
-    08:00:00.087  Alarm.stopAlarmSoundContinuous(): Sep 01 2026,  7:59
-    08:00:00.087  MusicPlayer.stopMusic() → doStopTrack → mpv killed
-    08:00:00.108  Alarm.restoreSoundSettings(): restoring volume:16 mute:false
-
-The chain is entirely the panel's own, and it is faithful to the original
-firmware: `Alarm.ringAlarm` (F2:11182) opens with
-`_alarmSet.stopAlarmsExcept(this)`, and `stopAlarmsExcept` (F2:12039) calls
-`stopAlarm(true)` on every *other* ringing alarm. `"Daily at 8:00"` is
-`type="none" arg="None" action="nightmode" action_param="off"
-auto_dismiss="1" enabled="1" time="480"` — a **silent** alarm whose only job
-is to leave night mode. It makes no sound of its own (its ringAlarm branch is
-autoDismiss + TYPE_NONE → `doPreAction` → `stopAlarm`, F2:11184-11191), yet it
-still runs `stopAlarmsExcept` first and so kills the audio alarm that has been
-ringing since 07:59. Two alarms one minute apart, and the silent one wins.
-
-Latency measured, no longer inferred: the cancel lands **85 ms** after
-08:00:00.000, exactly as `RING_WINDOW` (F2:10186) predicts.
-
-**Both open questions from the previous blocks dissolve.**
-
-1. *Why did mpv exit 75 s into SWR3?* It did not exit — it was killed, at
-   08:00:00.087, by our own `stop()` under `doStopTrack`. The 2026-08-28
-   "+75 s" was reconstructed from rtkit RT-thread grants, and that
-   reconstruction's own recorded hole (an mpv that never opens an audio device
-   leaves no line) is what made it look like a 47 s discrepancy. Nothing was
-   wrong with the exit.
-2. *Why did nothing play for the next 8 m 42 s?* Because the alarm had been
-   cancelled and nothing was supposed to play. There is no stuck-but-silent
-   mpv and no missed track supervision; the leading hypothesis recorded on
-   2026-08-28 (a live mpv that our `poll_state` reports as PLAYING forever) is
-   **refuted** — it never happened.
-
-Also settled, and both exonerated:
-
-- **The stream and the 8 o'clock news are innocent.** After Jan restarted the
-  entry by hand, SWR3 played unbroken from 08:00:51 to 08:17:15 — 16 min 24 s
-  straight through the entire news bulletin, no `doStepTrack` intervention, no
-  track death, ending only when he stopped it.
-- **The 08:00:19 "replay" is Jan's own.** `_bent() -> 1` at 08:00:14
-  (`BendTapper.onBend`), the control panel opens, Music, and at 08:00:19
-  `MusicPlayer.resume(): resuming from <stream …Birds + SWR3/>`. Nothing
-  restarted itself.
-
-Side finding, same trace, worth knowing: the cancel runs
-`Alarm.restoreSoundSettings()`, which puts the system volume back to its
-pre-alarm value — 44 → 16 here. So the manual resume at 08:00:19 played at
-volume 16 while the alarm had been at 44, which is why a restart after a
-cancelled alarm sounds quiet.
-
-The full consumer list for `stopAlarmsExcept`, since any remedy touches it:
-
-| site | caller | argument | reachable on our stack |
-|------|--------|----------|------------------------|
-| F2:11182 | `Alarm.ringAlarm` | `this` | **yes — this is the path that bites** |
-| F2:12033 | `AlarmSet.step`, periodic reload | `undefined` | no — the interval is `ONE_YEAR` without the `alarmReloadInterval` FlashVar (F2:11784) and our launcher passes only `-PlocalCache=1` |
-| F2:12238 | `AlarmSet.gotEvent("reload")` | `undefined` | fed by `ExtendedEvents.AlarmPlayer` (F2:12182); we drive no such event |
-| F2:12244 | `AlarmSet.gotEvent("load")` | `undefined` | same |
-
-Options for a remedy, none chosen (Jan's call):
-
-- **A — configuration only, no code.** Move `"Daily at 8:00"` out of the way
-  (before the wake alarm, or after its `duration="20"` window ends at 08:19),
-  or disable it. Zero risk, faithful, but the owner has to remember the
-  collision every time a wake alarm is set near a nightmode alarm.
-- **B — fork fix: a silent alarm must not cancel a sounding one.** Prototype
-  surgery on `AlarmSet.stopAlarmsExcept` (or on the `ringAlarm` call site) so
-  an alarm whose `_type == Alarm.TYPE_NONE` (F2:10170) skips the cancel. The
-  guard exists to keep two *sounding* alarms from overlapping; an alarm that
-  makes no sound has nothing to protect. Same class of one-shot VM surgery as
-  `empty_channel.rs` and `intro.rs`, and it is a deliberate deviation from
-  stock behaviour around alarms, so it needs saying out loud in the docs.
-- **C — leave it.** It is what a real chumby did.
-
-Box state unchanged by this session: chumby-pi-3, 0.9.5, `RUST_LOG` still
-active in `/etc/default/chumby-player`, `/psp/list.m3u` still ending in a
-newline (`setTracks(): got 3 tracks` again today — the phantom empty track is
-present and is *not* implicated in the failure). Nothing was written to the
-device. Revert the `RUST_LOG` line once a remedy is settled.
-
-Update 2026-09-01, 09:55 — remedy CHOSEN (option B), fix deferred to the next
-session for a clean context. Handoff:
-
-**The fix.** One-shot AVM prototype surgery, same pattern as
-`empty_channel.rs`/`intro.rs`. Recommended hook site: **`Alarm.ringAlarm`**
-(F2:11178). Wrap it so that when `this._type == Alarm.TYPE_NONE` (F2:10170,
-value `"none"`) it does **not** run the opening `_alarmSet.stopAlarmsExcept(this)`
-(F2:11182) — a silent nightmode/none alarm then does its night-mode side
-effect without silencing a sounding alarm. Keep every other effect of the
-TYPE_NONE branch intact (autoDismiss → doPreAction → stopAlarm,
-F2:11184-11191); only that one cancel line is skipped. This site is preferred
-over guarding `stopAlarmsExcept` itself because the canceller's identity is
-not passed to it (`anAlarm` is the survivor), and because `ringAlarm`/F2:11182
-is the single reachable caller — the other three `stopAlarmsExcept` callers
-(F2:12033, 12238, 12244) pass `undefined` and are unreachable on our stack
-(`ExtendedEvents.AlarmPlayer` drives none of them, and the periodic reload's
-interval is ONE_YEAR without the `alarmReloadInterval` FlashVar).
-
-**Where it goes.** New file in the fork under `core/src/chumby/` (e.g.
-`alarm_guard.rs`), wired in `mod.rs`, one-shot retry until frame 2 defines
-`Alarm.prototype.ringAlarm` — mirror `empty_channel.rs`. Before coding, grep
-every consumer of `ringAlarm`, `stopAlarmsExcept` and `TYPE_NONE` and list
-them with a verdict (CLAUDE.md consumer-list rule). It is a deliberate
-deviation from stock alarm behaviour, so record it in the fork's
-requirements.md (amendment near FR13) and design.md (the alarm chain / §9),
-per the docs-split rules.
-
-**Verify.** Desktop first: two alarms one minute apart — the later
-`type="none" action="nightmode"`, the earlier an audio stream — the audio must
-survive the silent alarm's ring. Then on chumby-pi-3, the real 07:59+08:00
-pairing this issue reproduced. Success signal: **no** `AlarmSet.stopAlarmsExcept():
-cancelling` at ~08:00 while the audio alarm keeps its mpv alive.
-
-**Recorded, not part of this fix:** the cancel also runs `restoreSoundSettings()`
-(volume 44→16 on 2026-09-01), so a manual resume after any cancel plays quiet.
-Moot once the cancel no longer fires for a silent alarm.
-
-Box left for the next session: chumby-pi-3 (192.168.42.24), 0.9.5, verbose
-`RUST_LOG` active in `/etc/default/chumby-player`
-(backup `.bak-preverbose`), `/psp/list.m3u` still ends in a newline. When the
-fix lands and is verified on the device, revert the `RUST_LOG` line and close
-this issue.
-
-Update 2026-09-01, 11:10 — option B built and verified on the desktop; the
-device run is what remains.
-
-Jan confirmed option B this session. The fix is fork commit 75f3acf28,
-`core/src/chumby/alarm_guard.rs`: a one-shot wrapper on
-`AlarmSet.prototype.stopAlarmsExcept` (F2:12039) that returns without
-cancelling when the argument's `_type` is `Alarm.TYPE_NONE` (F2:10170), and
-delegates to the parked original otherwise. Full rationale, consumer list and
-evidence are in the fork's `claude/issues.md` #10 — the player record, not
-repeated here.
-
-Two decisions differ from the 09:55 handoff, both deliberate:
-
-- **Hook site.** The handoff recommended wrapping `Alarm.ringAlarm` because
-  "the canceller's identity is not passed to `stopAlarmsExcept`". That is
-  wrong: at F2:11182 the argument is `this`, the ringing alarm, so canceller
-  and survivor are the same object on the only reachable path. Wrapping
-  `stopAlarmsExcept` is stateless; wrapping `ringAlarm` would require either
-  reimplementing its 50-line body or shadowing `stopAlarmsExcept` with a
-  no-op and restoring it, where a missed restore disables cancelling for every
-  alarm. Jan chose the `stopAlarmsExcept` site.
-- **Where it is documented.** The handoff said to amend the fork's
-  `requirements.md` (FR13) and `design.md` (§9). Those live in
-  `claude-docs/`, which fork commit 85d3447bc froze: *"claude-docs/ is the
-  frozen historical record. Live notes go in claude/."* The deviation is
-  recorded in the fork's `claude/issues.md` #10 instead.
-
-Desktop verification, same binary with the guard compiled out and in, two
-`when="once"` alarms a minute apart — earlier `type="beep" auto_dismiss="0"`,
-later `type="none" action="nightmode" auto_dismiss="1"`, the shape of the
-device failure. Guard off reproduced it off-device for the first time
-(`stopAlarmsExcept(): cancelling`, `isCancel:true`, `restoreSoundSettings():
-volume:60`); guard on shows none of those, the surviving alarm is never
-mentioned again after it rings, and the silent alarm still does its own work
-(`night mode off`, widget mode, `post_alarm_action` probes, `saveAlarms`).
-
-Still to do, and the reason this issue stays open:
-1. Build and deploy to chumby-pi-3 (192.168.42.24), gitlink bumped to
-   75f3acf28 on this repo's dev.
-2. Re-run the real pairing: a `when="once"` audio alarm at 07:59 with
-   `"Daily at 8:00"` enabled. Success signal: `silent alarm "Daily at 8:00"
-   rang — not cancelling ringing alarms` at 08:00, **no**
-   `stopAlarmsExcept(): cancelling`, and mpv still alive afterwards.
-3. Then revert the `RUST_LOG` line in `/etc/default/chumby-player` (backup at
-   `.bak-preverbose`) and close this issue.
-
-Box state, read off chumby-pi-3 on 2026-09-10, 19:58 (192.168.42.24, wired):
-`chumby-player` 0.9.5, so the fix is still undeployed; unit enabled and
-running since 2026-09-09 19:15 with `ruffle_desktop` at 82 % of a core;
-`/etc/default/chumby-player` (Aug 28 12:23) still carries the verbose
-`RUST_LOG`, backup `.bak-preverbose` beside it; `card0-DSI-1: connected`,
-backlight `10-0045` at 4/255.
-
-Update 2026-09-24, 20:04 — device verification of the guard, chumby-pi-3,
-0.9.8 (fork `5f585c1bd`, which carries `75f3acf28`). The running player
-logged `wrapped AlarmSet.prototype.stopAlarmsExcept` at start. Two
-one-shot alarms were added to a backed-up `/psp/alarms`, the pairing of
-this issue: "Guard test audio" on the Birds + SWR3 entry at 20:01
-(`auto_dismiss="1"`, `duration="3"`) and "Guard test silent" at 20:02
-(`type="none" action="nightmode" action_param="off" auto_dismiss="1"`).
-Journal:
-
-    20:01:00.050  Alarm.step(): ringing Sep 24 2026, 20:01
-    20:01:00.079  mpv pid=3500 url="/psp/birds.mp3" vol=0
-    20:01:31.979  mpv pid=3541 url="http://liveradio.swr.de/…/play.mp3" vol=50
-    20:02:00.121  Alarm.step(): ringing Sep 24 2026, 20:02
-    20:02:00.122  silent alarm "Guard test silent" rang — not cancelling ringing alarms
-    20:02:00.123  Alarm.doPrePostAction(): night mode off
-    20:04:00.148  Alarm.stopAlarmSoundContinuous(): Sep 24 2026, 20:01   (its duration)
-    20:04:00.171  Alarm.stopAlarm() Sep 24 2026, 20:01 isCancel:
-
-No `stopAlarmsExcept(): cancelling`; SWR3's mpv 3541 was alive 41 s after
-the silent alarm and until the audio alarm's own end at 20:04:00; the
-silent alarm still did its night-mode action. Pass.
-
-Seen in the same trace, harmless: the silent alarm's `stopAlarm(false)`
-(F2:11190) decrements `AlarmSet._alarmRefCount` (F2:12060) that its branch
-never incremented (`AlarmSet.ringAlarm`, F2:12055, runs for sounding
-alarms only) — "count is 0" while the audio alarm still rang, and
-`ScreenManager.stopAlarm()` sets `ScreenManager.mode = "stopAlarm"`
-(F2:9084). Stock behaviour (stock would reach −1 after its cancel), and
-inert: `_alarmRefCount` is only written and traced (F2:11783,
-12057-12069), `ScreenManager.mode` is read nowhere in the decompile.
-
-`/psp/alarms` restored (`cmp` identical), panel restarted to reload it,
-backup removed.
-
-Update 2026-09-24, 20:17 — closed. `/etc/default/chumby-player` restored
-from `.bak-preverbose` (the two differed only in line 55; the backup is
-byte-identical to the 0.9.8 template), backup removed, service restarted
-(`Result=success`); the player now runs with `RUST_LOG=warn`, the
-launcher default. Why now (Jan asked whether the verbose log is a
-problem): not for stability — the journal is volatile and capped near
-18 MB (10 % of the 182 MB `/run`), journald rotates it and used 5 s CPU in
-1 h 40 min — but the panel's periodic trace (~30 lines, 4.4 KB/min) filled
-that cap in under a day, so rare events aged out before anyone looked.
-Steady state afterwards: 7 journal lines in 2 min, none from the player;
-the supervisor logs regardless of `RUST_LOG`.
-
----
-
-Number: 18
-Timestamp: 2026-09-10, 19:57
-Title: Sony Dash panel support — parked on the sony-dash branch.
-Status: stale since 2026-10-20 — out of scope for the foreseeable future (Jan); the branch stays as a reference
-Description: The Dash work is on branch `sony-dash`, tip `6f0439a` (pushed to
-origin), whose gitlink is the fork's `sony-dash` tip `0ea50a70b`. dev was
-rewound to `e7aa3ee` so the Pi appliance work continues without the Dash tree
-in the way. Everything Dash lives on that branch and nowhere else:
-`claude/sony-dash-panel-plan.md` (steps 1-4 with their records) and appliance
-issues 14-17 — package into `$STATE`, panel selection in the launcher and
-`/etc/default`, how a theme reaches the panel, docs/packaging/boot theme — so
-numbers 14-17 are reserved here and must not be reused on dev. Player side:
-fork issues 11-21 on the fork's `sony-dash` branch, with the fork's dev
-rewound to `75f3acf28` — its counterpart pointer is fork issue 22.
-Next there, gated by CHECKPOINT 5: step 5, themes for the user and panel
-selection (seeded `/psp/theme.swf`, the `/mnt/usb/externalthemes.xml` stick,
-`chumby-download-firmware` fetching panel and theme apart under `$STATE`, an
-explicit active setting naming panel and theme, docs and the Dash's
-`default_opening.swf` boot theme against Plymouth's classic 132 frames).
-Two step-4 findings want the DSI box before step 5: fork issue 20 (brightness
-via native 5,22 never reaches the backlight on platform `yume`) and fork issue
-21 (the silent-alarm cancel is probably unguarded on the Dash).
-Untracked and in git nowhere, left in the fork worktree:
-`ruffle/fixtures-dash/rootfs/psp/guid` and `.../theme.swf`.
-
-UPDATE 2026-10-10: resumed. `sony-dash` is rebased onto dev in both repos —
-the tips above are gone from the branch and kept as
-`sony-dash-before-rebase-20261010`; read the branch, not a hash. Fork issue 21
-is accepted as a known issue (Jan: it concerns the real chumby devices too)
-and no longer gates step 5; fork issue 20 is fixed in this run, then the Dash
-is deployed onto the DSI box with `pkg/deploy-pi.sh` for end-user testing.
-
-UPDATE 2026-10-20: stale. Jan: the Dash is not in scope for the foreseeable
-future. The implemented, box-run state (one panel per install chosen in
-`chumby-download-firmware`, the re-scoped issues 14-17, the fork's `sony-dash`
-with its issues 11-22, 28, 29) stays on the `sony-dash` branches of both repos
-for reference and is not merged. dev carries nothing of it — nothing to
-simplify here. Anyone resuming reads the branch, not this entry.
-
----
-
-Number: 19
-Timestamp: 2026-09-10, 21:45
-Title: 0.9.6 — the backlight cap on chumby-pi-3.
-Status: closed 2026-10-20 — 25 % accepted (Jan)
-Description: Fork issue 23 caps the backlight: `brightness_cap` in
-`player.toml`, shipped active at 25, so the panel's 0-100 spreads over a
-quarter of `max_brightness` instead of all of it. Appliance side: version
-0.9.6 (`build-debs.sh:21` — a conffile template change forces the bump),
-`docs/setup.md` §5 and design §8.
-Deployed to chumby-pi-3 (192.168.42.24) 2026-09-10 21:38 via
-`pkg/deploy-pi.sh`. The box's `player.toml` was unmodified, so dpkg took the
-new default outright — no `.dpkg-dist`, `brightness_cap = 25` active, the
-other four keys unchanged. Verified: `sense1/brightness` 65535 →
-`/sys/class/backlight/10-0045/brightness` **64** (= 25 % of 255), unit
-`NRestarts=0`, `ruffle_desktop` up.
-To let Jan find his level, both panel settings were put at the top of the new
-scale: `/psp/daymode_brightness` and `nightmode_brightness` = 100 (old day
-value 7.2222 kept as `daymode_brightness.bak-precap`; old night value was
-1.5). Night must come back down once he has picked — at 100 the idle dim
-does not dim.
-
----
-
-Number: 20
-Timestamp: 2026-09-10, 22:25
-Title: 0.9.7 — one volume ceiling on chumby-pi-3, no exemptions.
-Status: closed 2026-10-20 — 50 % accepted (Jan)
-Description: Fork issue 24: `volume_cap` shipped at 50 instead of 100, and the
-backup-alarm Klaxon brought under it (the FR13 exemption reversed). Appliance
-side: version 0.9.7 (`build-debs.sh:21`, forced by the conffile template
-change) and `docs/setup.md` §5.
-Deployed to chumby-pi-3 2026-09-10 22:20. The conffile carries
-`volume_cap = 50` and `brightness_cap = 25`, again with no `.dpkg-dist` —
-the box's copy still matched what 0.9.6 shipped.
-Everything below the slider was already at unity and stays untouched: ALSA
-`PCM` 100 % on both cards, PipeWire sinks `vol: 1.00`, the SWF mixer at the
-CLI default 1, `/psp/backup_alarm_volume` absent (knob default 100, now × 50).
-Set to the top of the new scale for Jan to dial in: `/psp/volume` 32 → 100,
-`/psp/alarm_volume` 44 → 100. Player restarted, unit active, backlight still
-64 of 255.
-The one thing this makes worse: the never-done on-device Klaxon loudness check
-now applies to a tone at half scale.
-
----
-
-Number: 21
-Timestamp: 2026-09-24, 10:15
-Title: After a cold boot the nightmode alarms never ring — the panel scheduled them against a clock 5½ days slow.
-Status: remedy built — the panel watchdog restarts the panel on a clock step > 15 s (`claude/watchdog-plan.md`, R9); desktop-verified end to end (3e); on chumby-pi-3 (0.9.8) verified 2026-09-24 by a simulated boot on a slow clock (NTP off, clock −3 days, panel restarted, NTP on): stranded alarms before, correct schedule after the supervisor's restart (plan, test 4). Player side: fork issue 25
-Description: Jan: chumby-pi-3 did not run the "Daily at 8:00" nightmode-off
-alarm after it was booted on Monday. Read off the box 2026-09-24 10:02
-(192.168.42.24, 0.9.7, verbose `RUST_LOG` from issue 13 still active):
-
-    (Alarm heartbeat Daily at 8:00 rings in -544945 seconds, at:Thu Sep 17 08:00:00 GMT+0200 2026)
-    (Alarm heartbeat Daily at 23:00 rings in -577345 seconds, at:Wed Sep 16 23:00:00 GMT+0200 2026)
-
-Both enabled daily alarms point at times days in the past, and have since
-boot. The cause is the wall clock at player start:
-
-- Boot (`btime` 1790028539) was 2026-09-22 00:08:59 CEST; `ruffle_desktop`
-  pid 1143 started 00:09:30.
-- systemd stamped the unit `active since Wed 2026-09-16 08:53:04` at monotonic
-  30.4 s — so 30 s after boot the clock read Sep 16 08:53, **5 d 15 h 16 min
-  behind**. The Pi has no RTC (`RTC time: n/a`), no fake-hwclock; timesyncd
-  restores the last saved time and steps it forward only once NTP answers.
-  A step, not a slew: timesyncd (pid 306; no ntpd or chrony installed)
-  slews only offsets below `NTP_MAX_ADJUST = 0.4` s and sets larger ones
-  with `ADJ_SETOFFSET` (systemd v257 `timesyncd-manager.c:52,247-272`), and
-  the kernel's 500 ppm slew limit would cover at most ~104 s over this
-  uptime, not 5 d 15 h.
-- `chumby-player.service` orders only `After=systemd-user-sessions.service
-  getty@tty1.service`; `time-sync.target` was never reached (monotonic 0)
-  and `systemd-time-wait-sync.service` is disabled.
-
-The panel computed each alarm's next time once, from Sep 16 08:53:
-`computeNextAlarmTimeDaily` (F2:10805) gives 23:00 → Sep 16 23:00 and
-08:00 → Sep 17 08:00, exactly the two times logged. `Alarm.step` (F2:10897)
-rings only while `now - _alarmTime` is within `RING_WINDOW = 15000` ms
-(F2:10186, test at F2:10910), and a new time is computed only after a ring.
-After the forward step every enabled alarm sits outside its window for good;
-nothing in the panel notices a clock step. The 23:00 nightmode-on alarm is
-dead for the same reason. Any enabled alarm — audio ones included — is
-affected after a boot with a stale clock, until the player restarts.
-
-Not related to issue 13 / fork `alarm_guard.rs`: no alarm reaches
-`ringAlarm`, so the guard never runs.
-
-Side finding, not pursued: the journal is volatile (files under
-`/run/log/journal`, `/var/log/journal` empty), 17 MB, and with the verbose
-`RUST_LOG` it reaches back only to 2026-09-23 15:22 — the boot and the NTP
-step are already rotated out. The issue-13 note of a ≈5.9 GB persistent cap
-does not describe this box as it is now.
-
-Remedy options, none chosen:
-- **A — appliance: start the player after the clock is set.** Order the unit
-  after `time-sync.target` with `systemd-time-wait-sync` enabled. That unit
-  is `TimeoutStartSec=infinity`, so offline the panel would never start; it
-  needs a bounded wait. Does not help a clock that is stepped later (network
-  arrives after the timeout).
-- **B — player: re-arm alarms on a wall-clock step.** Compare wall-clock
-  against monotonic time; on a step beyond a threshold, recompute every
-  enabled alarm's `_alarmTime`. Covers late syncs and manual clock changes
-  too. Fork work, consumer list first.
-- **C — both.**
-
----
-
 Number: 22
 Timestamp: 2026-09-24, 10:50
 Title: The panel showed WLAN as good while the WLAN was not usable.
-Status: cause still unknown; mitigated — NetworkManager's connectivity check is now on (a real reachability test, not a default-route guess) and the watchdog restarts the panel when connectivity returns, refreshing the Info screen's boot-time snapshot (`claude/watchdog-plan.md`, R3/R7/R8; verified on chumby-pi-3 2026-09-24)
-Description: Jan, 2026-09-24: roughly 1-2 weeks ago the panel's WLAN
-information looked good, but the WLAN could not be used. No log exists for
-it: the journal on chumby-pi-3 is volatile and reaches back only to
-2026-09-23 15:22 (issue 21, side finding). What the panel's WLAN display is
-able to show, from the code — player side in fork issue 26:
-
-- **Link quality** is signal strength, nothing more: `/proc/net/wireless`
-  `link` (0-70, cfg80211's signal + 110 dBm, clamped) rescaled to percent.
-  `connected="1"` means only "the default route is on a wireless interface
-  and `/proc/net/wireless` has a line for it". Association status,
-  gateway and DNS reachability are not consulted. Polled live: the dashboard
-  meter every 60 frames, the Info screen on each open.
-- **IP, netmask, gateway, DNS, SSID** on the Info screen are read once, in
-  the panel's boot chain, and never refreshed.
-
-So a strong signal with a dead link, or a network that changed after player
-start, both render as "good". Same family as issue 21: the panel samples the
-system once, or through a proxy, and does not notice it changing.
-
+Status: open — cause unknown; mitigated by NetworkManager's connectivity check
+(a real reachability test, not a default-route guess) plus the supervisor's
+panel restart when connectivity returns, which refreshes the Info screen's
+boot-time snapshot (`claude/watchdog-plan.md` R3/R7/R8, verified on
+chumby-pi-3 2026-09-24)
+Description: Jan, 2026-09-24: roughly 1-2 weeks earlier the panel's WLAN
+information looked good while the WLAN could not be used. No log survived —
+the journal on chumby-pi-3 is volatile. Why the display cannot tell the
+difference: link quality is signal strength and nothing more
+(`/proc/net/wireless` `link`, rescaled to percent), `connected="1"` means only
+that the default route is on a wireless interface, and IP, netmask, gateway,
+DNS and SSID are read once in the panel's boot chain and never refreshed.
+Player side: fork issue 26.
 Next time it happens, before anything is restarted: `ip addr`, `ip route`,
-`cat /proc/net/wireless`, `iw dev wlan0 link`, `ping` the gateway and a name,
-and `journalctl --since "<absolute time>"` while the lines still exist.
+`cat /proc/net/wireless`, `iw dev wlan0 link`, ping the gateway and a name,
+and `journalctl --since "<absolute time>"` while the lines still exist (this
+box rejects relative timestamps).
 
 ---
 
@@ -1188,285 +119,14 @@ Number: 23
 Timestamp: 2026-09-30, 01:52
 Title: Idea: rebuild the hardware chumby's control panel in Rust, without Flash.
 Status: parked — idea only, Jan: "do not work on this for the time being"
-Description: Target is the classic chumby (i.MX21, ARMv5TE, Linux 2.6.16),
-not the Pi appliance; filed here at Jan's choice. Nothing built or tested.
-
-- **Memory.** Today Flash with panel and yoga widget: RSS 23 MB, 4.4 MB free
-  (yoga-widget `PLAN.md:252`). A single-process Rust panel is *estimated*
-  at 3-6 MB RSS: 320x240 at 16 bpp is 150 KB a frame, and the resolution is
-  fixed, so the panel's 567 shapes, 29 bitmaps and 14 embedded fonts
-  (916 KB TTF) can be pre-rendered at build time, a subset of them.
-  chumby-rust-remote shows a static armv5te binary at 0 CPU idle. If Flash
-  stays for widgets, its memory stays too.
-- **Constraints on the toolkit.** No GPU, no X/Wayland; fb + touchscreen;
-  on 2.6.16 `Condvar` and contended `Mutex` waits return at once and spin
-  (`rust-remote/README.md`, "Build"), so a single-threaded event loop and
-  software rendering. The panel owns fb1, the overlay the i.MX21 LCDC lays
-  over fb0; `/proc/fb` on the device lists only `0 IMX` and `1 IMX`
-  (2026-09-30).
-- **Toolkit candidates.** Slint (recommended): MCU-oriented software
-  renderer, custom platform for fb1 + touch, declarative screens —
-  unverified: an `armv5te-unknown-linux-musleabi` build, and whether its
-  licence (GPL / royalty-free / commercial) fits. embedded-graphics plus an
-  own widget layer: tiny, all widgets hand-written. LVGL via bindings:
-  proven on weaker hardware, but C. egui (redraws every frame) and
-  GPU/thread-based toolkits (iced) do not fit.
-- **Size of the panel** (decompile
-  chumby-pi-internal/docs/reference/appendix/controlpanel-2.8.87b3):
-  `frame_2/DoAction.as` 30,624 lines, 356 `_global` classes, 155 distinct
-  `ASnative` calls, 21 `exec://` commands. Dead services drop out
-  (MP3tunes, CBS/NPR podcasts, NOAA, Internode, Sleepcast, Chumbcast, ads,
-  widget ratings, the chumby.com catalogue). The subset: alarm engine
-  (snooze, backup alarm, actions, night mode — the hardest part), clock,
-  night mode, music (streams, FM, USB MP3, Bluetooth — the native players
-  `btplay`, `mp3.x`, `chumbradio*` stay callable), settings (volume,
-  brightness, wifi, timezone, touch calibration), widget player. Rebuilding
-  the look from the sprites/shapes is its own job.
-- **Widgets decide the architecture.** Widgets are SWFs:
-  1. no widgets — a pure Rust clock radio;
-  2. hybrid — `chumbyflashplayer.x` stays with a stub master SWF that only
-     loads widgets into the slave and takes orders over XMLSocket (proven
-     by chumby-rust-remote); Rust draws the panel on fb1, the stub sets the
-     overlay alpha (`ASnative(5,110)`, panel `DoAction.as:1474`);
-  3. a native Rust widget system.
-  Suggested if it is ever taken up: the hybrid on Slint, first slice clock,
-  alarms, night mode and streams, alarm engine proven first.
+Description: Target is the classic chumby (i.MX21, ARMv5TE, Linux 2.6.16), not
+the Pi appliance. Nothing built or tested. The full scoping — the memory
+estimate against Flash's 23 MB RSS, the toolkit survey (Slint recommended, no
+GPU and no X, single-threaded because 2.6.16 spins on contended waits), the
+panel's size from the decompile, and the three widget architectures — was last
+present in baefaeb and stays in git history. Do not work on it until Jan says.
 
 ---
-
-Number: 24
-Timestamp: 2026-10-13, 14:58
-Title: Look-and-feel check: the chumby 8 control panel under Ruffle.
-Status: done — look-and-feel only, nothing built; Jan has seen enough
-Description: Jan was unhappy that the Dash looks so different from the
-classic and wanted to see the chumby 8 (silvermoon/opus) panel. It is 800x600,
-SWF v8, 12 fps: on the 1024x600 DSI it fits the height 1:1 with the same 112 px
-side bars as the scaled classic. Its look is flat and light, nearer the Dash
-than the classic. Download URLs:
-
-- Firmware 1.8 build 3883 (`metadata`: platform_name silvermoon, config_name
-  opus; built-in 2011 panel in `rfs.tar.gz` at `usr/widgets/controlpanel.swf`):
-  http://files.chumby.com/resources/chumby8/1-8-2/update.zip
-- Newest panel, 5.0.38b2 (2014), what the server hands out once the query
-  carries the platform (`download_cp` sends `cnplatform`/`configname`; `hw`
-  alone is ignored):
-  https://www.chumby.com/xml/controlpanel?id=00000000-0000-0000-0000-000000000000&hw=10.6&sw=1.8.2&fw=1.8.2&lang=en-us&cnplatform=silvermoon&configname=opus
-  → http://chumbyfiles.s3-website-us-west-2.amazonaws.com/controlpanels/opus-controlpanel-5.0.38b2.tar.gz
-  (md5 `6a0d1626ee0f1a453920d802f428469d`; holds `controlpanel.swf` and
-  `slideshow.swf`)
-
-How it ran (scratch only, no repo change): the fork's debug build against a
-copy of `fixtures-dash/`, `-Ptest=1`. The panel takes its desktop path because
-Ruffle's version string has no "FL" (`com/chumby/Chumby.as:131` in the 5.0.38b2
-decompile); that path reads `data/start_network.xml` next to the SWF and uses a
-hardcoded guid (`Chumby.as:73`), so a canned "eth0 up" file and an
-`http/www.chumby.com/xapis/device/authorize/<that guid>` fixture answering
-`<chumby id="…"><name>chumby</name></chumby>` reach My Streams.
-
----
-
-Number: 25
-Timestamp: 2026-10-20, 17:30
-Title: Housekeeping before ikea-lys — chumby-pi only.
-Status: closed 2026-10-20 — all four steps done
-Description: Jan's ask: the code base in good shape, YAGNI/KISS, before
-ikea-lys starts. Scope: this repo; the fork is a later option. Decisions
-(interview, 2026-10-20): `sony-dash` is stale and kept for reference (issue
-18); ROADMAP.md deleted — its content is in the frozen `claude-docs/` and the
-git log; the backup branches `release-0.9.8` (identical to origin/main),
-`dev-before-rebase-20260924` and `sony-dash-before-rebase-20261010` deleted,
-the last also on origin; `hardware-ideas` stays; the wifi note in
-`pi.nic/README.md` removed (key rotated); the data-deb compatibility paths
-in the launcher and postinst go; the CI `pull_request` triggers go.
-
-Steps:
-1. Branches and the stray files — done (b6c9c06, this entry's commit).
-2. Appliance artifacts — done: `ROADMAP.md`, `CLAUDE.old.md` deleted;
-   README "what works" and sharing note rewritten against the shipped
-   state; `docs/hardware.md` brought to display autodetect, tiny-skia and
-   the shipped `/etc/default` keys; `.cargo/config.toml` comment points at
-   development.md §3 instead of a removed cargo feature; watchdog plan
-   header says shipped; issues 1-2 name the real branch (`hardware-ideas`);
-   apt landing page names the downloader.
-3. Appliance code — done: the launcher resolves `controlpanel.swf`,
-   the alarm-tone link and the intro from `$STATE` only, postinst checks
-   that one path (consumers: launcher 56/169/182/273, postinst 27, a
-   `.gitignore` comment; none in the fork or the decompile); `ci.yml`
-   runs on push to main and dispatch only, the PR guards and the install
-   test's PR wording are gone; one broken line wrap in
-   `chumby-local-widgets`' help text (the downloader on dev has none).
-   Verified with the launcher against a staged tree, player and
-   supervisor stubbed: --check without, unreadable and readable SWF;
-   --seed; full run without intro, with intro, with `/psp/disable_intro`,
-   with an unreadable intro; links idempotent over four runs. The exec
-   lines are unchanged; CI's movie start covers them on the next push to
-   main.
-4. Issue adjudication (interview) — done: 3 closed (good enough), 4
-   closed (the DSI panel is the answer), 19 and 20 closed (values
-   accepted); `claude/chumby-vnc-plan.md` dropped (Jan: the idea lives in
-   git history, last present in 6867afb). Still open and
-   unchanged: 1-2 (hardware-ideas), 7-8 (pi.nic known behaviours), 14-18
-   (Dash, stale), 21-22 (mitigated, cause of 22 unknown), 23 (parked).
-   The fork pass followed the same day (fork issue 30: old rules file,
-   spike probes, chumby.yml PR trigger, README/mod.rs tables, the mpv
-   lookup and its test, fork issues 3, 7, 10, 23-27 closed, duplicate
-   branches); gitlink bumped to it.
-
-Number: 26
-Timestamp: 2026-10-28, 22:30
-Title: Local widget services on the Pi — the stick's debugchumby hook and the socket allow-list.
-Status: closed 2026-11-03 — superseded by issue 31: the hook emulation went in 0.9.10, whose device round on chumby-pi-3 is done (22:4x; Jan's end-user check pending)
-Description: The light widget (chumby-ikea-lys) talks XMLSocket to ikea-lys
-on 127.0.0.1:8091. On the Pi two things were missing (Jan, 2026-10-28):
-the player's socket mode defaults to "ask" (desktop player.rs:234), which
-a kiosk cannot answer, and nothing starts the service. Decisions (Jan): no
-package for the service — emulate the chumby's boot hook instead: rcS:320
-runs `/mnt/usb/debugchumby` before the panel. The launcher now runs
-`$USB_LINK/debugchumby` in the background as pi, with `CHUMBY_STATE`
-exported, when `/etc/default/chumby-player` sets `CHUMBY_USB_HOOK=1`
-(opt-in, in line with the intro.swf decision), and passes `--socket-allow
-127.0.0.1:8091`. The hook (rust-remote/debugchumby, a nested repo) is
-architecture-aware: on arm64 it starts `ikea-lys/ikea-lys.aarch64` beside
-it with the token at the fixtures' `/psp/ikea-lys/token`; on the chumby
-what it did. The tree lives in `/media/chumby-usb` as a plain directory
-(Jan: the mount point is a directory anyway; a real stick would hide it),
-laid out like the chumby's stick, written by chumby-ikea-lys's
-`widget/deploy/deploy-pi.sh`; the panel merges its profile.xml (design §3
-search order). Consumers of the launcher's exec line: chumby-player-run
-only; of debugchumby: the chumby's stick copy (behaviour unchanged there),
-rust-remote/README. chumby-pi-3: `/usr/bin/chumby-player-run` patched by
-hand (backup `.orig-0.9.8`), `CHUMBY_USB_HOOK=1` set; the next release
-carries it. Verified 2026-10-28 23:xx on chumby-pi-3: the hook starts
-ikea-lys (as pi, 2.5 MB RSS), the widget connects over the allowed
-socket and renders (after it learned to paint its own background: the
-widget layer under a loaded movie is black here, light on the chumby),
-X reaches the panel ("Short circuit" → nextWidget). Two findings for
-the record: the panel takes the FIRST profile.xml of its search order,
-so a tree in /media/chumby-usb with a profile.xml hides the fixtures'
-own (chumby-local-widgets' clocks) — the ikea-lys deploy script now
-merges them; and the panel's traces land in the logind session scope,
-`journalctl -u chumby-player` does not show them — use `journalctl`
-without the unit filter. grim installed on the card (dev tool). Open:
-the launcher change ships with the next release; the Pi runs the
-hand-patched 0.9.8 until then.
-Update 2026-11-01 (Jan: "Deploy current version of lys to chumby-pi";
-interview: rust-remote on aarch64): the launcher also passes
-`--socket-allow 127.0.0.1:8090` (chumby-rust-remote, the Lys widget's skin
-store; issue 29), and the hook starts `rust-remote/chumby-rust-remote.aarch64`
-with `CHUMBY_ROOT` = the fixtures' rootfs, and ikea-lys with
-`--favourites` at the fixtures' `/psp/ikea-lys/favourites.xml`
-(chumby-ikea-lys PLAN.md, "Favourites per device"). Consumers of the
-allow-list: this exec line only (`--socket-allow` is repeatable, fork
-desktop/src/cli.rs:166). The Pi's hand-patched launcher gets the same line:
-done 2026-11-01 15:33 on chumby-pi-3 (backup
-`/usr/bin/chumby-player-run.bak-20261101`; the player runs with both
-allows, rust-remote and ikea-lys started by the hook). Still 0.9.8 +
-hand patch until the next release.
-Jan's end-user test 2026-11-01, the current Lys on chumby-pi-3: "works
-fine on both devices".
-Update 2026-11-03 (Lys panel skin on the Pi, issues 27/28/30): the launcher
-exports `CHUMBY_CTL` (the control FIFO) to the stick hook, so
-chumby-rust-remote can hand the panel soft events, and runs the player with
-`--letterbox off --background-color 000000` (why: issue 28). chumby-pi-3's
-hand-patched launcher got the same two chunks (backup
-`/usr/bin/chumby-player-run.bak-20261103`; its 0.9.8 file also carries the
-retired-data-deb fallbacks dev no longer has, so dev's file was NOT copied
-over it), and the player binary was hot-replaced with the fork's dev build
-5451fe42c (dist, sha256 65e16773…; backup `ruffle_desktop.bak-20261103`).
-Jan chose no release this round (interview 2026-11-03): still 0.9.8 + hand
-patch; the next release ships launcher and binary together.
-Update 2026-11-03, release 0.9.9 (Jan's decisions): `--letterbox off
---background-color 000000` and both socket allows come only with
-`CHUMBY_USB_HOOK=1`, in the hook's block (`HOOK_ARGS`); a plain install
-keeps the letterbox and the socket prompt. Consumers of those exec-line
-pieces: the launcher (the only place they are passed); its conffile and
-docs/setup.md (reworded: the hook described generically, no private path);
-this record and #27, #28, #30 (history, unchanged); fork desktop/src/cli.rs
-:166, :186-192 and player.rs:327 (the flags, unchanged); chumby-ikea-lys
-PLAN.md, widget/README.md:45, deploy/deploy-pi.sh:8 and its pi/debugchumby
-(they assume the hook is on, which they require anyway); CI's install test
-runs the launcher without the hook, so it now covers the plain line only.
-chumby-pi-3 has `CHUMBY_USB_HOOK=1` (above), so it keeps all four flags.
-Verified on the PC: the deb `chumby-player_0.9.9_arm64.deb` (dist player,
-exporter, supervisor; launcher and conffile byte-equal to the tree); the
-real launcher against a staged tree in a headless cage with a host player
-behind an argument-logging wrapper — with `CHUMBY_USB_HOOK=1` the four
-flags reach the player and a scratch debugchumby ran with `CHUMBY_STATE`
-and `CHUMBY_CTL` set, without it none of them and no hook; both runs alive
-at 45 s, `_getPlatform` logged, no panic. The data-deb fallbacks are gone
-since 6867afb: a box seeded by the retired chumby-player-data keeps working
-only if /var/lib/chumby holds controlpanel.swf — to check on chumby-pi-3 in
-the device round, with the 0.9.9 install (`--force-confold`) and the
-removal of the hand-patch backups.
-
-Number: 27
-Timestamp: 2026-10-31, 12:40
-Title: Widget navigation on the Pi — the player has no soft-event hook, and no chumby-rust-remote runs on aarch64.
-Status: closed 2026-11-03 — the player has a soft-event path on the control FIFO, chumby-rust-remote uses it on the Pi; verified on chumby-pi-3
-Description: The widget-navigation drop-down (yoga-widget/PLAN.md "Open",
-"Navigation between widgets", 2026-10-31) jumps between widgets through
-chumby-rust-remote, which appends `WidgetPlayer setWidget <name>` to
-`/tmp/flashplayer.event` and sends SIGHUP to the player — the chumby
-firmware's soft-event hook (`/usr/chumby/scripts/signal_soft_event.sh`),
-which the panel receives through the native `ExtendedEvents` class
-(F2:5404, dispatched at F2:5417-5447; `nextWidget`, `prevWidget`,
-`reload`, `setChannel`, `setWidget`, `shuffle`). The fork implements none
-of it: no `flashplayer.event`, no SIGHUP handler, no `ExtendedEvents` in
-ruffle/ (grep over the Rust sources and the fork's docs, 2026-10-31), and
-`rust-remote/debugchumby` starts only ikea-lys on aarch64. So on the Pi
-the widgets' title does nothing (they hide the drop-down when port 8090
-does not answer), and "Nacht"/"Uhr" in the yoga widget do nothing there
-either. To close: (a) player work in ruffle/ — the event file + SIGHUP
-path or an equivalent host touchpoint that raises `ExtendedEvents`
-(consumer list: the panel's five commands above, NightMode, the
-IntercomPlayer script at F2:21844); (b) the hook starts a rust-remote
-built for aarch64 with the Pi's paths (`CHUMBY_ROOT`). Not scoped; Jan
-decides when.
-Update 2026-11-01: (b) done, for the skin store (issue 26's update). On the
-Pi rust-remote now answers on 8090, so the widgets' drop-down opens and
-lists the channel (the panel's `putFile("/tmp/widget_names")`, F2:3750,
-lands in the fixtures, fork core/src/chumby/fixture.rs:590), but a tap does
-nothing: `widget`, `night` and `screen` answer `error=event` (no pid file,
-no event hook) — no signal is sent. The yoga widget's "Nacht" shows on the
-Pi for the same reason, if yoga is deployed there. (a) stays open.
-Update 2026-11-03: (a) done in the fork (issue 31 there, commit 5451fe42c):
-`ExtendedEvents` exists for the panel's nine listener kinds, and the control
-FIFO takes `event KIND VALUE [COMMENT]`, delivered to the listeners once per
-frame; the FIFO is held open read-write (the reopen-after-EOF reader lost
-lines: 79 of 100 in a burst test on the PC, 100 of 100 after the fix).
-chumby-rust-remote (nested repo, 2ddafca) writes those lines to `CHUMBY_CTL`
-when the launcher exports it (issue 26), the event-file + SIGHUP path on the
-chumby unchanged. Verified on chumby-pi-3 2026-11-03 14:0x: `event NightMode
-on|off` over the FIFO flips the panel's nightmode file 0→1→0; through
-rust-remote `widget Lys` → ok=1 and the widget shows, `radio SWR3` → mpv with
-the stream, `/tmp/musicsource` written, `volume up` 16→21 in `/psp/volume`,
-`radio stop` → mpv gone and musicsource erased (the fork now really deletes
-it on `rm /tmp/musicsource`, which the exec manifest had faked). Backlight
-events reach `setDim` too, so the night screen's lease now works on the Pi
-(not watched on the display).
-
-Number: 28
-Timestamp: 2026-10-31, 14:10
-Title: The Pi's side bars — a host-drawn panel beside the 320x240 stage.
-Status: closed 2026-11-03 — superseded: the Lys widget draws into the margins itself
-Description: On the 1024x600 DSI box the panel scales 2.5x to 800x600 and
-leaves 112 px black left and right (issue "Black bars around a widget",
-closed: Jan keeps the scaling). Jan's idea (2026-10-31, while scoping the
-Lys widget's clock screen): use that space — a clock, status, light
-buttons — instead of leaving it black. That is player work in ruffle/:
-the panel's stage is 320x240 and a widget is loaded into a 320x240
-proxy, so anything beside it is drawn by the host (the fork), not by a
-widget. The Lys widget's own home screen (chumby-ikea-lys PLAN.md,
-"Clock screen") serves the Pi meanwhile. Not scoped; Jan decides when.
-Update 2026-11-03: no host-drawn panel. The player runs with `--letterbox
-off` (issue 26), so a widget may draw outside the 320x240 stage, and the Lys
-panel skin detects the display's aspect from `System.capabilities` and lays
-itself out 410 stage px wide (chumby-ikea-lys PLAN.md, "The panel skin at
-full width on the chumby-pi"); the other skins and every other widget stay
-320 wide. Without the letterbox the margins would show the panel's stage
-colour 0x333333, hence `--background-color 000000` (fork issue 31). The
-panel does not clip the widget proxy (checked in the fork's control panel on
-the PC); taps in the margins reach the widget.
 
 Number: 29
 Timestamp: 2026-10-31, 23:55
@@ -1483,455 +143,6 @@ knowledge of what a skin is). To do: shape the store that way (a
 widget-scoped key/value store on the XMLSocket interface, the skin one
 entry of it) and move the skin names out of the service. Not scoped;
 Jan decides when.
-
-Number: 30
-Timestamp: 2026-11-02, 22:40
-Title: The Lys panel skin on the Pi — deploy it, and adapt chumby-rust-remote so its radio plays there.
-Status: closed 2026-11-03 — Jan's end-user test on chumby-pi-3 passed
-Description: The Lys widget's fourth skin, "panel" (LCARS, the favourite
-scenes, AUS, and a radio: three "My Streams" stations, STOP, volume − / +),
-runs on the hardware chumby since 2026-11-02 (chumby-ikea-lys PLAN.md,
-"LCARS panel overlay" and journal). It is not deployed to chumby-pi-3
-(the Pi runs the Lys of 2026-11-01). Its radio goes through
-chumby-rust-remote (rust-remote/README.md: `radio`, `radio NAME`,
-`radio stop`, `volume up|down`), which hands it to the control panel's own
-player with soft events (`UserPlayer play`, `MusicPlayer stop|setVolume`);
-on the Pi those events fail with `error=event` — the player has no
-soft-event hook and writes no pid file (issue 27). The station mark reads
-the panel's `/tmp/musicsource` and the volume step `/psp/volume`, both
-under the fixtures' root on the Pi. To do: deploy the current Lys and
-rust-remote to the Pi (chumby-ikea-lys `widget/deploy/deploy-pi.sh`), and
-adapt chumby-rust-remote so the radio plays on the Pi. How is open: Jan
-descoped the Pi from the feature and withdrew the first idea (rust-remote
-starting its own mpv beside the player's) — "I think you got the
-architecture wrong". The player already plays streams through mpv
-(fork `core/src/chumby/fixture.rs:242`, `_playAudio`). Not scoped; Jan
-decides when.
-Update 2026-11-03: done. The fork's soft-event path and chumby-rust-remote's
-FIFO transport (issue 27), the launcher (issue 26), the widget at full width
-(issue 28) and the Lys deploy to chumby-pi-3 (`deploy-pi.sh`, 14:01: lys.swf
-90,141 bytes md5 9488f342…, ikea-lys b8cbe618…, rust-remote f119034d…; the
-services restarted by the hook with `CHUMBY_CTL`). The station mark now
-follows the player process (rust-remote `radio` reports a station only while
-mpv / btplayd lives), and the player passes mpv ffmpeg's reconnect options
-for http streams (fork issue 31) — both from the 2026-11-03 interview.
-Smoke-tested over the sockets (issue 27's list); the look on the display is
-Jan's round: passed 2026-11-03 ("test fine"). The Pi's sink was capped at
-30 % for the test and set back to 100 % afterwards, its value before the cap
-(the backup's WirePlumber state). Follow-up requirements (night screen:
-a button per favourite, a sleep timer in rust-remote, full width on the
-Pi) are noted in chumby-ikea-lys PLAN.md; the sleep timer is specified
-there since 2026-11-04 (Requirements, "Night mode: the scenes and a sleep
-timer": rust-remote gets `sleep N` / `sleep cancel` / `sleep`, `playing`
-and `sleep` in the status), not built.
-Update 2026-11-04 (evening): the sleep timer is built, not deployed; Jan's
-device round pending. chumby-rust-remote (its own repository in
-`rust-remote/`, README "Appendix: commands"): `sleep N` (5-240 min, N into
-the panel's `/psp/music_timer_duration`), `sleep cancel`, `sleep`
-(`duration=N&`, 15 when unset or below 5); every status gains `playing`
-and `sleep` (seconds left); the poll stops the music at the end
-(`MusicPlayer stop`) and clears a timer whose music has ended; `radio
-stop` clears it. Package 0.1.2 built (`pkg/build-deb.sh`), not published.
-The Lys widget's prompt and countdown line: chumby-ikea-lys PLAN.md,
-journal "The sleep timer built (2026-11-04)". PC only: `cargo test`, nc on
-a fake root (event file and control FIFO), the widget in the fork's
-release Ruffle against the real service.
-Update 2026-11-04, 21:53-22:01: published and deployed (Jan: "can you the
-publish and deploy?", both devices). chumby-ikea-lys 0.1.2 (lys.swf
-5f26c1c4…, 576,980 bytes) and chumby-rust-remote 0.1.2 (152,580 bytes)
-published to the LAN repo (fetch check: good signature, both 0.1.2, every
-file 200). chumby-pi-3: 0.1.1 → 0.1.2 both, from the repo, units active,
-`status` ends `playing=0&sleep=0`, `sleep` answers `duration=15`, sink
-0.80 untouched. The backup BEFORE the upgrade failed unnoticed (the tar's
-`-C /` after the paths, its stderr hidden: a 45-byte empty archive) — a
-backup of the chumby files was taken right AFTER it instead
-(~/chumby-pi-3-backup/chumby-backup-20261104-post-sleep-upgrade.tar.gz,
-136 entries, token and favourites inside); the pre-upgrade files are the
-0.1.1 debs, no longer local but in the 2026-11-03 backups' lineage, and
-the upgrade kept every conffile (--force-confold). The chumby (.83):
-backup first, ~/chumby-backup/20261104-2159-pre-sleep/ (chumby-rust-remote
-02bb6130…, debugchumby bef30ec8…, lys.swf c8c55274…, profile.xml
-5e459512…, alarms, favourites.xml); rust-remote's deploy.sh put the 0.1.2
-binary fdc3d31b… on the stick (debugchumby unchanged), the old service
-(pid 28051) killed, the new one (pid 17002) started with debugchumby's
-line — `sleep` there answers `duration=10`: the chumby already has a
-/psp/music_timer_duration of its own, the panel's; deploy-chumby.sh put
-lys.swf 5f26c1c4… and thumb.jpg on the stick, favourites kept, the panel
-restarted 22:00-22:01, widgets Space Clock, Lys, Yoga. Jan's end-user
-round pending on both.
-Stations four and five on the wide panel are the Pi's My Streams entries
-`Groove Salad` and `Def Con Radio`; a third favourite is a `favourites.xml`
-entry (Jan's). Backup before the deploy:
-`~/chumby-pi-3-backup/chumby-backup-20261103-pre-lys.tar.gz`. The chumby
-(hardware) has not been deployed: it needs the refactored widget and the
-new rust-remote (station mark); Jan decides when.
-
-Number: 31
-Timestamp: 2026-11-03, 21:40 (plan rewritten 22:30)
-Title: The widget services on the Pi become private debs with systemd units, from a private apt repo on the LAN; the public package drops the debugchumby hook emulation.
-Status: steps 1-3 done; step 4 built locally and its device round done on chumby-pi-3 (2026-11-03; Jan's end-user check pending); release-0.9.10 respun with the two fixes below (Jan), not pushed; step 0 answered — Jan's decisions 2026-11-03 (reverses issue 26's "no package for the service"); the public side ships in 0.9.10
-Description: Jan: chumby-rust-remote and ikea-lys run on the Pi as systemd
-units, enabled by default, shipped as two private debs from a private apt
-repo on the LAN's lighttpd (the container that serves the yoga videos;
-address, user and path in a private config, never in this public repo —
-the precedent is yoga-widget/PLAN.md, outside this repo). Not GitHub. The
-public chumby-player loses the hook emulation of issue 26 and gains plain
-switches for what the services' widgets need. The chumby keeps its stick
-and debugchumby; only the Pi changes. Public side: 0.9.10. Plan only;
-file:line from the trees of 2026-11-03.
-
-1. The private apt repo.
-   - A signed flat repo, the public recipe (ci.yml:166-184: apt-ftparchive
-     Packages + Release, gpg clearsign InRelease and Release.gpg), in a
-     directory `chumby-apt/` below the server's existing web root, so
-     lighttpd needs no change (URL: <web root URL>/chumby-apt/).
-   - Signing: a separate key, "chumby private archive", that Jan generates
-     and keeps; not the public chumby-archive key (pkg/apt/chumby-archive.gpg),
-     so a leak of either stays contained.
-   - Publish: `pkg/publish-private-apt.sh` here — generic, no address in it:
-     reads `~/.config/chumby-apt/private.env` (HOST, USER, DIR, KEY_ID;
-     Jan writes it), collects the newest deb of each private package from
-     the two repos' pkg/out/, builds and signs the index in a scratch dir,
-     rsyncs it as the web user (the yoga upload's way). A private script
-     elsewhere would also do; here it sits beside the public recipe it
-     mirrors.
-   - The Pi: a second sources entry
-     `/etc/apt/sources.list.d/chumby-private.list` (`deb
-     [signed-by=/usr/share/keyrings/chumby-private.gpg] <URL> ./`) and the
-     keyring, both by hand once (setup.md does not mention them: the
-     public docs know no private repo).
-2. Two private debs, each built where its source lives (both are outside
-   this git: rust-remote/ is ignored, .gitignore:37; ikea-lys is its own
-   repo): `pkg/` in rust-remote and in chumby-ikea-lys, after
-   pkg/build-debs.sh (cross-built binary checked, :25-32, installed,
-   :56-58) and pkg/deploy-pi.sh (always rebuilds, :17-29; installs with
-   `--force-confold`, :39).
-   - chumby-rust-remote: /usr/lib/chumby-rust-remote/chumby-rust-remote
-     (aarch64, rust-remote/README.md:210), unit, drop-in (3).
-   - chumby-ikea-lys: /usr/lib/chumby-ikea-lys/ikea-lys, unit, drop-in,
-     conffile `/etc/default/chumby-ikea-lys` with `LYS_HUB=` as an active
-     line. The living room's compiled-in hub (chumby-ikea-lys
-     src/main.rs:41) goes: `--hub` becomes required, ikea-lys refuses an
-     empty one with a message. Token and favourites move to
-     `/etc/chumby-ikea-lys/` (token root:pi 640, placed by the owner;
-     favourites.xml a conffile seeded from widget/deploy/favourites.xml):
-     today they sit in the fixtures' /psp (chumby-ikea-lys
-     deploy-pi.sh:14), which a re-seed deletes (chumby-player-run:128-135).
-   - Both `Depends: chumby-player (>= 0.9.10)` (the fixtures root, the
-     control FIFO, user pi, the drop-in directory). Versions of their own,
-     0.1.0 first, bumped per change in the repo's build script.
-3. Units and switches.
-   - System units, `User=pi`, `After=` and `PartOf=chumby-player.service`,
-     `WantedBy=multi-user.target`, `Restart=on-failure`, stderr to the
-     journal (no /tmp logs). Enabled by default: postinst daemon-reload,
-     enable, start (postinst:12-15 the pattern); prerm stop, disable
-     (prerm:4-5).
-   - chumby-rust-remote.service: `Environment=CHUMBY_ROOT=/var/lib/chumby/fixtures/rootfs`,
-     `CHUMBY_CTL=/tmp/chumby-ctl` (chumby-player-run:45). No PrivateTmp:
-     the panel's /tmp is /tmp/chumby-panel-tmp, mode 700, pi's
-     (chumby-player-run:154-159).
-   - chumby-ikea-lys.service: `EnvironmentFile=/etc/default/chumby-ikea-lys`,
-     `ExecStart=… --hub ${LYS_HUB} --token /etc/chumby-ikea-lys/token
-     --favourites /etc/chumby-ikea-lys/favourites.xml`,
-     `ConditionPathExists=` the token.
-   - The public side: the launcher's hook block and HOOK_ARGS
-     (chumby-player-run:275-295, used at :310) go. Two active lines in
-     /etc/default/chumby-player instead: `CHUMBY_SOCKET_ALLOW=""` (a list
-     of host:port, one `--socket-allow` each; empty = the player's prompt)
-     and `CHUMBY_LETTERBOX=on` (`off` lets a widget draw beside the 4:3
-     stage and brings `--background-color 000000`, issue 28). A private
-     package turns them on without touching that conffile: the launcher
-     sources `/etc/chumby-player/conf.d/*.conf` (sorted, root-owned, beside
-     player.toml) after it; each private deb ships one there as its own
-     conffile — rust-remote's `CHUMBY_SOCKET_ALLOW="$CHUMBY_SOCKET_ALLOW
-     127.0.0.1:8090"`, ikea-lys's the same for 8091 plus
-     `CHUMBY_LETTERBOX=off` (the Lys panel skin). Unset (an upgraded box
-     that kept its old conffile) means the player's own behaviour.
-   - Unchanged: the fork (the flags exist, desktop/src/cli.rs:166,
-     186-192).
-4. What goes, with its consumers:
-   - The hook run, CHUMBY_USB_HOOK, HOOK_ARGS: chumby-player-run:275-295,
-     :310; chumby-player.default:57-63 (incl. Jan's /media/chumby-usb
-     sentence, 2178872); docs/setup.md:177-182 (the entry) and :183-189
-     (Jan's paragraph: /media/chumby-usb stays a plain directory for a
-     stick's tree and the panel's widgets — only `debugchumby` and
-     `post_alarm_action` leave its list; his wording); this record (#26's
-     history stays; #26 closes with 0.9.10).
-   - rust-remote debugchumby:9-14 (the aarch64 branch; the chumby branch
-     :15-18 stays, and gains `--hub` for ikea-lys, the stick being the
-     chumby's own config); README:229-242 (the Pi paragraph).
-   - chumby-ikea-lys widget/deploy/deploy-pi.sh: the service builds and
-     copies (:16, 24-28, 33-34, 63, 69), the hook text (:2-9), the restart
-     (:85-87); build/pi/ (debugchumby, ikea-lys/, rust-remote/, an
-     artifact); README.md "Build, test on the PC, deploy"; PLAN.md's
-     chumby-pi entries. It keeps the widget: lys/ and profile.xml into
-     /media/chumby-usb, as today.
-   - Unchanged: deploy-chumby.sh, rust-remote/deploy.sh, the chumby's
-     stick.
-5. Steps:
-   0. CHECKPOINT: Jan answers the questions below, creates the private key
-      and writes ~/.config/chumby-apt/private.env himself.
-   1. Public side on dev: launcher (conf.d, the two switches, the hook out),
-      conffile, setup.md, the install test (a drop-in case,
-      .github/scripts/deb-install-test.sh:69); desktop launcher runs with
-      and without drop-ins; the deb's contents. CHECKPOINT.
-   2. Private debs: rust-remote pkg/ + debugchumby + README; ikea-lys
-      `--hub` required + pkg/ + deploy-pi.sh + README + PLAN.md; build,
-      `dpkg-deb -c/-I`, `systemd-analyze verify` of both units. CHECKPOINT.
-   3. publish-private-apt.sh: a dry run into a scratch dir, the index and
-      its signature checked with gpgv; then the first upload (it writes to
-      the server: Jan's go). CHECKPOINT.
-   4. Release 0.9.10 the 0.9.9 way (version, pair regeneration — fork dev
-      also carries 7732e65ce —, release commit). CHECKPOINT before main,
-      chumby, push.
-   5. Device rounds, Jan watching: chumby-pi-3 — backup; take
-      debugchumby, ikea-lys/, rust-remote/ out of /media/chumby-usb and
-      `CHUMBY_USB_HOOK=1` out of the conffile; the private sources and
-      keyring; chumby-player 0.9.10 (`--force-confold`, merge the two new
-      lines), chumby-rust-remote, chumby-ikea-lys; token and hub into /etc;
-      Lys, the lights, the night claim and the alarms. The chumby — the
-      ikea-lys without a compiled hub and debugchumby with `--hub`, after a
-      backup.
-   Open for Jan: (i) the repo below the existing web root, or its own
-   lighttpd alias? (ii) token and favourites to /etc/chumby-ikea-lys/? (iii)
-   the Lys widget stays a stick-tree file put there by deploy-pi.sh, or
-   into the chumby-ikea-lys deb? (iv) the black background tied to
-   letterbox off, or a line of its own? (v) the publish script here
-   (generic, config outside), or in a private place?
-Update 2026-11-03, step 0 answered (Jan): (i) the repo below the existing
-web root; (ii) token and favourites to /etc/chumby-ikea-lys/; (iii) the Lys
-widget's SWF and its profile ship in the chumby-ikea-lys deb, deploy-pi.sh
-becomes a dev shortcut, /media/chumby-usb keeps a profile.xml pointing at
-the installed SWF; (iv) the publish script in pkg/ here, its config only in
-~/.config/chumby-apt/private.env; (v) the black background stays tied to
-`CHUMBY_LETTERBOX=off`. The signing key and the private config exist (made
-at Jan's word): the config holds HOST, USER, DIR, URL and KEY_ID, the
-exported public key sits beside it as chumby-private-archive.gpg; the
-publish script reads those five names, nothing of them goes into this
-repo. The first upload (step 3) waits for Jan's go.
-Update 2026-11-03, step 1 done (dev 320982a; version still 0.9.9 on dev,
-0.9.10 carries it): chumby-player-run sources
-`${CHUMBY_CONFD:-/etc/chumby-player/conf.d}/*.conf` after the
-environment (an empty or missing directory sources nothing; later files
-win), turns `CHUMBY_SOCKET_ALLOW` into one `--socket-allow` per entry and
-`CHUMBY_LETTERBOX=off` into `--letterbox off --background-color 000000`;
-`on` or unset adds nothing, anything else refuses to start (`--check`
-too); the hook block, `CHUMBY_USB_HOOK` and `HOOK_ARGS` are gone. The
-conffile ships `CHUMBY_SOCKET_ALLOW=""` and `CHUMBY_LETTERBOX=on` as active
-lines (the hook comment, Jan's /media/chumby-usb sentence in it included,
-went with the block); the deb ships the empty /etc/chumby-player/conf.d/;
-docs/setup.md names the two switches and the drop-ins, and Jan's paragraph
-keeps the directory and "`profile.xml` and widgets". Consumers of the
-removed names: none left in this repo's tracked files outside this record
-(git grep CHUMBY_USB_HOOK, HOOK_ARGS, debugchumby, post_alarm_action);
-this record's history and fork claude/issues.md:893 stay as history;
-rust-remote debugchumby:3-5 and README:229-242 and chumby-ikea-lys
-widget/deploy/deploy-pi.sh:7-8 still describe the hook — step 2. The
-README never mentioned the hook. Not before step 2: 0.9.10 on chumby-pi-3
-without the private debs would leave its services unstarted (the hook
-started them).
-Verified on the PC: pkg/build-debs.sh with the 0.9.9 dist binaries — the
-deb lists ./etc/chumby-player/conf.d/, its launcher is byte-equal to the
-tree, its conffile ends with the two lines. The launcher against a staged
-tree in a headless cage, the conffile loaded as systemd would, the player
-behind an argument-logging wrapper:
-- defaults: `--check` 0; the player's arguments end `--fullscreen
-  -PlocalCache=1 <swf>`; alive at 45 s, `_getPlatform`, no panic;
-- the conffile with `CHUMBY_SOCKET_ALLOW="127.0.0.1:8090 127.0.0.1:8091"`
-  and `CHUMBY_LETTERBOX=off`: `… --fullscreen --socket-allow 127.0.0.1:8090
-  --socket-allow 127.0.0.1:8091 --letterbox off --background-color 000000
-  -PlocalCache=1 <swf>`, alive, no panic;
-- the shipped conffile plus two drop-ins (chumby-ikea-lys.conf: 8091 and
-  letterbox off; chumby-rust-remote.conf: 8090): `… --socket-allow
-  127.0.0.1:8091 --socket-allow 127.0.0.1:8090 --letterbox off
-  --background-color 000000 …` (the files in name order), alive, no panic;
-- `CHUMBY_LETTERBOX=maybe`: `--check` and the run exit 1 with
-  "CHUMBY_LETTERBOX must be on or off, not 'maybe'"; the player never starts.
-Update 2026-11-03, step 2 done (Jan's go): the two private debs, built on
-the PC, nothing installed.
-- The profile placement. The panel merges the first existing of /tmp,
-  /mnt/usb, /mnt/storage, /psp profile.xml (F2:4344, design.md §4).
-  Chosen: the launcher writes the fixtures' /tmp/profile.xml at every
-  start — the profile the panel would have taken plus every profile in
-  /usr/share/chumby-player/profile.d/ (the public deb ships the empty
-  directory; duplicates by instance id skipped) — only when that directory
-  has any; it removes its own file otherwise (marked
-  `generated="chumby-player-run"`) and leaves a foreign one alone. A stick's
-  profile stays the base (stock: it replaces the owner's set) and the
-  packaged widget is added to it; a re-seed cannot delete it (rebuilt from
-  /usr/share at the next start, /tmp is emptied at boot anyway); the
-  owner's /psp profile is the base when no stick has one. The fork hides
-  all four paths alike under `merge_local_remote_widgets = 0`
-  (core/src/chumby/fixture.rs:548-561). Rejected: a profile.xml in
-  /media/chumby-usb (Jan's first idea) — a real stick hides it, and it
-  shadows the /psp profile unless merged by hand (#26); the deb merging
-  into /psp/profile.xml — a re-seed deletes it, chumby-local-widgets
-  overwrites it; Lys as an owner widget in /var/lib/chumby/widgets — the
-  helper is user-run and interactive, a stick still hides /psp; the deb
-  writing /tmp/profile.xml — emptied at boot. Code: chumby-player-run
-  after `mkdir -p "$STATE/widgets"` (python3, a Depends already; the
-  CHUMBY_PROFILED override for desktop runs), dev bda0223.
-- chumby-rust-remote 0.1.0 (rust-remote ab74ad3, `pkg/build-deb.sh`):
-  /usr/lib/chumby-rust-remote/chumby-rust-remote; the unit — User=pi,
-  After= and PartOf=chumby-player.service, WantedBy=chumby-player.service,
-  Restart=on-failure, `CHUMBY_ROOT=/var/lib/chumby/fixtures/rootfs`
-  (STATE chumby-player-run:50, the rootfs as at :177) and
-  `CHUMBY_CTL=/tmp/chumby-ctl` (:51), no PrivateTmp (the panel's /tmp,
-  :188-193); the conffile /etc/chumby-player/conf.d/chumby-rust-remote.conf
-  (8090); postinst enable + restart, prerm disable --now; Depends
-  chumby-player (>= 0.9.10), libc6, libgcc-s1 (its NEEDED). debugchumby
-  is the chumby's alone (the aarch64 branch out) and passes ikea-lys
-  `--hub`; README's Pi paragraph rewritten.
-- chumby-ikea-lys 0.1.0 (chumby-ikea-lys b4c1813): ikea-lys requires
-  `--hub` (the compiled-in living-room address gone, exit 2 without one);
-  /usr/lib/chumby-ikea-lys/ikea-lys; the unit — as above plus
-  `EnvironmentFile=/etc/default/chumby-ikea-lys` (`LYS_HUB=`, the only
-  value it takes from the environment), `ConditionPathExists` the token,
-  `RestartPreventExitStatus=2`, token and favourites in
-  /etc/chumby-ikea-lys/; the conffiles /etc/default/chumby-ikea-lys,
-  /etc/chumby-ikea-lys/favourites.xml, /etc/chumby-player/conf.d/
-  chumby-ikea-lys.conf (8091, letterbox off); the widget in
-  /usr/share/chumby-ikea-lys/ and its entry in
-  /usr/share/chumby-player/profile.d/chumby-ikea-lys.xml (was
-  widget/deploy/profile-pi.xml). The favourites reach the widget only
-  through the service's state (widget 04-state.as:8), so the widget reads
-  no file; the chumby's paths are unchanged. deploy-pi.sh is a dev
-  shortcut (build, the movie over the installed one, restart).
-- Consumers of what went: debugchumby's aarch64 branch — the launcher's
-  hook run (gone in step 1), rust-remote README:229-242 (rewritten),
-  chumby-ikea-lys deploy-pi.sh (rewritten), widget/build/pi/ (an artifact,
-  deleted); ikea-lys's default hub — its README options and the chumby's
-  run line (now `--hub`), debugchumby (passes it), the PC tests (pass
-  `--hub 127.0.0.1` already), PLAN.md's journal (history);
-  deploy/profile-pi.xml — the old deploy-pi.sh only (PLAN.md history).
-- Checked on the PC: both debs' `dpkg-deb -I/-c` (files, conffiles,
-  Depends, the binaries aarch64 PIEs, NEEDED libc and libgcc_s);
-  `systemd-analyze verify` of both units — the only findings were the
-  missing installed binaries, clean with the extracted ones; User=pi was
-  not flagged although this PC has no user pi (verify does not resolve
-  users). lintian is not installed. The launcher's merge through `--seed`:
-  no fragments — no /tmp/profile.xml; a fragment and a /psp profile —
-  ids 1000 and lys-1; with a stick profile — 2000 and lys-1; the fragment
-  gone — the file removed; a foreign /tmp/profile.xml — left alone, said so.
-  A full launcher run in a headless cage with the two drop-ins and the
-  fragment: the player arguments `… --fullscreen --socket-allow
-  127.0.0.1:8091 --socket-allow 127.0.0.1:8090 --letterbox off
-  --background-color 000000 -PlocalCache=1 <swf>`, the panel "found a
-  local profile" at /tmp/profile.xml, "adding 2 local widget instances",
-  loaded Lys from the real-disk path; alive at 45 s, no panic.
-- Next, step 3: pkg/publish-private-apt.sh (reads the five names from
-  ~/.config/chumby-apt/private.env), a dry run into a scratch dir checked
-  with gpgv; the first upload waits for Jan's go.
-Update 2026-11-03: Jan accepts the profile.d merge in place of his
-"/media/chumby-usb keeps a profile.xml" (answer iii; told, no objection).
-Update 2026-11-03, step 3 done (Jan's go, upload included):
-`pkg/publish-private-apt.sh`. It reads HOST, USER, DIR, URL, KEY_ID from
-~/.config/chumby-apt/private.env (refuses without the file, the public key
-beside it, any of the five, a DIR at or right below /, or the key in gpg;
-USER is read under its own name, not the login's), optionally
-RUST_REMOTE_OUT (default rust-remote/pkg/out) and LYS_OUT (default
-/home/jan/chumby-ikea-lys/pkg/out); takes the newest deb of each package by
-version; builds the flat index in a mktemp dir with the public recipe
-(apt-ftparchive Packages + Packages.gz; Release with Origin/Label
-chumby-private, Suite/Codename stable, Architectures arm64; gpg
---clearsign → InRelease, --detach-sign → Release.gpg, with KEY_ID), adds
-the public key as chumby-private-archive.gpg, verifies both signatures with
-gpgv; `--dry-run` stops there; otherwise rsync -rlpt --delete into DIR only,
-then the fetch check. `--sources` prints the Pi's setup (keyring
-/usr/share/keyrings/chumby-private-archive.gpg, `deb [signed-by=…] URL ./`
-in /etc/apt/sources.list.d/chumby-private.list, the URL from the config at
-print time). No value of the config is in this repo or this record.
-- Dry run: gpgv "Good signature from "chumby private apt repo …"" for
-  InRelease and Release.gpg.
-- Uploaded: chumby-rust-remote 0.1.0, 151,208 bytes, sha256 89a554b0…;
-  chumby-ikea-lys 0.1.0, 575,080 bytes, sha256 3b06f3f2…; Packages,
-  Packages.gz, Release, InRelease, Release.gpg, the public key.
-- Fetch check: InRelease fetched and gpgv "Good signature"; Packages lists
-  chumby-ikea-lys 0.1.0 and chumby-rust-remote 0.1.0 (Depends chumby-player
-  (>= 0.9.10), libc6, libgcc-s1; Size and SHA256 as above); HTTP 200 for
-  Packages.gz, Release, Release.gpg, the key and both debs; both served
-  debs byte-equal to the local builds (sha256). No 404, no MIME issue.
-- Not yet installable on a Pi: both depend on chumby-player 0.9.10.
-Update 2026-11-03, step 4 built locally (Jan: build, device round, then
-push): fork dev 30b8d7642 (issue 10: the guard's removal ships in 0.9.10;
-issue 31 there shipped in 0.9.9) — `cargo test -p ruffle_core --lib
-chumby` 50 passed, 1 ignored; movie start (debug, CI's command line,
-headless cage): exit 124, `_getPlatform` 1, no panic. Pair regenerated on
-8328af42d: C1 e708dc21a (85 additions — alarm_guard.rs gone), C2 d5237b1c1
-(tree equal to fork dev; the same 19-path edit surface), branch
-`chumby-regen-2026-11-03b`, the old tip 19cc439e8 kept as
-`chumby-before-regen-2026-11-03b` (`…-2026-11-03` already holds 0.9.9's
-backup, 5dac40c05). Here: 0.9.10 (b7f1740), the three cross-builds (dist
-player, dist exporter, supervisor; the one upstream `__jcvt` warning),
-chumby-player_0.9.10_arm64.deb (13,920,316 bytes, sha256 204aef1d…):
-Version 0.9.10, Depends as 0.9.9, conf.d and profile.d shipped, launcher and
-conffile byte-equal to the tree, the fresh dist player. Desktop launcher:
-defaults → `… --fullscreen -PlocalCache=1 <swf>`; drop-ins and a packaged
-profile → `… --socket-allow 127.0.0.1:8091 --socket-allow 127.0.0.1:8090
---letterbox off --background-color 000000 …`, "adding 2 local widget
-instances", Lys loaded; both alive at 45 s, no panic; `CHUMBY_LETTERBOX=maybe`
-→ `--check` and the run exit 1. Release commit on `release-0.9.10`; not
-pushed; the device round comes first.
-Update 2026-11-03, 22:4x, the device round on chumby-pi-3 (the
-coordinator; Jan's end-user check later): chumby-player 0.9.10 from the
-local deb (`dpkg -i --force-confold`), the conffile swapped for its
-.dpkg-dist; the stick directory's leftovers (debugchumby, profile.xml,
-lys/, ikea-lys/, rust-remote/) in /var/backups/chumby-usb-pre-0.9.10/, the
-hand-patch backups (chumby-player-run .orig-0.9.8/.bak-*,
-ruffle_desktop.bak-20261103) and the old conffile in /var/backups/; the
-private repo configured (the script's --sources, the key copied from the
-PC); chumby-rust-remote and chumby-ikea-lys 0.1.0 installed from it; token
-and favourites in /etc/chumby-ikea-lys/, LYS_HUB set; the three units
-active; the merged /tmp/profile.xml holds 1000, 1001, 1002 and lys-1; Lys
-shows the wide panel skin with favourites and radio, connected to 8091;
-rust-remote's status `claim=1` after `widget Lys`; the sink back at 0.80.
-Findings:
-1. Bug in 0.9.10's launcher: every `--socket-allow` reached the player
-   twice. `--kiosk` re-runs the script inside cage (`exec /usr/bin/cage --
-   "$0"`, chumby-player-run:166 now); `CHUMBY_SOCKET_ALLOW` comes exported
-   from the unit's EnvironmentFile, so the inner run inherited the list the
-   drop-ins had extended and extended it again. Fixed on dev: the drop-ins
-   are sourced once per start (`CHUMBY_CONFD_LOADED`, exported with
-   `CHUMBY_SOCKET_ALLOW` and, if set, `CHUMBY_LETTERBOX`); `--check`, a
-   process of its own, sources them as before. Desktop, the `--kiosk` path
-   in a headless cage with the shipped conffile exported and the two
-   drop-ins: the old launcher (dd60fee) gave 4 `--socket-allow` (8091 8090
-   8091 8090), the fixed one 2 (8091 8090) plus `--letterbox off
-   --background-color 000000`, the panel merged and loaded Lys, alive at
-   45 s, no panic; defaults and `CHUMBY_LETTERBOX=maybe` as before.
-   release-0.9.10 (ea2a205) does not contain this fix: shipping it means
-   a respin (dev's tree again, the same pair) — Jan decides.
-2. Cosmetic: `systemctl stop chumby-player` ends "Control process exited,
-   code=exited, status=1/FAILURE", the unit `failed` instead of `inactive`:
-   its ExecStop, `pkill -TERM -x -u pi chumby-supervis`
-   (chumby-player.service:43), exits 1 when nothing matches. Pre-existing
-   (seen with 0.9.8's unit). One token, so changed on dev: `ExecStop=-…`
-   (systemd ignores the exit status). Not in release-0.9.10 either; not
-   checked on a device.
-Update 2026-11-03, respin (Jan): release-0.9.10 recut from dev's tree with
-both fixes (this record included), the gitlink at the same fork pair
-(d5237b1c1), parent 14ce5c1; the first cut ea2a205 is kept as branch
-`release-0.9.10-first`. The deb rebuilt from dev b9e6dff with the existing
-dist binaries: chumby-player_0.9.10_arm64.deb, 13,920,760 bytes, sha256
-86a1c877…59b09 (Version 0.9.10; launcher, unit and conffile byte-equal to
-the tree; conf.d and profile.d shipped; ExecStop=-…). Its launcher, the
---kiosk path in a headless cage with the drop-ins: each allow once (8091,
-8090), letterbox off, Lys merged and loaded, alive at 45 s, no panic.
-chumby-pi-3 runs the first 0.9.10 deb (doubled allows) until this one is
-installed.
-Update 2026-11-03, 23:30: chumby-ikea-lys 0.1.1 published (Jan: entering
-Lys's night switches no scene any more; chumby-ikea-lys 82c9469, its
-PLAN.md). 575,572 bytes, sha256 3156f526…37b68; the fetch check passed
-(InRelease good signature, Packages lists chumby-ikea-lys 0.1.1 and
-chumby-rust-remote 0.1.0, every file 200, the served deb byte-equal). The
-repo keeps the newest version of each package only: rsync --delete removed
-0.1.0 (404 now). chumby-pi-3 still runs 0.1.0 until `apt upgrade`.
-Update 2026-11-03, 23:31: chumby-pi-3 upgraded chumby-ikea-lys 0.1.0 →
-0.1.1 from the private repo (lys.swf c8c55274…), the unit active. 0.9.10's
-push: in progress — the fork's backup branch and dev are pushed; the
-forced push of chumby (19cc439e8 → d5237b1c1) waits for Jan (the
-coordinator's permission layer blocks it tonight); chumby-pi main
-(release-0.9.10) and dev follow after it.
 
 ---
 
@@ -2147,3 +358,151 @@ expensive to re-find and independent of the modelling:
   a reloaded Lys starts `night = false` (`08-night.as:10`) and its claim
   handler is idempotent (`08-night.as:56-61`), so the next renewal
   re-establishes the night.
+
+---
+
+Number: 33
+Timestamp: 2026-11-06, 09:30
+Title: Housekeeping — fewer documents, so the project is easier to understand.
+Status: in progress — steps 1 and 2 done
+Description: Jan's ask: reduce the complexity of understanding this project.
+Candidates he named: closed issues, loose ends, short tests, ditched features.
+Decisions (interview, 2026-11-06):
+- Delete whole files: the fork's three finished plan documents, both
+  night-mode spec files, `rust-remote/research/` (the dropped
+  third-framebuffer study and, on the second round, the never-adopted FastCGI
+  experiment), and `docs/index.adoc` with CI's render step.
+- Both `issues.md` files: **one line per settled issue, no exceptions.** The
+  panel facts the closed blocks carried stay in git history, which Jan
+  accepted when choosing this over keeping the fact-bearing bodies.
+- `claude/watchdog-plan.md` stays as it is: it is the only requirements and
+  design document for the shipped supervisor, and `supervisor/src/policy.rs:3`,
+  `supervisor/src/main.rs:2` and the fork's `restart.rs:3` cite it by
+  R-number.
+- Adjudicated: close #21 and #31, keep #22 open as the unknown cause with its
+  probe list, compress #18 and #23 to pointers.
+- A dangling pointer in the frozen `claude-docs/development.md:815` is fixed
+  rather than left (Jan): it named the deleted fork plan, and now names
+  `render/tiny_skia/`.
+
+Step 1 — whole files (chumby-pi baefaeb, fork 4bc40bd89, rust-remote 67685f2
+and 297367a). 1012 lines of documents went in the first round, 843 of them in
+the fork. Two facts that lived only in the deleted fork plan moved into the
+code they describe, because the fork's frozen `claude-docs` mention tiny-skia
+nowhere: the measured spike numbers and the viewport-vs-stage lever into
+`render/tiny_skia/src/lib.rs`, and why the present path is shared memory
+rather than a wgpu blit into `desktop/src/gui/controller.rs`. The night-mode
+spec's surviving content — Jan's three modelling questions, where the
+discarded code stands, and the panel touchpoints found while specifying — is
+in #32. `cargo check` clean for `ruffle_render_tiny_skia` and
+`ruffle_desktop`; nothing but comments changed there.
+Checked before deleting `docs/index.adoc`: it was an empty asciidoc skeleton
+(three headings, no content) published as the project's landing page on every
+push to main, and every live reference — `docs/setup.md:82,84`,
+`pkg/apt/index.html:20,22`, `claude-docs/design.md:255` — points at `/apt`,
+never at the root. The site root will 404 after the next push; `/apt` is
+untouched.
+
+Step 2 — this file. The settled issues became the register at the end; #22 and
+#23 were compressed in place; #1, #2, #7, #8, #29 and #32 are unchanged.
+2117 lines before, with 62 % of them settled.
+
+---
+
+## The register of settled issues
+
+One line each: the outcome, and where the result lives. The full blocks — with
+their measurements, device traces and decompile line numbers — were last
+present in baefaeb. Numbers 14-17 belong to the Dash (see #18) and are not
+reused.
+
+- **#3** Plymouth boot animation (closed 2026-10-20, good enough — Jan): the
+  theme ships as `pkg/chumby-player/plymouth-theme-chumby/`, its 132 frames
+  are rasterised on the box by `chumby-download-firmware`'s
+  `install_boot_theme`, and a backgrounded `plymouth quit` in
+  `chumby-player-run` hands over to cage. The handoff gap and alt_opening's
+  audio are accepted as they are.
+- **#4** Find a display — 3.5", 4:3, brightness, 12 fps (closed 2026-10-20 —
+  Jan): the 5" DSI panel is the answer; brightness works there (#5), and 3.5"
+  and 4:3 were given up with its 1024x600 (#12). On SPI the honest clean
+  ceiling is 8.4 fps, reached by pinning `core_freq_min=400` alone — every
+  clock above the overlay's nominal 24 MHz visibly corrupts the picture.
+- **#5** Backlight brightness on the 5" DSI box (closed 2026-08-24): FR16 is
+  satisfied on hardware; the deb's `90-chumby-backlight.rules` does fire on a
+  bare install, so `pi` writes `/sys/class/backlight/10-0045` without sudo.
+- **#6** CI shipped the player with Ruffle's mock clock (closed, device-
+  verified 2026-08-24): cargo unified `exporter`'s `deterministic` and
+  `default_font` into `ruffle_desktop`. CI now builds the two binaries in
+  separate invocations, and a guard step fails the run if either feature
+  resolves into the player again.
+- **#9** Direct stream entries in `/psp/url_streams` (fixed 2026-08-23):
+  `mimetype="audio/mpeg"` for a direct stream, `audio/x-mpegurl` only when the
+  `url` really is a playlist.
+- **#10** Playlist entries in an m3u (fixed 2026-08-24): the panel drops
+  relative entries silently; absolute chumby paths (`/psp/birds.mp3`) survive
+  and the host maps them through the virtual rootfs.
+- **#11** The Tagesschau widget's video source (closed 2026-08-24): external —
+  its hardcoded `welttheorie.de` FLV answers 502; the widget was deleted from
+  the box.
+- **#12** Black bars around a widget on the 1024x600 DSI panel (closed
+  2026-08-24): Jan chose to leave the scaling alone. Two causes, both measured:
+  320x240 under show-all scales 2.5x to 800x600, and the widget's own artwork
+  carries 15 px of black at the top and 14 at the bottom.
+- **#13** A "Birds + SWR3" alarm went silent 100 s in (won't fix 2026-11-03 —
+  Jan: "this exists on the chumby, too. We do not need to deviate"): the
+  silent 08:00 nightmode alarm cancels the still-ringing 07:59 alarm through
+  the panel's own `stopAlarmsExcept`, traced to the millisecond on
+  chumby-pi-3 2026-09-01. The guard that suppressed it is removed again in
+  0.9.10 (fork #10). What remains is the configuration workaround — keep a
+  nightmode alarm out of a wake alarm's ring window.
+- **#18** Sony Dash panel support (stale 2026-10-20 — out of scope for the
+  foreseeable future, Jan): everything Dash lives on the `sony-dash` branch of
+  both repos and nowhere else, including appliance issues 14-17 and the fork's
+  11-21. dev carries none of it. Anyone resuming reads the branch, not an entry.
+- **#19** 0.9.6, the backlight cap on chumby-pi-3 (closed 2026-10-20):
+  `brightness_cap = 25` in `player.toml`, accepted by Jan.
+- **#20** 0.9.7, one volume ceiling (closed 2026-10-20): `volume_cap = 50`,
+  accepted by Jan, with the backup-alarm Klaxon brought under it.
+- **#21** After a cold boot the nightmode alarms never ring (closed
+  2026-11-06): the panel computes each alarm's time once, from the wall clock
+  at player start, and nothing in it notices a later NTP step — on 2026-09-22
+  that clock was 5 d 15 h slow. Remedied by `chumby-supervisor`, which
+  restarts the panel on a clock step > 15 s (`claude/watchdog-plan.md` R9);
+  shipped in 0.9.8, device-verified on chumby-pi-3 2026-09-24 with a simulated
+  boot on a slow clock. Player side: fork #25.
+- **#24** Look-and-feel check, the chumby 8 panel under Ruffle (done
+  2026-10-13 — Jan has seen enough): 800x600, SWF v8, 12 fps; flat and light,
+  nearer the Dash than the classic; nothing built. Where its panel comes from:
+  `http://files.chumby.com/resources/chumby8/1-8-2/update.zip` (firmware 1.8
+  build 3883, panel at `usr/widgets/controlpanel.swf`), and the newest,
+  5.0.38b2, from `https://www.chumby.com/xml/controlpanel?id=…&hw=10.6&sw=1.8.2&fw=1.8.2&lang=en-us&cnplatform=silvermoon&configname=opus`
+  — the server needs `cnplatform`/`configname`, `hw` alone is ignored.
+- **#25** Housekeeping before ikea-lys (closed 2026-10-20): all four steps
+  done; `ROADMAP.md`, `CLAUDE.old.md` and the VNC plan went, the launcher
+  resolves everything from `$STATE`, and CI lost its dead PR triggers. The
+  fork half is fork #30.
+- **#26** Local widget services on the Pi — the stick's debugchumby hook and
+  the socket allow-list (closed 2026-11-03): superseded by #31. The hook
+  emulation shipped in 0.9.9 and was replaced in 0.9.10 by
+  `CHUMBY_SOCKET_ALLOW`, `CHUMBY_LETTERBOX` and the `conf.d` / `profile.d`
+  drop-ins. One finding worth keeping: the panel takes the FIRST `profile.xml`
+  of its search order, so a stick tree with one hides the fixtures' own.
+- **#27** Widget navigation on the Pi (closed 2026-11-03): the fork gained
+  `ExtendedEvents` and a lossless control FIFO (fork #31),
+  chumby-rust-remote writes `event KIND VALUE` to `CHUMBY_CTL`, and it runs on
+  aarch64 — so the drop-down, "Nacht" and the Lys radio work there.
+- **#28** The Pi's side bars (closed 2026-11-03): superseded — no host-drawn
+  panel. The player runs `--letterbox off --background-color 000000` and the
+  Lys panel skin lays itself out 410 stage px wide; taps in the margins reach
+  the widget.
+- **#30** The Lys panel skin on the Pi (closed 2026-11-03): deployed to
+  chumby-pi-3, its radio plays through the panel's own player over soft
+  events, and Jan's end-user test passed ("test fine").
+- **#31** The widget services become private debs from a LAN apt repo (closed
+  2026-11-06): steps 0-4 done. `pkg/publish-private-apt.sh` publishes
+  chumby-rust-remote and chumby-ikea-lys to the private repo, reading HOST,
+  USER, DIR, URL and KEY_ID from `~/.config/chumby-apt/private.env` — no value
+  of it is in this repo. The public launcher lost the hook and gained the two
+  switches plus the two drop-in directories; 0.9.10 shipped 2026-11-04 (main
+  `e017c92`, fork pair `d5237b1c1`) and chumby-pi-3 runs it with both private
+  debs installed. The chumby keeps its stick and `debugchumby`.
