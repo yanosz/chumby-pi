@@ -2108,9 +2108,42 @@ one device round on chumby-pi-3 at Jan's time — a real Lys night, a
 SIGKILL of the player child for the crash path, and the journal surviving
 it.
 
-State spec: claude/nightmode-spec.md — BROKEN and parked on 2026-11-05,
-see claude/nightmode-spec-broken.md for why and for where the code stands.
-It was written as the automaton Jan asked for (mermaid in markdown). It holds the
-three states, every transition with the actor that writes it, the six
-invariants, and the four consequences worth knowing before judging it. It
-is the single copy — do not restate the automaton here.
+State spec: PARKED, and its two files deleted in the 2026-11-06
+housekeeping (`claude/nightmode-spec.md`, `claude/nightmode-spec-broken.md`,
+last present in c9142db). It was the automaton Jan asked for — three states
+over `/tmp/nightmode`, mermaid in markdown — and he rejected the model on
+2026-11-05: too much friction, and these three modelling questions come
+first, probably with proper UML rather than an ad-hoc state diagram (his
+words, condensed):
+1. "Unload" is a technical event, not a domain event. The spec leaned on Lys
+   being loaded or unloaded, which is a fact about the player, not about the
+   appliance's behaviour; the domain concept behind it has to be named and
+   defined before it can appear in a machine.
+2. "The panel enters night mode" does not say which panel, or which night
+   mode — the label collapses several different things.
+3. There are probably more states than three. "Lys active" may well be a
+   state of its own; the model carried it as an unstated condition, which is
+   why edges kept needing guards, and why the restart out of Lys night
+   behaved unlike every other edge.
+Start from the domain, not from the file: what are the appliance's night
+states as a user would name them, which events are domain events, and only
+then which byte encodes what. Do not revive the automaton from git.
+
+Where the code stands: nothing implemented, deployed or pushed. Step 1's
+half-finished code was discarded at Jan's request (2026-11-05) — rust-remote
+is back to `b627f0e` on main with a clean tree and the WIP branch deleted;
+its reflog holds it as `a35e507` for about 90 days, but it implements the
+rejected model and should be rewritten rather than revived.
+
+Panel touchpoints found while specifying, kept here because they are
+expensive to re-find and independent of the modelling:
+- the panel enters night mode — a nightmode-on alarm (F2:11094-11108), the
+  Night button (`DefineSprite_1766/frame_2:43-56`), or a NightMode soft
+  event (F6:107-110; off at F6:119-122) — and writes `1` at F2:19751.
+- the panel leaves night mode — a touch, key or bend on the night screen
+  (F2:19606-19628, 19659, 19729) — and writes `0` at F2:19757.
+- Lys announces its own night to the remote with `screen dim`/`screen off`
+  and `screen bright` (chumby-ikea-lys `widget/frame_1/08-night.as:76-94`);
+  a reloaded Lys starts `night = false` (`08-night.as:10`) and its claim
+  handler is idempotent (`08-night.as:56-61`), so the next renewal
+  re-establishes the night.
